@@ -1,0 +1,5 @@
+{
+  "name": "BudgetBuddy-backend",
+  "outputDirectory": "build",
+  "buildCommand": "npm run build"
+}
