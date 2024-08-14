@@ -1,7 +1,11 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
 const app = express();
+
+// Use Helmet to set various HTTP headers for security
+app.use(helmet());
 
 app.use(cors());
 
