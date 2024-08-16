@@ -7,6 +7,10 @@ const app = express();
 // Use Helmet to set various HTTP headers for security
 app.use(helmet());
 
+app.use("/", (req, res) => {
+  res.send("this is home page");
+});
+
 app.use(cors());
 
 const PORT = process.env.PORT || 3000;
