@@ -1,5 +1,13 @@
 import React from "react";
-import { AppBar, Toolbar, IconButton, Typography, Switch } from "@mui/material";
+import {
+  AppBar,
+  Toolbar,
+  IconButton,
+  Typography,
+  Switch,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 
 interface TopBarProps {
@@ -13,6 +21,9 @@ const TopBar: React.FC<TopBarProps> = ({
   onToggleDarkMode,
   darkMode,
 }) => {
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
+
   return (
     <AppBar>
       <Toolbar>
@@ -24,10 +35,19 @@ const TopBar: React.FC<TopBarProps> = ({
         >
           <MenuIcon />
         </IconButton>
-        <Typography variant="h6" style={{ flexGrow: 2 }}>
-          BudgetBudd
+        <Typography
+          variant="h6"
+          sx={{
+            flexGrow: 1,
+            textAlign: isSmallScreen ? "center" : "left",
+            marginRight: isSmallScreen ? 0 : "auto",
+          }}
+        >
+          BudgetBuddy
         </Typography>
-        <Switch checked={darkMode} onChange={onToggleDarkMode} />
+        {!isSmallScreen && (
+          <Switch checked={darkMode} onChange={onToggleDarkMode} />
+        )}
       </Toolbar>
     </AppBar>
   );

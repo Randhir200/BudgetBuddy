@@ -30,6 +30,7 @@ const SideMenu: React.FC<SideMenuProps> = ({ open, onClose }) => {
         "& .MuiDrawer-paper": {
           width: 240,
           boxSizing: "border-box",
+          marginTop: 7, // Adjust margin to avoid overlapping with TopBar
         },
       }}
     >

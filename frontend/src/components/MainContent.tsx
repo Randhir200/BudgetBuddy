@@ -5,7 +5,13 @@ interface MainContentProps {
 }
 
 const MainContent: React.FC<MainContentProps> = ({ children }) => {
-  return <div style={{ padding: "16px", flexGrow: 1 }}>{children}</div>;
+  return (
+    <div style={{ padding: "16px", flexGrow: 1 }}>
+      {" "}
+      {/* Adjust marginTop to fit below TopBar */}
+      {children}
+    </div>
+  );
 };
 
 export default MainContent;

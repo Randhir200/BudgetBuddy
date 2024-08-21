@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import TopBar from "./TopBar.tsx";
-import SideMenu from "./SideMenu.tsx";
-import MainContent from "./MainContent.tsx";
+import TopBar from "./TopBar";
+import SideMenu from "./SideMenu";
+import MainContent from "./MainContent";
+// import { useTheme, useMediaQuery } from "@mui/material"
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -15,20 +16,24 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   darkMode,
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  //   const theme = useTheme();
+  //   const isLargeScreen = useMediaQuery(theme.breakpoints.up("md"));
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
   };
 
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       <TopBar
         onMenuClick={toggleMenu}
         onToggleDarkMode={onToggleDarkMode}
         darkMode={darkMode}
       />
-      <SideMenu open={menuOpen} onClose={toggleMenu} />
-      <MainContent>{children}</MainContent>
+      <div style={{ display: "flex", flex: 1 }}>
+        <SideMenu open={menuOpen} onClose={toggleMenu} />
+        <MainContent>{children}</MainContent>
+      </div>
     </div>
   );
 };
