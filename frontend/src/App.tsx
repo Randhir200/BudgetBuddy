@@ -10,6 +10,11 @@ const App: React.FC = () => {
     palette: {
       mode: darkMode ? "dark" : "light",
     },
+    mixins: {
+      toolbar: {
+        minHeight: "50px",
+      },
+    },
   });
 
   const toggleDarkMode = () => {
