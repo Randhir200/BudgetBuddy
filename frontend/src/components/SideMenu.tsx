@@ -18,11 +18,11 @@ interface SideMenuProps {
 const SideMenu: React.FC<SideMenuProps> = ({ open, onClose }) => {
   const theme = useTheme();
   const isLargeScreen = useMediaQuery(theme.breakpoints.up("md"));
-
+  console.log(open, onClose);
   return (
     <Drawer
       variant={isLargeScreen ? "permanent" : "temporary"}
-      open={isLargeScreen || open}
+      open={open}
       onClose={onClose}
       sx={{
         width: 240,

@@ -23,20 +23,21 @@ const TopBar: React.FC<TopBarProps> = ({
 }) => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
-
   return (
     <AppBar>
       <Toolbar>
-        <IconButton
-          edge="start"
-          color="inherit"
-          aria-label="menu"
-          onClick={onMenuClick}
-        >
-          <MenuIcon />
-        </IconButton>
+        {isSmallScreen && (
+          <IconButton
+            edge="start"
+            color="inherit"
+            aria-label="menu"
+            onClick={onMenuClick}
+          >
+            <MenuIcon />
+          </IconButton>
+        )}
         <Typography
-          variant="h6"
+          variant="h5"
           component="div"
           sx={{
             flexGrow: 1,
