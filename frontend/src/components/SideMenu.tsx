@@ -9,6 +9,7 @@ import {
 import HomeIcon from "@mui/icons-material/Home";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import { useTheme, useMediaQuery } from "@mui/material";
+import { Link } from "react-router-dom"; // Import Link from react-router-dom
 
 interface SideMenuProps {
   open: boolean;
@@ -18,7 +19,7 @@ interface SideMenuProps {
 const SideMenu: React.FC<SideMenuProps> = ({ open, onClose }) => {
   const theme = useTheme();
   const isLargeScreen = useMediaQuery(theme.breakpoints.up("md"));
-  console.log(open, onClose);
+
   return (
     <Drawer
       variant={isLargeScreen ? "permanent" : "temporary"}
@@ -35,17 +36,18 @@ const SideMenu: React.FC<SideMenuProps> = ({ open, onClose }) => {
       }}
     >
       <List>
-        <ListItem button component="a" href="/">
+        {/* Use Link component instead of a */}
+        <ListItem button component={Link} to="/" onClick={onClose}>
           <ListItemIcon>
             <HomeIcon />
           </ListItemIcon>
           <ListItemText primary="Dashboard" />
         </ListItem>
-        <ListItem button component="a" href="/expenses">
+        <ListItem button component={Link} to="/config" onClick={onClose}>
           <ListItemIcon>
             <AttachMoneyIcon />
           </ListItemIcon>
-          <ListItemText primary="Expenses" />
+          <ListItemText primary="Config" />
         </ListItem>
         {/* Add more menu items as needed */}
       </List>

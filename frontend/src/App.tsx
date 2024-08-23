@@ -1,21 +1,28 @@
-import React, { useState } from "react";
 import "./App.css";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
 import Dashboard from "./pages/Dashboard";
 import DashboardLayout from "./components/DashboardLayout";
+import Config from "./pages/Config";
+import React, { useState, useMemo } from "react";
+import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
+
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
-  const theme = createTheme({
-    palette: {
-      mode: darkMode ? "dark" : "light",
-    },
-    mixins: {
-      toolbar: {
-        minHeight: "50px",
-      },
-    },
-  });
+
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode: darkMode ? "dark" : "light",
+        },
+        mixins: {
+          toolbar: {
+            minHeight: "50px",
+          },
+        },
+      }),
+    [darkMode]
+  );
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
@@ -28,7 +35,7 @@ const App: React.FC = () => {
         <DashboardLayout onToggleDarkMode={toggleDarkMode} darkMode={darkMode}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            {/* <Route path="expensess" element={<Expenses />} /> */}
+            <Route path="/config" element={<Config />} />
           </Routes>
         </DashboardLayout>
       </Router>
