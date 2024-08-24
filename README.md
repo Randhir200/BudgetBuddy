@@ -10,4 +10,4 @@ Backend built with Node.js and Express, utilizing MongoDB for dynamic data handl
 ### Multi-database Support: 
 PostgreSQL integration for managing relational data, offering a robust and scalable solution.
 ### Expense Tracking: 
-Easily add, edit, and categorize your expenses, with real-time updates and data visualization.
+Easily add, me edit, and categorize your expenses, with real-time updates and data visualization.
