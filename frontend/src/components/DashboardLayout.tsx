@@ -30,7 +30,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         onToggleDarkMode={onToggleDarkMode}
         darkMode={darkMode}
       />
-      <div style={{ display: "flex", flex: 1, width:"100%"}}>
+      <div style={{ display: "flex", flex: 1}}>
         <SideMenu open={menuOpen} onClose={toggleMenu} />
         <MainContent>{children}</MainContent>
       </div>

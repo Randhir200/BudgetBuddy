@@ -5,7 +5,7 @@ import DashboardLayout from "./components/DashboardLayout";
 import Config from "./pages/Config";
 import React, { useState, useMemo } from "react";
 import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
-import { Expenses } from "./pages/Expenses";
+import Expenses  from "./pages/Expenses";
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
