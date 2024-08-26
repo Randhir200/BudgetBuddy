@@ -6,8 +6,7 @@ interface MainContentProps {
 
 const MainContent: React.FC<MainContentProps> = ({ children }) => {
   return (
-    <div style={{ padding: "16px", flexGrow: 1 }}>
-      {" "}
+    <div style={{padding: "10px", flexGrow: 1,  border:"1px solid grey"}}>
       {/* Adjust marginTop to fit below TopBar */}
       {children}
     </div>

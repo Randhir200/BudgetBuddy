@@ -5,6 +5,7 @@ import DashboardLayout from "./components/DashboardLayout";
 import Config from "./pages/Config";
 import React, { useState, useMemo } from "react";
 import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
+import { Expenses } from "./pages/Expenses";
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -35,6 +36,7 @@ const App: React.FC = () => {
         <DashboardLayout onToggleDarkMode={toggleDarkMode} darkMode={darkMode}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/expenses" element={<Expenses />} />
             <Route path="/config" element={<Config />} />
           </Routes>
         </DashboardLayout>
