@@ -1,16 +1,81 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+
+interface Response {
+  message: string;
+  status: number;
+  data: {
+    token: string;
+  };
+}
 
 const Signup = () => {
-  const [username, setUsername] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [cnfPassword, setCnfPassword] = useState("");
+  const [cpassword, setCpassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const validateEmail = (email: string) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    console.log(re.test(email));
+    return re.test(email);
+  };
+
+  const validatePassword = (password: string) => {
+    // Example: Password should be at least 8 characters, contain at least one letter and one number
+    const re = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    console.log(re.test(password));
+    return re.test(password);
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log({ username, email, password });
+    try {
+      if (firstName && lastName && email && password && cpassword) {
+        if (!validateEmail(email)) {
+          setError("Invalid email address");
+          setEmail("");
+          return;
+        }
+        if (!validatePassword(password)) {
+          setError(
+            "Password must be at least 8 characters long and contain at least one letter and one number"
+          );
+          setPassword("");
+          setCpassword("");
+          return;
+        }
+        if (password === cpassword) {
+          const res: Response = await axios.post(
+            "http://localhost:9000/user/signup",
+            { firstName, lastName, email, password, cpassword }
+          );
+          if (res.status === 201) {
+            const token = res.data.token;
+            console.log(token);
+            if (token) {
+              localStorage.setItem("auth-token", token);
+              navigate("/login");
+            } else {
+              setError("No authentication token received");
+            }
+          }
+        } else {
+          setError("Passwords are not matching!");
+        }
+      } else {
+        setError("Please fill all the inputs");
+      }
+    } catch (err) {
+      console.error(err);
+      console.log(error);
+    }
   };
 
   return (
@@ -19,9 +84,15 @@ const Signup = () => {
         <Title>Sign Up</Title>
         <Input
           type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Username"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          placeholder="First Name"
+        />
+        <Input
+          type="text"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          placeholder="Last Name"
         />
         <Input
           type="email"
@@ -36,9 +107,9 @@ const Signup = () => {
           placeholder="Password"
         />
         <Input
-          type="cnfpassword"
-          value={cnfPassword}
-          onChange={(e) => setCnfPassword(e.target.value)}
+          type="password"
+          value={cpassword}
+          onChange={(e) => setCpassword(e.target.value)}
           placeholder="Confirm Password"
         />
         <Button type="submit">Sign Up</Button>
