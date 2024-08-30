@@ -5,10 +5,13 @@ import DashboardLayout from "./components/DashboardLayout";
 import Config from "./pages/Config";
 import React, { useState, useMemo } from "react";
 import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
-import Expenses  from "./pages/Expenses";
+import Expenses from "./pages/Expenses";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   const theme = useMemo(
     () =>
@@ -32,14 +35,19 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+
       <Router>
-        <DashboardLayout onToggleDarkMode={toggleDarkMode} darkMode={darkMode}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+        </Routes>
+        {/* <DashboardLayout onToggleDarkMode={toggleDarkMode} darkMode={darkMode}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/config" element={<Config />} />
           </Routes>
-        </DashboardLayout>
+        </DashboardLayout> */}
       </Router>
     </ThemeProvider>
   );
