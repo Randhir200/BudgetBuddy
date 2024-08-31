@@ -37,11 +37,12 @@ const App: React.FC = () => {
       <Router>
           <Routes>
             <Route path="/login" element={<Login/>}/>
-            <Route element={<DashboardLayout onToggleDarkMode={toggleDarkMode} 
-            darkMode={darkMode}/>} />
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/expenses" element={<Expenses />} />
-            <Route path="/config" element={<Config />} />
+            <Route path="/" element={<DashboardLayout onToggleDarkMode={toggleDarkMode} 
+            darkMode={darkMode} children={<Dashboard/>}/>} /> 
+            <Route path="/expenses" element={<DashboardLayout onToggleDarkMode={toggleDarkMode} 
+            darkMode={darkMode} children={<Expenses/>}/>} />
+            <Route path="/config" element={<DashboardLayout onToggleDarkMode={toggleDarkMode} 
+            darkMode={darkMode} children={<Config/>}/>} />
           </Routes>
       </Router>
     </ThemeProvider>
