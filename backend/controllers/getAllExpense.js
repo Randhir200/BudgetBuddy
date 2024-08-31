@@ -1,7 +1,7 @@
 const Expense = require("../models/expenseModel");
 
 const getAllExpense = async (req, res)=>{
-    // const {userId} = req.body;
+    const body = req.body;
     try{        
         const expenseRaw = await Expense.find({userId:"sdse"});
         const expenseData = expenseRaw.json();
