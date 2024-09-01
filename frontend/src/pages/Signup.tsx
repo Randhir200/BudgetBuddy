@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { Snackbar } from "@mui/material";
+import MuiAlert, { AlertColor, AlertProps } from "@mui/material/Alert";
 
 interface Response {
   message: string;
@@ -12,13 +14,22 @@ interface Response {
   };
 }
 
+const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
+  props,
+  ref
+) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
+
 const Signup = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [cpassword, setCpassword] = useState("");
+  const [open, setOpen] = React.useState(false);
   const [error, setError] = useState("");
+  const [errorType, setErrorType] = useState<AlertColor>("success");
   const navigate = useNavigate();
 
   const validateEmail = (email: string) => {
@@ -39,14 +50,17 @@ const Signup = () => {
     try {
       if (firstName && lastName && email && password && cpassword) {
         if (!validateEmail(email)) {
-          setError("Invalid email address");
-          setEmail("");
+          // setError("Invalid email address");
+          // setErrorType("error");
+          // setOpen(true);
           return;
         }
         if (!validatePassword(password)) {
           setError(
             "Password must be at least 8 characters long and contain at least one letter and one number"
           );
+          setErrorType("error");
+          setOpen(true);
           setPassword("");
           setCpassword("");
           return;
@@ -63,14 +77,18 @@ const Signup = () => {
               localStorage.setItem("auth-token", token);
               navigate("/login");
             } else {
-              setError("No authentication token received");
+              console.error("No authentication token received");
             }
           }
         } else {
           setError("Passwords are not matching!");
+          setErrorType("error");
+          setOpen(true);
         }
       } else {
         setError("Please fill all the inputs");
+        setErrorType("warning");
+        setOpen(true);
       }
     } catch (err) {
       console.error(err);
@@ -78,8 +96,32 @@ const Signup = () => {
     }
   };
 
+  const handleClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setOpen(false);
+  };
   return (
     <Container>
+      <Snackbar
+        open={open}
+        autoHideDuration={6000}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleClose}
+          severity={errorType}
+          sx={{ width: "100%" }}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
       <Form onSubmit={handleSubmit}>
         <Title>Sign Up</Title>
         <Input
@@ -128,7 +170,7 @@ const Container = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  height: 100%;
   background-color: #fff;
 `;
 

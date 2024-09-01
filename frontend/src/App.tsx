@@ -8,10 +8,11 @@ import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
 import Expenses from "./pages/Expenses";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import PageNotFound from "./pages/PageNotFound";
+import PrivateRoute from "./components/PrivateRoute";
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   const theme = useMemo(
     () =>
@@ -39,15 +40,48 @@ const App: React.FC = () => {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/signup" element={<Signup />} />4
+          <Route path="*" element={<PageNotFound />} />4
+          <Route
+            path="/"
+            element={
+              <PrivateRoute>
+                <DashboardLayout
+                  onToggleDarkMode={toggleDarkMode}
+                  darkMode={darkMode}
+                >
+                  <Dashboard />
+                </DashboardLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/expenses"
+            element={
+              <PrivateRoute>
+                <DashboardLayout
+                  onToggleDarkMode={toggleDarkMode}
+                  darkMode={darkMode}
+                >
+                  <Expenses />
+                </DashboardLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/config"
+            element={
+              <PrivateRoute>
+                <DashboardLayout
+                  onToggleDarkMode={toggleDarkMode}
+                  darkMode={darkMode}
+                >
+                  <Config />
+                </DashboardLayout>
+              </PrivateRoute>
+            }
+          />
         </Routes>
-        {/* <DashboardLayout onToggleDarkMode={toggleDarkMode} darkMode={darkMode}>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/expenses" element={<Expenses />} />
-            <Route path="/config" element={<Config />} />
-          </Routes>
-        </DashboardLayout> */}
       </Router>
     </ThemeProvider>
   );

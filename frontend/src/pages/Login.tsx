@@ -1,18 +1,100 @@
+import axios from "axios";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
+import { Snackbar } from "@mui/material";
+import MuiAlert, { AlertColor, AlertProps } from "@mui/material/Alert";
+
+interface Response {
+  status: number;
+  data: {
+    message: string;
+    token: string;
+    status: string;
+  };
+}
+
+const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
+  props,
+  ref
+) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [open, setOpen] = React.useState(false);
+  const [error, setError] = useState("");
+  const [errorType, setErrorType] = useState<AlertColor>("success");
+  const navigate = useNavigate();
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log({ email, password });
+    try {
+      if (email && password) {
+        const response: Response = await axios.post(
+          "http://localhost:9000/user/login",
+          {
+            email,
+            password,
+          }
+        );
+        console.log(response);
+        if (response.status === 201) {
+          const token = response.data.token;
+          if (token) {
+            localStorage.setItem("auth-token", token);
+            navigate("/");
+          } else {
+            console.error("No authentication token received");
+          }
+        }
+      } else {
+        setError("Please fill all input fields");
+        setErrorType("warning");
+        setOpen(true);
+      }
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        if (err.status === 401) {
+          setError(err.response?.data.message);
+          setErrorType("warning");
+          setOpen(true);
+        }
+        console.error(err);
+      }
+    }
+  };
+
+  const handleClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setOpen(false);
   };
 
   return (
     <Container>
+      <Snackbar
+        open={open}
+        autoHideDuration={6000}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleClose}
+          severity={errorType}
+          sx={{ width: "100%" }}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
       <Form onSubmit={handleSubmit}>
         <Title>Login</Title>
         <Input
@@ -44,7 +126,7 @@ const Container = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  height: 100%;
   background-color: #fff;
 `;
 
