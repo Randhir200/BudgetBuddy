@@ -1,8 +1,8 @@
 const express = require('express');
-const expenseRoute = require('./expenses');
+const expenseRoute = require('./expenseRoute');
 const masterRoute = express.Router();
 
-masterRoute.all('/expense', expenseRoute);
+masterRoute.use('/expense', expenseRoute);
 
 
 module.exports = masterRoute;
