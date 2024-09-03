@@ -6,9 +6,11 @@ import Config from "./pages/Config";
 import React, { useState, useMemo } from "react";
 import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
 import Expenses  from "./pages/Expenses";
+import  Login  from "./pages/Login";
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
+  const [isLogedin, setIsLogedin] = useState(true);
 
   const theme = useMemo(
     () =>
@@ -33,13 +35,15 @@ const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <DashboardLayout onToggleDarkMode={toggleDarkMode} darkMode={darkMode}>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/expenses" element={<Expenses />} />
-            <Route path="/config" element={<Config />} />
+            <Route path="/login" element={<Login/>}/>
+            <Route path="/" element={<DashboardLayout onToggleDarkMode={toggleDarkMode} 
+            darkMode={darkMode} children={<Dashboard/>}/>} /> 
+            <Route path="/expenses" element={<DashboardLayout onToggleDarkMode={toggleDarkMode} 
+            darkMode={darkMode} children={<Expenses/>}/>} />
+            <Route path="/config" element={<DashboardLayout onToggleDarkMode={toggleDarkMode} 
+            darkMode={darkMode} children={<Config/>}/>} />
           </Routes>
-        </DashboardLayout>
       </Router>
     </ThemeProvider>
   );
