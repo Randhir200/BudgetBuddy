@@ -7,6 +7,8 @@ const connection = require("./db/connection");
 const masterRoute = require("./routes/masterRoute");
 const app = express();
 
+app.use(express.json());
+
 //cors
 app.use(cors());
 

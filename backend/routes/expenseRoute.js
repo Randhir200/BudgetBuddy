@@ -1,8 +1,9 @@
 const express = require('express');
 const getAllExpense = require('../controllers/getAllExpense');
+const addExpense = require('../controllers/addExpense');
 const expenseRoute = express.Router();
 
 expenseRoute.get('/getAllExpense', getAllExpense);
-// expenseRoute.get('/createExpense', createExpense);
+expenseRoute.post('/addExpense', addExpense);
 
 module.exports = expenseRoute
