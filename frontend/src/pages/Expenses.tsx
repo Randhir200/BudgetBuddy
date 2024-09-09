@@ -18,7 +18,7 @@ const Expenses: React.FC = () => {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 4, mb: 4 }}>
+    <Container sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" gutterBottom>
         Add Expense
       </Typography>
@@ -26,7 +26,7 @@ const Expenses: React.FC = () => {
         component="form"
         sx={{
           display: "flex",
-          flexDirection: "column",
+          flexDirection: isSmallScreen ? "column" : "row",
           gap: 3,
           p: 3,
           backgroundColor: theme.palette.background.paper,

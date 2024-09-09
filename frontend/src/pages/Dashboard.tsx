@@ -3,6 +3,7 @@ import React from "react";
 const Dashboard = () => {
   return (
     <>
+    <div>
       <h1>Dashboard</h1>;
       <p content="justify">
         Lorem ipsum, dolor sit amet consectetur adipisicing elit. Omnis ad
@@ -17,6 +18,7 @@ const Dashboard = () => {
         sit totam reprehenderit sint, nemo quo aut eligendi, itaque nobis ex
         repellendus molestias et voluptatibus vero? Aut.
       </p>
+      </div>
     </>
   );
 };
