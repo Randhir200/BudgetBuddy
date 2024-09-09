@@ -23,8 +23,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     setMenuOpen(!menuOpen);
   };
 
+  const topBarHieght = "50px";
+
   return (
-    <Grid container direction="column" style={{ height: "100vh" }}>
+    <Grid container direction="column" style={{ height: "100vh", width:"100vw" }}>
       {/* TopBar */}
       <Grid item>
         <TopBar
@@ -35,10 +37,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       </Grid>
 
       {/* Body: SideMenu and MainContent */}
-      <Grid item container style={{ flexGrow: 1, width: "100vw" }}>
+      <Grid item container   sx={{marginTop:topBarHieght, width: "100vw", border:"1px dashed blue"}}>
         {/* SideMenu */}
         {isLargeScreen && (
-          <Grid item xs={2}>
+          <Grid item xs={2} sx={{ border:"1px dashed red"}}>
             {/* <div style={{marginTop: "50px", border:"1px solid grey"}}>
               Side Menu
             </div> */}
@@ -47,8 +49,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         )}
 
         {/* MainContent */}
-        <Grid item xs={isLargeScreen ? 10 : 12}>
-          <MainContent>{children}</MainContent>
+        <Grid item xs={isLargeScreen ? 10 : 12} sx={{ border:"1px dashed green"}}>
+          <MainContent >{children}</MainContent>
           {/* <div style={{marginTop: "50px", border: "1px solid red"}}>
             Dashboard
             <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Repudiandae, atque.</p>
