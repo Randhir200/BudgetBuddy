@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   Box,
-  Button,
   Container,
   FormControl,
   InputLabel,
@@ -12,6 +11,7 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material";
+import ExpenseTable from '../components/ExpenseTable';
 import ButtonComp from "../components/ButtonComp";
 
 const Expenses: React.FC = () => {
@@ -107,6 +107,10 @@ const Expenses: React.FC = () => {
       {/* Submit Button */}
       <ButtonComp title="Submit" variant="contained" color="primary" size="small" event={handleToggleAdd}/>
     </Box>}
+
+    <Box sx={{mt:2}}>
+      <ExpenseTable/>
+    </Box>
       
     </Container>
   );

@@ -26,7 +26,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const topBarHieght = "50px";
 
   return (
-    <Grid container direction="column" style={{ height: "100vh", width:"100vw" }}>
+    <Grid container direction="column" style={{ height: "auto", width:"100vw" }}>
       {/* TopBar */}
       <Grid item>
         <TopBar
