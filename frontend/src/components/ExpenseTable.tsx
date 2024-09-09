@@ -7,80 +7,64 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
+import IconButton from '@mui/material/IconButton';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 interface Column {
-  id: 'name' | 'code' | 'population' | 'size' | 'density';
+  id: 'slNo' | 'date' | 'type' | 'category' | 'item' | 'price' | 'action';
   label: string;
   minWidth?: number;
-  align?: 'right';
+  align?: 'center';
   format?: (value: number) => string;
 }
 
 const columns: readonly Column[] = [
-  { id: 'name', label: 'Name', minWidth: 170 },
-  { id: 'code', label: 'ISO\u00a0Code', minWidth: 100 },
-  {
-    id: 'population',
-    label: 'Population',
-    minWidth: 170,
-    align: 'right',
-    format: (value: number) => value.toLocaleString('en-US'),
-  },
-  {
-    id: 'size',
-    label: 'Size\u00a0(km\u00b2)',
-    minWidth: 170,
-    align: 'right',
-    format: (value: number) => value.toLocaleString('en-US'),
-  },
-  {
-    id: 'density',
-    label: 'Density',
-    minWidth: 170,
-    align: 'right',
-    format: (value: number) => value.toFixed(2),
-  },
+  { id: 'slNo', label: 'Sl.No.', minWidth: 50 },
+  { id: 'date', label: 'Date', minWidth: 100 },
+  { id: 'type', label: 'Type', minWidth: 100 },
+  { id: 'category', label: 'Category', minWidth: 100 },
+  { id: 'item', label: 'Item', minWidth: 100 },
+  { id: 'price', label: 'Price', minWidth: 100, align: 'center' },
+  { id: 'action', label: 'Action', minWidth: 150, align: 'center' },
 ];
 
 interface Data {
-  name: string;
-  code: string;
-  population: number;
-  size: number;
-  density: number;
+  slNo: number;
+  date: string;
+  type: string;
+  category: string;
+  item: string;
+  price: number;
+  action?: any;
 }
 
 function createData(
-  name: string,
-  code: string,
-  population: number,
-  size: number,
+  slNo: number,
+  date: string,
+  type: string,
+  category: string,
+  item: string,
+  price: number
 ): Data {
-  const density = population / size;
-  return { name, code, population, size, density };
+  return { slNo, date, type, category, item, price };
 }
 
+// Sample rows
 const rows = [
-  createData('India', 'IN', 1324171354, 3287263),
-  createData('China', 'CN', 1403500365, 9596961),
-  createData('Italy', 'IT', 60483973, 301340),
-  createData('United States', 'US', 327167434, 9833520),
-  createData('Canada', 'CA', 37602103, 9984670),
-  createData('Australia', 'AU', 25475400, 7692024),
-  createData('Germany', 'DE', 83019200, 357578),
-  createData('Ireland', 'IE', 4857000, 70273),
-  createData('Mexico', 'MX', 126577691, 1972550),
-  createData('Japan', 'JP', 126317000, 377973),
-  createData('France', 'FR', 67022000, 640679),
-  createData('United Kingdom', 'GB', 67545757, 242495),
-  createData('Russia', 'RU', 146793744, 17098246),
-  createData('Nigeria', 'NG', 200962417, 923768),
-  createData('Brazil', 'BR', 210147125, 8515767),
+  createData(1, '2024-09-01', 'Need', 'Food', 'Milk', 27),
+  createData(2, '2024-09-02', 'Want', 'Electronics', 'Headphones', 99),
+  createData(3, '2024-09-03', 'Need', 'Transport', 'Bus Ticket', 3),
+  // Add more rows as needed
 ];
 
-export default function StickyHeadTable() {
+export default function CustomTable() {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+
+  // Check if screen width is less than 600px
+  const isMobile = useMediaQuery('(max-width:600px)');
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -92,30 +76,65 @@ export default function StickyHeadTable() {
   };
 
   return (
-    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-      <TableContainer sx={{ maxHeight: 440 }}>
-        <Table stickyHeader aria-label="sticky table">
+    <Paper style={{ width: '100%', overflowX: 'auto' }}>
+      <TableContainer style={{ maxHeight: 440 }}>
+        <Table
+          stickyHeader
+          aria-label="customized table"
+          sx={{
+            '& .MuiTableCell-root': {
+              fontSize: isMobile ? '10px' : '14px',  // Smaller font for mobile
+              padding: isMobile ? '4px' : '10px',  // Smaller padding for mobile
+            },
+          }}
+        >
           <TableHead>
             <TableRow>
-              {columns.map((column) => (
-                <TableCell
-                  key={column.id}
-                  align={column.align}
-                  style={{ minWidth: column.minWidth }}
-                >
-                  {column.label}
-                </TableCell>
-              ))}
+              {columns.map((column) => {
+                if (isMobile && ['category', 'item'].includes(column.id)) {
+                  // Hide "category" and "item" columns on small screens
+                  return null;
+                }
+                return (
+                  <TableCell
+                    key={column.id}
+                    align={column.align}
+                    style={{ minWidth: column.minWidth }}
+                  >
+                    {column.label}
+                  </TableCell>
+                );
+              })}
             </TableRow>
           </TableHead>
           <TableBody>
             {rows
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((row) => {
-                return (
-                  <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
-                    {columns.map((column) => {
-                      const value = row[column.id];
+              .map((row) => (
+                <TableRow hover role="checkbox" tabIndex={-1} key={row.slNo}>
+                  {columns.map((column) => {
+                    if (isMobile && ['category', 'item'].includes(column.id)) {
+                      return null;
+                    }
+                    const value = row[column.id];
+                    if (column.id === 'action') {
+                      return (
+                        <TableCell key={column.id} align={column.align}>
+                          <IconButton
+                            aria-label="edit"
+                            size={isMobile ? 'small' : 'medium'} // Smaller icon size for mobile
+                          >
+                            <EditIcon fontSize={isMobile ? 'small' : 'medium'} />
+                          </IconButton>
+                          <IconButton
+                            aria-label="delete"
+                            size={isMobile ? 'small' : 'medium'} // Smaller icon size for mobile
+                          >
+                            <DeleteIcon fontSize={isMobile ? 'small' : 'medium'} />
+                          </IconButton>
+                        </TableCell>
+                      );
+                    } else {
                       return (
                         <TableCell key={column.id} align={column.align}>
                           {column.format && typeof value === 'number'
@@ -123,10 +142,10 @@ export default function StickyHeadTable() {
                             : value}
                         </TableCell>
                       );
-                    })}
-                  </TableRow>
-                );
-              })}
+                    }
+                  })}
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </TableContainer>
@@ -138,6 +157,14 @@ export default function StickyHeadTable() {
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+        sx={{
+          '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+            fontSize: isMobile ? '10px' : '14px',  // Smaller pagination font for mobile
+          },
+          '& .MuiTablePagination-input': {
+            fontSize: isMobile ? '10px' : '14px',
+          },
+        }}
       />
     </Paper>
   );
