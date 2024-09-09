@@ -35,10 +35,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       </Grid>
 
       {/* Body: SideMenu and MainContent */}
-      <Grid item container style={{ flexGrow: 1, border:"1px solid yellow", width: "100vw" }}>
+      <Grid item container style={{ flexGrow: 1, width: "100vw" }}>
         {/* SideMenu */}
         {isLargeScreen && (
-          <Grid item xs={2} sx={{border:"1px solid green"}} >
+          <Grid item xs={2}>
             {/* <div style={{marginTop: "50px", border:"1px solid grey"}}>
               Side Menu
             </div> */}
@@ -47,7 +47,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         )}
 
         {/* MainContent */}
-        <Grid item xs={isLargeScreen ? 10 : 12} sx={{border:"1px solid red"}}>
+        <Grid item xs={isLargeScreen ? 10 : 12}>
           <MainContent>{children}</MainContent>
           {/* <div style={{marginTop: "50px", border: "1px solid red"}}>
             Dashboard

@@ -63,18 +63,18 @@ const Expenses: React.FC = () => {
             <MenuItem value="Grocery">Grocery</MenuItem>
           </Select>
         </FormControl>
-
-        {/* Date Field */}
+        {/* Item */}
         <TextField
-          id="date"
-          label="Date"
-          type="date"
+          id="item"
+          label="Item"
+          type="item"
           defaultValue=""
           InputLabelProps={{
             shrink: true,
           }}
           fullWidth
         />
+       
 
         {/* Price Field */}
         <TextField
@@ -83,6 +83,18 @@ const Expenses: React.FC = () => {
           type="number"
           fullWidth
           inputProps={{ min: 0 }}
+        />
+
+         {/* Date Field */}
+         <TextField
+          id="date"
+          label="Date"
+          type="date"
+          defaultValue=""
+          InputLabelProps={{
+            shrink: true,
+          }}
+          fullWidth
         />
 
         {/* Submit Button */}
