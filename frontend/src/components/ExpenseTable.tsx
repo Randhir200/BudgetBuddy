@@ -21,13 +21,13 @@ interface Column {
 }
 
 const columns: readonly Column[] = [
-  { id: 'slNo', label: 'Sl.No.', minWidth: 50 },
-  { id: 'date', label: 'Date', minWidth: 100 },
-  { id: 'type', label: 'Type', minWidth: 100 },
-  { id: 'category', label: 'Category', minWidth: 100 },
-  { id: 'item', label: 'Item', minWidth: 100 },
-  { id: 'price', label: 'Price', minWidth: 100, align: 'center' },
-  { id: 'action', label: 'Action', minWidth: 150, align: 'center' },
+  { id: 'slNo', label: 'Sl.No.' },
+  { id: 'date', label: 'Date'},
+  { id: 'type', label: 'Type',},
+  { id: 'category', label: 'Category',},
+  { id: 'item', label: 'Item',},
+  { id: 'price', label: 'Price', align: 'center' },
+  { id: 'action', label: 'Action', align: 'center' },
 ];
 
 interface Data {
