@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Container,
@@ -13,9 +13,12 @@ import {
 } from "@mui/material";
 import ExpenseTable from "../components/ExpenseTable";
 import ButtonComp from "../components/ButtonComp";
+import axios from "axios";
 
 const Expenses: React.FC = () => {
   const [toggleAdd, setToggleAdd] = useState(false);
+  const [expensesData, setExpensesData] = useState([]);
+  const [expErr, setExpErr] = useState({status:false, message:''});
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -23,6 +26,33 @@ const Expenses: React.FC = () => {
     setToggleAdd(!toggleAdd);
   };
 
+  const fetchExpenses = async ()=>{
+    try{
+      const response = await axios(`http://localhost:3000/expense/getAllExpense?userId=66d89bda30bb3c771a5007c6`);
+      const data =  response.data;
+      setExpensesData(data);
+      console.log(data);
+    }catch(error:any){
+      if (error.response) {
+        // Request made and server responded (API returned a 404 with a custom message)
+        console.log('Error Status:', error.response.status); // 404
+        console.log('Error Data:', error.response.data);     // { status, message, data, statusCode }
+        console.log('Error Headers:', error.response.headers);
+        setExpErr({status:true, message:error.response.data.message})
+        console.log(expErr);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.log('Error Request:', error.request);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.log('Error Message:', error.message);
+      }
+    }
+  }
+
+ useEffect(()=>{
+  fetchExpenses();
+ },[]);
   return (
     <Container>
       <Typography
