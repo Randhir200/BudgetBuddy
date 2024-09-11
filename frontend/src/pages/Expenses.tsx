@@ -30,8 +30,8 @@ const Expenses: React.FC = () => {
     try{
       const response = await axios(`http://localhost:3000/expense/getAllExpense?userId=66d89bda30bb3c771a5007c6`);
       const data =  response.data;
-      setExpensesData(data);
-      console.log(data);
+      setExpensesData(data.data);
+      console.log(data.data);
     }catch(error:any){
       if (error.response) {
         // Request made and server responded (API returned a 404 with a custom message)
@@ -177,7 +177,7 @@ const Expenses: React.FC = () => {
       )}
 
       <Box sx={{ mt: 2 }}>
-        <ExpenseTable />
+        <ExpenseTable expenses={expensesData} />
       </Box>
     </Container>
   );
