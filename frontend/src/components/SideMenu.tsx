@@ -7,8 +7,10 @@ import {
   ListItemText,
 } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
-import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import { useTheme, useMediaQuery } from "@mui/material";
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import SettingsIcon from '@mui/icons-material/Settings';
+import InsightsIcon from '@mui/icons-material/Insights';
 import { Link } from "react-router-dom"; // Import Link from react-router-dom
 
 interface SideMenuProps {
@@ -39,19 +41,19 @@ const SideMenu: React.FC<SideMenuProps> = ({ open, onClose }) => {
         {/* Use Link component instead of a */}
         <ListItem button component={Link} to="/" onClick={onClose}>
           <ListItemIcon>
-            <HomeIcon />
+            <InsightsIcon />
           </ListItemIcon>
-          <ListItemText primary="Dashboard" />
+          <ListItemText primary="Insight" />
         </ListItem>
         <ListItem button component={Link} to="/expenses" onClick={onClose}>
           <ListItemIcon>
-            <HomeIcon />
+            <ReceiptLongIcon />
           </ListItemIcon>
           <ListItemText primary="Expenses" />
         </ListItem>
         <ListItem button component={Link} to="/config" onClick={onClose}>
           <ListItemIcon>
-            <AttachMoneyIcon />
+            <SettingsIcon />
           </ListItemIcon>
           <ListItemText primary="Config" />
         </ListItem>
