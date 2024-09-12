@@ -15,6 +15,7 @@ const schema = joi.object({
     category: joi.string(),
     price: joi.number(),
     item:joi.string(),
+    createdAt:joi.date().optional(),
     userId: joi.string().custom(objectIdValidation).required(),
 })
 const addExpense = async (req, res) => {
