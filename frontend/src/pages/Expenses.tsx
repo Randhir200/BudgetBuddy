@@ -2,23 +2,39 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Container,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  TextField,
   Typography,
   useTheme,
-  useMediaQuery,
+  useMediaQuery
 } from "@mui/material";
+
+import { SnackbarOrigin } from "@mui/material/Snackbar";
+import { AlertProps } from "@mui/material/Alert";
 import ExpenseTable from "../components/ExpenseTable";
 import ButtonComp from "../components/ButtonComp";
 import axios from "axios";
+import { AlertComp } from "../components/AlertComp";
+import { AddExpenseForm } from "../components/AddExpenseForm";
 
+
+interface State extends SnackbarOrigin {
+  open: boolean;
+}
+
+interface alertState extends AlertProps {
+  message: string
+}
 const Expenses: React.FC = () => {
   const [toggleAdd, setToggleAdd] = useState(false);
   const [expensesData, setExpensesData] = useState([]);
-  const [expErr, setExpErr] = useState({status:false, message:''});
+  const [toastState, setToastState] = React.useState<State>({
+    open: false,
+    vertical: 'top',
+    horizontal: 'center',
+  });
+  const [alertState, setAlertState] = React.useState<alertState>({ severity: 'success', message: '' })
+  const { vertical, horizontal, open } = toastState;
+
+  //mui theme
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -26,35 +42,38 @@ const Expenses: React.FC = () => {
     setToggleAdd(!toggleAdd);
   };
 
-  const fetchExpenses = async ()=>{
-    try{
+  //adding expense
+  const addExpense = () => {
+
+  }
+
+  //fetching expense
+  const fetchExpenses = async () => {
+    try {
       const response = await axios(`http://localhost:3000/expense/getAllExpense?userId=66d89bda30bb3c771a5007c6`);
-      const data =  response.data;
+      const data = response.data;
       setExpensesData(data.data);
-      console.log(data.data);
-    }catch(error:any){
-      if (error.response) {
-        // Request made and server responded (API returned a 404 with a custom message)
-        console.log('Error Status:', error.response.status); // 404
-        console.log('Error Data:', error.response.data);     // { status, message, data, statusCode }
-        console.log('Error Headers:', error.response.headers);
-        setExpErr({status:true, message:error.response.data.message})
-        console.log(expErr);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.log('Error Request:', error.request);
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log('Error Message:', error.message);
-      }
+      setAlertState({ ...alertState, severity: data.status, message: data.message })
+    } catch (error: any) {
+      setAlertState({ ...alertState, severity: 'error', message: error.response.data.message })
+    } finally {
+      setToastState({ ...toastState, open: true });
+      setTimeout(() => {
+        setToastState({ ...toastState, open: false });
+      }, 2000); // Close after 2 seconds
     }
   }
 
- useEffect(()=>{
-  fetchExpenses();
- },[]);
+
+
+  useEffect(() => {
+    fetchExpenses();
+  }, []);
   return (
     <Container>
+      <AlertComp vertical={vertical} horizontal={horizontal} open={open}
+        alertState={alertState}
+      />
       <Typography
         variant={isSmallScreen ? "h5" : "h4"} // Adjust the heading size based on screen size
         gutterBottom
@@ -72,108 +91,7 @@ const Expenses: React.FC = () => {
         />
       </Box>
       {toggleAdd && (
-        <Box
-          component="form"
-          sx={{
-            display: "flex",
-            flexDirection: isSmallScreen ? "column" : "row",
-            gap: isSmallScreen ? 2 : 3, // Smaller gaps for small screens
-            p: isSmallScreen ? 2 : 3, // Smaller padding for small screens
-            backgroundColor: theme.palette.background.paper,
-            borderRadius: 1,
-            boxShadow: theme.shadows[3],
-          }}
-        >
-          {/* Type Field */}
-          <FormControl fullWidth>
-            <InputLabel
-              id="type-label"
-              sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }} // Smaller label font size
-            >
-              Type
-            </InputLabel>
-            <Select
-              labelId="type-label"
-              id="type"
-              label="Type"
-              defaultValue=""
-              sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }} // Smaller input font size
-            >
-              <MenuItem value="Needs">Needs</MenuItem>
-              <MenuItem value="Wants">Wants</MenuItem>
-              <MenuItem value="Savings">Savings</MenuItem>
-            </Select>
-          </FormControl>
-
-          {/* Category Field */}
-          <FormControl fullWidth>
-            <InputLabel
-              id="category-label"
-              sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }}
-            >
-              Category
-            </InputLabel>
-            <Select
-              labelId="category-label"
-              id="category"
-              label="Category"
-              defaultValue=""
-              sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }}
-            >
-              <MenuItem value="Food">Food</MenuItem>
-              <MenuItem value="Bills">Bills</MenuItem>
-              <MenuItem value="Grocery">Grocery</MenuItem>
-            </Select>
-          </FormControl>
-
-          {/* Item */}
-          <TextField
-            id="item"
-            label="Item"
-            type="item"
-            defaultValue=""
-            fullWidth
-            InputLabelProps={{
-              sx: { fontSize: isSmallScreen ? "0.8rem" : "1rem" }, // Smaller label font size
-            }}
-            inputProps={{ style: { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }} // Smaller input font
-          />
-
-          {/* Price Field */}
-          <TextField
-            id="price"
-            label="Price"
-            type="number"
-            fullWidth
-            inputProps={{ min: 0, style: { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }} // Smaller input font size
-            InputLabelProps={{
-              sx: { fontSize: isSmallScreen ? "0.8rem" : "1rem" }, // Smaller label font size
-            }}
-          />
-
-          {/* Date Field */}
-          <TextField
-            id="date"
-            label="Date"
-            type="date"
-            defaultValue=""
-            InputLabelProps={{
-              shrink: true,
-              sx: { fontSize: isSmallScreen ? "0.8rem" : "1rem" }, // Smaller label font size
-            }}
-            fullWidth
-            inputProps={{ style: { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }} // Smaller input font size
-          />
-
-          {/* Submit Button */}
-          <ButtonComp
-            title="Submit"
-            variant="contained"
-            color="primary"
-            size={isSmallScreen ? "small" : "medium"} // Adjust button size for small screens
-            event={handleToggleAdd}
-          />
-        </Box>
+        <AddExpenseForm isSmallScreen={isSmallScreen} theme={theme} handleToggleAdd={handleToggleAdd} />
       )}
 
       <Box sx={{ mt: 2 }}>

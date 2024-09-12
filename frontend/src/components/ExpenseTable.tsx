@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -14,13 +14,13 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 
 // Define the columns
 const columns = [
-  { id: 'slNo', label: 'Sl.No.' },
-  { id: 'date', label: 'Date' },
-  { id: 'type', label: 'Type' },
-  { id: 'category', label: 'Category' },
-  { id: 'item', label: 'Item' },
-  { id: 'price', label: 'Price', align: 'center' },
-  { id: 'action', label: 'Action', align: 'center' },
+  { id: 'slNo', label: 'Sl.No.',},
+  { id: 'date', label: 'Date',},
+  { id: 'type', label: 'Type',},
+  { id: 'category', label: 'Category',},
+  { id: 'item', label: 'Item',},
+  { id: 'price', label: 'Price',},
+  { id: 'action', label: 'Action',},
 ];
 
 // Define the CustomTable component
@@ -31,7 +31,7 @@ const CustomTable = ({ expenses }:any) => {
   // Check if screen width is less than 600px
   const isMobile = useMediaQuery('(max-width:600px)');
 
-  const handleChangePage = (event, newPage:any) => {
+  const handleChangePage = (newPage:any) => {
     setPage(newPage);
   };
 
@@ -57,14 +57,14 @@ const CustomTable = ({ expenses }:any) => {
             <TableRow>
               {columns.map((column) => {
                 // Hide "category" and "item" columns on small screens
-                if (isMobile && ['category', 'item'].includes(column.id)) {
-                  return null;
-                }
+                // if (isMobile && ['category', 'item'].includes(column.id)) {
+                //   return null;
+                // }
                 return (
                   <TableCell
                     key={column.id}
-                    align={column.align}
-                    style={{ minWidth: column.minWidth }}
+                    align={"left"} // 
+                    style={{ }} // we can put minwidth
                   >
                     {column.label}
                   </TableCell>
@@ -75,15 +75,15 @@ const CustomTable = ({ expenses }:any) => {
           <TableBody>
             {expenses
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((expense, index) => (
+              .map((expense:any, index:number) => (
                 <TableRow hover role="checkbox" tabIndex={-1} key={expense._id}>
                   <TableCell>{page * rowsPerPage + index + 1}</TableCell> {/* Sl.No. */}
                   <TableCell>{new Date(expense.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>{expense.type}</TableCell>
                   <TableCell>{expense.category}</TableCell>
                   <TableCell>{expense.item}</TableCell>
-                  <TableCell align="center">{expense.price}</TableCell>
-                  <TableCell align="center">
+                  <TableCell align="left">{expense.price}</TableCell>
+                  <TableCell align="left">
                     <IconButton aria-label="edit" size={isMobile ? 'small' : 'medium'}>
                       <EditIcon fontSize={isMobile ? 'small' : 'medium'} />
                     </IconButton>
