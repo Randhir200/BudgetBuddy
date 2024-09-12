@@ -26,10 +26,10 @@ const SideMenu: React.FC<SideMenuProps> = ({ open, onClose }) => {
       open={open}
       onClose={onClose}
       sx={{
-        width: "18%",
+        width: "16.66%",
         flexShrink: 0,
         "& .MuiDrawer-paper": {
-          width: "17.8%",
+          width: "16.66%",
           boxSizing: "border-box",
           marginTop: theme.mixins.toolbar.minHeight, // Adjust margin to avoid overlapping with TopBar
         },

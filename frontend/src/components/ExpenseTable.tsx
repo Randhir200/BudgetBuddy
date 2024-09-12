@@ -27,11 +27,14 @@ const columns = [
 const CustomTable = ({ expenses }:any) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  console.log(expenses);
+
   // Check if screen width is less than 600px
   const isMobile = useMediaQuery('(max-width:600px)');
 
-  const handleChangePage = (newPage:any) => {
+  const handleChangePage = (
+    event: React.MouseEvent<HTMLButtonElement> | null,
+    newPage: number,
+  ) => {
     setPage(newPage);
   };
 

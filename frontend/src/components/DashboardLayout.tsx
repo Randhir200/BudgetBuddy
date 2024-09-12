@@ -26,7 +26,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const topBarHieght = "50px";
 
   return (
-    <Grid container direction="column" style={{width:"100vw", height: "100vh" }}>
+    <Grid container direction="column">
       {/* TopBar */}
       <Grid item>
         <TopBar
@@ -37,10 +37,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       </Grid>
 
       {/* Body: SideMenu and MainContent */}
-      <Grid item container sx={{marginTop:topBarHieght, width: "100vw", height:"auto" }}>
+      <Grid item container sx={{margin:"50px 0 0", width: "auto", height:"auto" }}>
         {/* SideMenu */}
         {isLargeScreen && (
-          <Grid item xs={2} sx={{ }}>
+          <Grid item xs={2} sx={{}}>
             {/* <div style={{marginTop: "50px", border:"1px solid grey"}}>
               Side Menu
             </div> */}
@@ -49,7 +49,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         )}
 
         {/* MainContent */}
-        <Grid item xs={isLargeScreen ? 10 : 12} sx={{height:"auto"}}>
+        <Grid item xs={isLargeScreen ? 10 : 12} sx={{}}>
           <MainContent >{children}</MainContent>
           {/* <div style={{marginTop: "50px", border: "1px solid red"}}>
             Dashboard

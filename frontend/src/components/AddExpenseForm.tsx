@@ -6,8 +6,33 @@ import {
     TextField,
 } from '@mui/material'
 import ButtonComp from './ButtonComp'
+import { useEffect, ChangeEvent, FormEvent } from 'react'
 
-export const AddExpenseForm = ({isSmallScreen, theme, handleToggleAdd}: any) => {
+
+// interface FormData {
+//     type: string;
+//     category: string;
+//     item: string;
+//     price: number;
+//     createdAt: string
+//   }
+
+export const AddExpenseForm = ({ isSmallScreen,
+    theme,
+    setFormData,
+    addExpense,
+    formData}: any) => {
+
+    function handleAddExpense(e:any) {
+        const { name, value } = e.target;
+        setFormData((formData:any) => ({ ...formData, [name]: value }));
+        console.log(formData);
+    }
+    
+    function handleSubmit(){
+        addExpense();
+    }
+
     return (
         <Box
             component="form"
@@ -34,6 +59,9 @@ export const AddExpenseForm = ({isSmallScreen, theme, handleToggleAdd}: any) => 
                     id="type"
                     label="Type"
                     defaultValue=""
+                    name="type"
+                    value={formData.type}
+                    onChange={handleAddExpense}
                     sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }} // Smaller input font size
                 >
                     <MenuItem value="Needs">Needs</MenuItem>
@@ -55,6 +83,9 @@ export const AddExpenseForm = ({isSmallScreen, theme, handleToggleAdd}: any) => 
                     id="category"
                     label="Category"
                     defaultValue=""
+                    name="category"
+                    value={formData.category}
+                    onChange={handleAddExpense}
                     sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }}
                 >
                     <MenuItem value="Food">Food</MenuItem>
@@ -68,6 +99,9 @@ export const AddExpenseForm = ({isSmallScreen, theme, handleToggleAdd}: any) => 
                 id="item"
                 label="Item"
                 type="item"
+                name="item"
+                value={formData.item}
+                onChange={handleAddExpense}
                 defaultValue=""
                 fullWidth
                 InputLabelProps={{
@@ -81,6 +115,9 @@ export const AddExpenseForm = ({isSmallScreen, theme, handleToggleAdd}: any) => 
                 id="price"
                 label="Price"
                 type="number"
+                name="price"
+                value={formData.price}
+                onChange={handleAddExpense}
                 fullWidth
                 inputProps={{ min: 0, style: { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }} // Smaller input font size
                 InputLabelProps={{
@@ -94,6 +131,9 @@ export const AddExpenseForm = ({isSmallScreen, theme, handleToggleAdd}: any) => 
                 label="Date"
                 type="date"
                 defaultValue=""
+                name="createdAt"
+                value={formData.createdAt}
+                onChange={handleAddExpense}                
                 InputLabelProps={{
                     shrink: true,
                     sx: { fontSize: isSmallScreen ? "0.8rem" : "1rem" }, // Smaller label font size
@@ -108,7 +148,7 @@ export const AddExpenseForm = ({isSmallScreen, theme, handleToggleAdd}: any) => 
                 variant="contained"
                 color="primary"
                 size={isSmallScreen ? "small" : "medium"} // Adjust button size for small screens
-                event={handleToggleAdd}
+                event={handleSubmit}
             />
         </Box>
     )

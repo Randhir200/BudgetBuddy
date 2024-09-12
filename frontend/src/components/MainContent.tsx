@@ -6,7 +6,7 @@ interface MainContentProps {
 
 const MainContent: React.FC<MainContentProps> = ({ children }) => {
   return (
-    <div style={{width:"99%", height:"auto", margin: "auto"}}>
+    <div style={{width:"99%", margin: "auto"}}>
       {/* Adjust marginTop to fit below TopBar */}
       {children}
     </div>
