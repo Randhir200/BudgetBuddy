@@ -1,18 +1,34 @@
 import {
-    Box, FormControl,
-    InputLabel,
-    MenuItem,
-    Select,
-    TextField,
-} from '@mui/material'
+    Box, TextField, Chip
+} from '@mui/material';
 import ButtonComp from './ButtonComp';
+import { useState } from 'react';
 
-export const ConfigForm = ({ CateForm,
+export const ConfigForm = ({
     isSmallScreen,
     theme,
     handleAddType,
     formData,
-    handleSubmit }: any) => {
+    handleSubmit
+}: any) => {
+    const [categories, setCategories] = useState<string[]>([]); // State for categories
+    const [categoryInput, setCategoryInput] = useState<string>(''); // State for input field
+    
+    console.log(categories);
+    // Handle keypress (Enter) to add categories
+    const handleCategoryKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && categoryInput.trim() !== '') {
+            setCategories((prev) => [...prev, categoryInput.trim()]);
+            setCategoryInput(''); // Clear the input after adding
+            e.preventDefault(); // Prevent form submission
+        }
+    };
+
+    // Handle removing a category
+    const handleRemoveCategory = (categoryToRemove: string) => {
+        setCategories((prev) => prev.filter((category) => category !== categoryToRemove));
+    };
+
     return (
         <>
             <Box
@@ -20,8 +36,8 @@ export const ConfigForm = ({ CateForm,
                 sx={{
                     display: "flex",
                     flexDirection: isSmallScreen ? "column" : "row",
-                    gap: isSmallScreen ? 2 : 3, // Smaller gaps for small screens
-                    p: isSmallScreen ? 2 : 3, // Smaller padding for small screens
+                    gap: isSmallScreen ? 2 : 3,
+                    p: isSmallScreen ? 2 : 3,
                     backgroundColor: theme.palette.background.paper,
                     borderRadius: 1,
                     boxShadow: theme.shadows[3],
@@ -29,108 +45,58 @@ export const ConfigForm = ({ CateForm,
             >
                 {/* Type Field */}
 
-                {CateForm ?
-                  <>
-                    <FormControl fullWidth>
-                        <InputLabel
-                            id="type-label"
-                            sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }} // Smaller label font size
-                        >
-                            Type
-                        </InputLabel> <Select
-                            labelId="type-label"
+                      <TextField
                             id="type"
                             label="Type"
-                            defaultValue=""
+                            type="text"
                             name="type"
-                            value={""}
+                            value={formData.type || ""}
                             onChange={handleAddType}
-                            sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }} // Smaller input font size
-                        >
-                            <MenuItem value="Needs">Needs</MenuItem>
-                            <MenuItem value="Wants">Wants</MenuItem>
-                            <MenuItem value="Savings">Savings</MenuItem>
-                        </Select>
-                    </FormControl>
-                    <TextField
-   id="category"
-   label="Category"
-   type="category"
-   name="category"
-   value={formData.item}
-   onChange={handleAddType}
-   defaultValue=""
-   fullWidth
-   InputLabelProps={{
-       sx: { fontSize: isSmallScreen ? "0.8rem" : "1rem" }, // Smaller label font size
-   }}
-   inputProps={{ style: { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }} // Smaller input font
-/>
+                            defaultValue=""
+                            fullWidth
+                            InputLabelProps={{
+                                sx: { fontSize: isSmallScreen ? "0.8rem" : "1rem" },
+                            }}
+                            inputProps={{ style: { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }}
+                        />
 
-            </>
-:
-<>
-   {/* Item */}
-   <TextField
-   id="item"
-   label="Item"
-   type="item"
-   name="item"
-   value={formData.item}
-   onChange={handleAddType}
-   defaultValue=""
-   fullWidth
-   InputLabelProps={{
-       sx: { fontSize: isSmallScreen ? "0.8rem" : "1rem" }, // Smaller label font size
-   }}
-   inputProps={{ style: { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }} // Smaller input font
-/>
 
-{/* Price Field */}
-<TextField
-   id="price"
-   label="Price"
-   type="number"
-   name="price"
-   value={formData.price}
-   onChange={handleAddType}
-   fullWidth
-   inputProps={{ min: 0, style: { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }} // Smaller input font size
-   InputLabelProps={{
-       sx: { fontSize: isSmallScreen ? "0.8rem" : "1rem" }, // Smaller label font size
-   }}
-/>
-
-{/* Date Field */}
-<TextField
-   id="date"
-   label="Date"
-   type="date"
-   defaultValue=""
-   name="createdAt"
-   value={formData.createdAt}
-   onChange={handleAddType}
-   InputLabelProps={{
-       shrink: true,
-       sx: { fontSize: isSmallScreen ? "0.8rem" : "1rem" }, // Smaller label font size
-   }}
-   fullWidth
-   inputProps={{ style: { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }} // Smaller input font size
-/>
-</>
-}
-
-   
-             
+                        {/* Multiple Category Input */}
+                        <TextField
+                            id="category"
+                            label="Category"
+                            type="text"
+                            name="category"
+                            value={categoryInput}
+                            onChange={(e) => setCategoryInput(e.target.value)}
+                            onKeyPress={handleCategoryKeyPress} // Handle adding category on Enter
+                            placeholder="Press Enter to add category"
+                            fullWidth
+                            InputLabelProps={{
+                                sx: { fontSize: isSmallScreen ? "0.8rem" : "1rem" },
+                            }}
+                            inputProps={{ style: { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }}
+                        />
                 {/* Submit Button */}
                 <ButtonComp
                     title="Submit"
                     variant="contained"
                     color="primary"
-                    size={isSmallScreen ? "small" : "medium"} // Adjust button size for small screens
+                    size={isSmallScreen ? "small" : "medium"}
                     event={handleSubmit}
                 />
             </Box>
+                {/* Display added categories as chips */}
+                <Box sx={{ mt: 2 }}>
+                            {categories.map((category, index) => (
+                                <Chip
+                                    key={index}
+                                    label={category}
+                                    onDelete={() => handleRemoveCategory(category)}
+                                    sx={{ m: 0.5 }}
+                                />
+                            ))}
+                        </Box>
         </>
-    )
-}
+    );
+};

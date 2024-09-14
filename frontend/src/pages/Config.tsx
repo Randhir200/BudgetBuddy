@@ -3,6 +3,7 @@ import styled from "styled-components";
 import ButtonComp from "../components/ButtonComp";
 import {useTheme, useMediaQuery} from "@mui/material";
 import { ConfigForm } from "../components/ConfigForm";
+import ConfigTable from "../components/ConfigTable";
 const Title = styled.h1`
   font-size: 1.5em;
   text-align: center;
@@ -47,13 +48,6 @@ const Config: React.FC = () => {
           size={isSmallScreen ? "small" : "medium"} // Adjust button size
           event={handleToggleTypeBtn}
         />       
-         <ButtonComp
-          title="Add Type"
-          variant="contained"
-          color="primary"
-          size={isSmallScreen ? "small" : "medium"} // Adjust button size
-          event={handleToggleCatBtn}
-        />   
          </ButtonBox>
          <div>
           {
@@ -65,18 +59,9 @@ const Config: React.FC = () => {
               formData = {[]}
               handleSubmit = {()=>{}} />
           }
-          {
-            toggleCatBtn &&
-            <ConfigForm 
-            CateForm ={true}
-            isSmallScreen = {isSmallScreen}
-            theme = {theme}
-            handleAddType = {()=>{}}
-            formData = {[]}
-            handleSubmit = {()=>{}} 
-             />
-          }
+          
          </div>
+         <ConfigTable types={[]}/>
       </Wrapper>
     </>
   );
