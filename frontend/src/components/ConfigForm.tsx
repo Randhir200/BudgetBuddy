@@ -8,13 +8,14 @@ export const ConfigForm = ({
     isSmallScreen,
     theme,
     handleAddType,
+    AddConfig,
+    setFormData,
     formData,
-    handleSubmit
+
 }: any) => {
     const [categories, setCategories] = useState<string[]>([]); // State for categories
     const [categoryInput, setCategoryInput] = useState<string>(''); // State for input field
     
-    console.log(categories);
     // Handle keypress (Enter) to add categories
     const handleCategoryKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' && categoryInput.trim() !== '') {
@@ -28,6 +29,17 @@ export const ConfigForm = ({
     const handleRemoveCategory = (categoryToRemove: string) => {
         setCategories((prev) => prev.filter((category) => category !== categoryToRemove));
     };
+
+
+    function handleType(e:any) {
+        const { name, value } = e.target;
+        setFormData((formData:any) => ({ ...formData, [name]: value }));
+        console.log(formData);
+    }
+    
+    function handleSubmit(){
+        AddConfig();
+    }
 
     return (
         <>
@@ -51,7 +63,7 @@ export const ConfigForm = ({
                             type="text"
                             name="type"
                             value={formData.type || ""}
-                            onChange={handleAddType}
+                            onChange={handleType}
                             defaultValue=""
                             fullWidth
                             InputLabelProps={{
@@ -67,7 +79,7 @@ export const ConfigForm = ({
                             label="Category"
                             type="text"
                             name="category"
-                            value={categoryInput}
+                            value={formData.category}
                             onChange={(e) => setCategoryInput(e.target.value)}
                             onKeyPress={handleCategoryKeyPress} // Handle adding category on Enter
                             placeholder="Press Enter to add category"

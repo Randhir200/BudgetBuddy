@@ -21,7 +21,7 @@ const columns = [
 ];
 
 // Define the ConfigTable component
-const ConfigTable = ({ types }:any) => {
+const ConfigTable = ({ configs }:any) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -73,7 +73,7 @@ const ConfigTable = ({ types }:any) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {types
+            {configs
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((expense:any, index:number) => (
                 <TableRow hover role="checkbox" tabIndex={-1} key={expense._id}>
@@ -99,7 +99,7 @@ const ConfigTable = ({ types }:any) => {
       <TablePagination
         rowsPerPageOptions={[10, 25, 100]}
         component="div"
-        count={types.length}
+        count={configs.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}
