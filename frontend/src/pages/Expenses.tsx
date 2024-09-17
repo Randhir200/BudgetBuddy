@@ -14,7 +14,6 @@ import ButtonComp from "../components/ButtonComp";
 import axios, { Axios, AxiosError } from "axios";
 import { AlertComp } from "../components/AlertComp";
 import { AddExpenseForm } from "../components/AddExpenseForm";
-import { CategoryRounded } from "@mui/icons-material";
 
 
 interface State extends SnackbarOrigin {
