@@ -7,6 +7,7 @@ import ConfigTable from "../components/ConfigTable";
 import axios, {AxiosError} from "axios";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
 import { AlertProps } from "@mui/material/Alert";
+import { AlertComp } from "../components/AlertComp";
 
 
 const Title = styled.h1`
@@ -53,6 +54,7 @@ const Config: React.FC = () => {
     vertical: 'top',
     horizontal: 'center',
   });
+  const {vertical, horizontal} = toastState;
   const [alertState, setAlertState] = React.useState<alertState>({ severity: "success", message: '' });
 
 
@@ -69,12 +71,11 @@ const Config: React.FC = () => {
     try {
       const response = await axios(`http://localhost:3000/config/getAllConfigs?userId=66d89bda30bb3c771a5007c6`);
       const data = response.data;
-      console.log(data);
-      setConfigData(data.data);
+                setConfigData(data.data);
       setAlertState({ ...alertState, severity: data.status, message: data.message })
     } catch (error: any) {
       if (AxiosError) {
-        setAlertState({ ...alertState, severity: 'error', message: error.message })
+        setAlertState({ ...alertState, severity: 'error', message: error })
       }
       setAlertState({ ...alertState, severity: 'error', message: error.response.data.message })
 
@@ -129,6 +130,9 @@ const Config: React.FC = () => {
   return (
     <>
       <Wrapper>
+      <AlertComp vertical={vertical} horizontal={horizontal} open={open}
+        alertState={alertState}
+      />
         <Title>
           Config
         </Title>
