@@ -46,7 +46,7 @@ if (validationResult.error) {
   console.log('Validation passed!'); // Proceed with processing the request
 }
 
-const addType = async (req, res)=>{
+const addConfig = async (req, res)=>{
     const {userId, type, categories} = req.body;
     try{
 
@@ -55,4 +55,4 @@ const addType = async (req, res)=>{
     }
 }
 
-module.exports = addType;
+module.exports = addConfig;

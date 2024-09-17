@@ -2,7 +2,7 @@ const Config = require('../../models/configModel');
 const mongoose = require('mongoose');
 const { responseJson } = require('../../utils/responseJson');
 
-const getAllTypes = async (req, res)=>{
+const getAllConfigs = async (req, res)=>{
       const {userId} = req.query;
       try{
         // Check if userId is valid and non-empty before querying
@@ -29,4 +29,4 @@ const getAllTypes = async (req, res)=>{
     }
 }
 
-module.exports = getAllTypes
+module.exports = getAllConfigs

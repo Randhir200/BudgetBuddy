@@ -1,11 +1,9 @@
 const express = require('express');
-const getAllTypes = require('../controllers/Config/getAllTypes');
+const getAllConfigs = require('../controllers/Config/getAllConfigs');
 
 const configRoute = express.Router();
 
-configRoute.get('/getAllTypes', getAllTypes);
-configRoute.get('/getAllCategories', ()=>{});
-configRoute.get('/addType', ()=>{});
-configRoute.get('/addCategory', ()=>{});
+configRoute.get('/getAllConfigs', getAllConfigs);
+configRoute.post('/addConfig', ()=>{});
 
 module.exports = configRoute;
