@@ -122,7 +122,7 @@ const Expenses: React.FC = () => {
         gutterBottom
         sx={{ textAlign:"center", fontSize: isSmallScreen ? "1.2rem" : "2rem" }} // Smaller font for small screens
       >
-        Add Expense
+        Expense
       </Typography>
       <Box sx={{ display: "flex", justifyContent: "end", mb: 2 }}>
         <ButtonComp

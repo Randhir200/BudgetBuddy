@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import ButtonComp from "../components/ButtonComp";
-import { useTheme, useMediaQuery } from "@mui/material";
+import { useTheme, useMediaQuery, Typography } from "@mui/material";
 import { ConfigForm } from "../components/ConfigForm";
 import ConfigTable from "../components/ConfigTable";
-import axios, {AxiosError} from "axios";
+import axios, { AxiosError } from "axios";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
 import { AlertProps } from "@mui/material/Alert";
 import { AlertComp } from "../components/AlertComp";
 
 
-const Title = styled.h1`
-  font-size: 1.5em;
-  text-align: center;
-  color: black;
-`;
+// const Title = styled.h1`
+//   font-size: 1.5em;
+//   text-align: center;
+//   color: black;
+// `;
 
 const ButtonBox = styled.div`
   display:flex;
@@ -54,7 +54,7 @@ const Config: React.FC = () => {
     vertical: 'top',
     horizontal: 'center',
   });
-  const {vertical, horizontal, open} = toastState;
+  const { vertical, horizontal, open } = toastState;
   const [alertState, setAlertState] = React.useState<alertState>({ severity: "success", message: '' });
 
 
@@ -71,7 +71,7 @@ const Config: React.FC = () => {
     try {
       const response = await axios(`http://localhost:3000/config/getAllConfigs?userId=66d89bda30bb3c771a5007c6`);
       const data = response.data;
-                setConfigData(data.data);
+      setConfigData(data.data);
       setAlertState({ ...alertState, severity: data.status, message: data.message })
     } catch (error: any) {
       if (AxiosError) {
@@ -130,12 +130,16 @@ const Config: React.FC = () => {
   return (
     <>
       <Wrapper>
-      <AlertComp vertical={vertical} horizontal={horizontal} open={open}
-        alertState={alertState}
-      />
-        <Title>
+        <AlertComp vertical={vertical} horizontal={horizontal} open={open}
+          alertState={alertState}
+        />
+        <Typography
+          variant={isSmallScreen ? "h5" : "h4"} // Adjust the heading size based on screen size
+          gutterBottom
+          sx={{ textAlign: "center", fontSize: isSmallScreen ? "1.2rem" : "2rem" }} // Smaller font for small screens
+        >
           Config
-        </Title>
+        </Typography>
         <ButtonBox>
           <ButtonComp
             title="Add Type"
@@ -153,7 +157,7 @@ const Config: React.FC = () => {
               theme={theme}
               handleAddType={() => { }}
               formData={formData}
-              addType = {addType}
+              addType={addType}
               handleSubmit={() => { }} />
           }
 
