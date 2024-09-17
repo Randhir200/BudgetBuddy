@@ -1,5 +1,6 @@
 const Config = require('../../models/configModel');
 const Joi = require('joi');
+const { responseJson } = require('../../utils/responseJson');
 
 // Joi validation schema for expense type
 const expenseTypeSchema = Joi.object({
@@ -8,9 +9,8 @@ const expenseTypeSchema = Joi.object({
     'any.required': 'User ID is required',
     'string.base': 'User ID must be a string'
   }),
-  type: Joi.string().valid('Need', 'Want', 'Saving').required().messages({
+  type: Joi.string().required().messages({
     'any.required': 'Type is required',
-    'any.only': 'Type must be one of ["Need", "Want", "Saving"]',
     'string.base': 'Type must be a string'
   }),
   categories: Joi.array().items(
@@ -38,20 +38,22 @@ const expenseTypeSchema = Joi.object({
   })
 });
 
-// Example usage:
-const validationResult = expenseTypeSchema.validate(requestBody);
-if (validationResult.error) {
-  console.log(validationResult.error.details); // Handle validation error
-} else {
-  console.log('Validation passed!'); // Proceed with processing the request
-}
 
-const addConfig = async (req, res)=>{
-    const {userId, type, categories} = req.body;
-    try{
 
-    }catch(err){
+const addConfig = async (req, res) => {
+  try {
+    // Example usage:
+    const { error, value } = expenseTypeSchema.validate(req.body);
+    if (error) {
+      console.info(`INFO: ${error}`)
+      return responseJson(res, 'badRequest', error.details.map(detail => detail.message));
+    }
+    const resData = await Config.create(value);
+    return responseJson(res, 'success', 'Config has been uploaded', resData);
 
+    } catch (err) {
+      console.error(`ERROR: something went wrong! ${err}`)
+      return responseJson(res, 'internalError', `something went wrong! ${err}`)
     }
 }
 
