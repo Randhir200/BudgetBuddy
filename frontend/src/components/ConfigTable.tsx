@@ -14,14 +14,15 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 
 // Define the columns
 const columns = [
-  { id: 'slNo', label: 'Sl.No.',},
+  { id: 'slNo', label: 'Sl.No.',  },
   { id: 'type', label: 'Type',},
-  { id: 'category', label: 'Category',},
+  { id: 'categories', label: 'Categories',},
+  { id: 'createdAt', label: 'Created At',},
   { id: 'action', label: 'Action',},
 ];
 
 // Define the ConfigTable component
-const ConfigTable = ({ configs }:any) => {
+const ConfigTable = ({ configs }: any) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -35,9 +36,19 @@ const ConfigTable = ({ configs }:any) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event:any) => {
+  const handleChangeRowsPerPage = (event: any) => {
     setRowsPerPage(+event.target.value);
     setPage(0);
+  };
+
+  // Format createdAt date
+  const formatDate = (dateString: string) => {
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    };
+    return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
   return (
@@ -55,34 +66,28 @@ const ConfigTable = ({ configs }:any) => {
         >
           <TableHead>
             <TableRow>
-              {columns.map((column) => {
-                // Hide "category" and "item" columns on small screens
-                // if (isMobile && ['category', 'item'].includes(column.id)) {
-                //   return null;
-                // }
-                return (
-                  <TableCell
-                    key={column.id}
-                    align={"left"} // 
-                    style={{ }} // we can put minwidth
-                  >
-                    {column.label}
-                  </TableCell>
-                );
-              })}
+              {columns.map((column) => (
+                <TableCell
+                  key={column.id}
+                  align="left"
+                  style={{ }}
+                >
+                  {column.label}
+                </TableCell>
+              ))}
             </TableRow>
           </TableHead>
           <TableBody>
             {configs
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((expense:any, index:number) => (
-                <TableRow hover role="checkbox" tabIndex={-1} key={expense._id}>
+              .map((config: any, index: number) => (
+                <TableRow hover role="checkbox" tabIndex={-1} key={config._id}>
                   <TableCell>{page * rowsPerPage + index + 1}</TableCell> {/* Sl.No. */}
-                  <TableCell>{new Date(expense.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell>{expense.type}</TableCell>
-                  <TableCell>{expense.category}</TableCell>
-                  <TableCell>{expense.item}</TableCell>
-                  <TableCell align="left">{expense.price}</TableCell>
+                  <TableCell>{config.type}</TableCell>
+                  <TableCell>
+                    {config.categories.map((category: any) => category.name).join(', ')}
+                  </TableCell>
+                  <TableCell>{formatDate(config.createdAt)}</TableCell>
                   <TableCell align="left">
                     <IconButton aria-label="edit" size={isMobile ? 'small' : 'medium'}>
                       <EditIcon fontSize={isMobile ? 'small' : 'medium'} />

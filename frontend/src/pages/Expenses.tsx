@@ -11,7 +11,7 @@ import { SnackbarOrigin } from "@mui/material/Snackbar";
 import { AlertProps } from "@mui/material/Alert";
 import ExpenseTable from "../components/ExpenseTable";
 import ButtonComp from "../components/ButtonComp";
-import axios, { Axios, AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
 import { AlertComp } from "../components/AlertComp";
 import { AddExpenseForm } from "../components/AddExpenseForm";
 

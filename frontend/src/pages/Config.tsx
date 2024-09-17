@@ -54,7 +54,7 @@ const Config: React.FC = () => {
     vertical: 'top',
     horizontal: 'center',
   });
-  const {vertical, horizontal} = toastState;
+  const {vertical, horizontal, open} = toastState;
   const [alertState, setAlertState] = React.useState<alertState>({ severity: "success", message: '' });
 
 
