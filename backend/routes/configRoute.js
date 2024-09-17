@@ -1,4 +1,4 @@
-const express = require('expense');
+const express = require('express');
 const getAllTypes = require('../controllers/Config/getAllTypes');
 
 const configRoute = express.Router();
