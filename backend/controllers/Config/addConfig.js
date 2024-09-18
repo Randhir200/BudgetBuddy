@@ -30,12 +30,8 @@ const expenseTypeSchema = Joi.object({
     'any.required': 'Categories are required',
     'array.base': 'Categories must be an array'
   }),
-  createdAt: Joi.date().optional().iso().messages({
-    'date.base': 'CreatedAt must be a valid ISO date'
-  }),
-  updatedAt: Joi.date().optional().iso().messages({
-    'date.base': 'UpdatedAt must be a valid ISO date'
-  })
+  createdAt: Joi.date().optional(),
+  updatedAt: Joi.date().optional()
 });
 
 
