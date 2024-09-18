@@ -82,7 +82,7 @@ const ConfigTable = ({ configs }: any) => {
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((config: any, index: number) => (
                 <TableRow hover role="checkbox" tabIndex={-1} key={config._id}>
-                  <TableCell>{page * rowsPerPage + index + 1}</TableCell> {/* Sl.No. */}
+                  <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                   <TableCell>{config.type}</TableCell>
                   <TableCell>
                     {config.categories.map((category: any) => category.name).join(', ')}

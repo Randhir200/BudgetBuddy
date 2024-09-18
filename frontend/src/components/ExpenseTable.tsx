@@ -80,7 +80,7 @@ const CustomTable = ({ expenses }:any) => {
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((expense:any, index:number) => (
                 <TableRow hover role="checkbox" tabIndex={-1} key={expense._id}>
-                  <TableCell>{page * rowsPerPage + index + 1}</TableCell> {/* Sl.No. */}
+                  <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                   <TableCell>{new Date(expense.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>{expense.type}</TableCell>
                   <TableCell>{expense.category}</TableCell>

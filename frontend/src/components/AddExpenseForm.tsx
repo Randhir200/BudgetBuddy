@@ -1,5 +1,6 @@
 import {
-    Box, FormControl,
+    Box,
+    FormControl,
     InputLabel,
     MenuItem,
     Select,
@@ -7,30 +8,21 @@ import {
 } from '@mui/material'
 import ButtonComp from './ButtonComp'
 
+export const AddExpenseForm = ({ isSmallScreen, theme, setFormData, addExpense, formData, configData }: any) => {
 
-// interface FormData {
-//     type: string;
-//     category: string;
-//     item: string;
-//     price: number;
-//     createdAt: string
-//   }
-
-export const AddExpenseForm = ({ isSmallScreen,
-    theme,
-    setFormData,
-    addExpense,
-    formData}: any) => {
-
-    function handleAddExpense(e:any) {
+    function handleAddExpense(e: any) {
         const { name, value } = e.target;
-        setFormData((formData:any) => ({ ...formData, [name]: value }));
+        setFormData((formData: any) => ({ ...formData, [name]: value }));
         console.log(formData);
     }
-    
-    function handleSubmit(){
+
+    function handleSubmit() {
         addExpense();
     }
+
+    // Filter categories based on the selected type
+    const selectedConfig = configData.find((item: any) => item.type === formData.type);
+    const availableCategories = selectedConfig ? selectedConfig.categories : [];
 
     return (
         <Box
@@ -38,8 +30,8 @@ export const AddExpenseForm = ({ isSmallScreen,
             sx={{
                 display: "flex",
                 flexDirection: isSmallScreen ? "column" : "row",
-                gap: isSmallScreen ? 2 : 3, // Smaller gaps for small screens
-                p: isSmallScreen ? 2 : 3, // Smaller padding for small screens
+                gap: isSmallScreen ? 2 : 3,
+                p: isSmallScreen ? 2 : 3,
                 backgroundColor: theme.palette.background.paper,
                 borderRadius: 1,
                 boxShadow: theme.shadows[3],
@@ -49,7 +41,7 @@ export const AddExpenseForm = ({ isSmallScreen,
             <FormControl fullWidth>
                 <InputLabel
                     id="type-label"
-                    sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }} // Smaller label font size
+                    sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }} 
                 >
                     Type
                 </InputLabel>
@@ -57,15 +49,16 @@ export const AddExpenseForm = ({ isSmallScreen,
                     labelId="type-label"
                     id="type"
                     label="Type"
-                    defaultValue=""
                     name="type"
                     value={formData.type}
                     onChange={handleAddExpense}
-                    sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }} // Smaller input font size
+                    sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }} 
                 >
-                    <MenuItem value="Needs">Needs</MenuItem>
-                    <MenuItem value="Wants">Wants</MenuItem>
-                    <MenuItem value="Savings">Savings</MenuItem>
+                    {configData.map((item: any) => (
+                        <MenuItem key={item._id} value={item.type}>
+                            {item.type}
+                        </MenuItem>
+                    ))}
                 </Select>
             </FormControl>
 
@@ -81,15 +74,16 @@ export const AddExpenseForm = ({ isSmallScreen,
                     labelId="category-label"
                     id="category"
                     label="Category"
-                    defaultValue=""
                     name="category"
                     value={formData.category}
                     onChange={handleAddExpense}
                     sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }}
                 >
-                    <MenuItem value="Food">Food</MenuItem>
-                    <MenuItem value="Bills">Bills</MenuItem>
-                    <MenuItem value="Grocery">Grocery</MenuItem>
+                    {availableCategories.map((category: any) => (
+                        <MenuItem key={category._id} value={category.name}>
+                            {category.name}
+                        </MenuItem>
+                    ))}
                 </Select>
             </FormControl>
 
@@ -101,12 +95,11 @@ export const AddExpenseForm = ({ isSmallScreen,
                 name="item"
                 value={formData.item}
                 onChange={handleAddExpense}
-                defaultValue=""
                 fullWidth
                 InputLabelProps={{
-                    sx: { fontSize: isSmallScreen ? "0.8rem" : "1rem" }, // Smaller label font size
+                    sx: { fontSize: isSmallScreen ? "0.8rem" : "1rem" },
                 }}
-                inputProps={{ style: { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }} // Smaller input font
+                inputProps={{ style: { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }}
             />
 
             {/* Price Field */}
@@ -118,9 +111,9 @@ export const AddExpenseForm = ({ isSmallScreen,
                 value={formData.price}
                 onChange={handleAddExpense}
                 fullWidth
-                inputProps={{ min: 0, style: { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }} // Smaller input font size
+                inputProps={{ min: 0, style: { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }}
                 InputLabelProps={{
-                    sx: { fontSize: isSmallScreen ? "0.8rem" : "1rem" }, // Smaller label font size
+                    sx: { fontSize: isSmallScreen ? "0.8rem" : "1rem" },
                 }}
             />
 
@@ -129,16 +122,15 @@ export const AddExpenseForm = ({ isSmallScreen,
                 id="date"
                 label="Date"
                 type="date"
-                defaultValue=""
                 name="createdAt"
                 value={formData.createdAt}
-                onChange={handleAddExpense}                
+                onChange={handleAddExpense}
                 InputLabelProps={{
                     shrink: true,
-                    sx: { fontSize: isSmallScreen ? "0.8rem" : "1rem" }, // Smaller label font size
+                    sx: { fontSize: isSmallScreen ? "0.8rem" : "1rem" },
                 }}
                 fullWidth
-                inputProps={{ style: { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }} // Smaller input font size
+                inputProps={{ style: { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }}
             />
 
             {/* Submit Button */}
@@ -146,7 +138,7 @@ export const AddExpenseForm = ({ isSmallScreen,
                 title="Submit"
                 variant="contained"
                 color="primary"
-                size={isSmallScreen ? "small" : "medium"} // Adjust button size for small screens
+                size={isSmallScreen ? "small" : "medium"}
                 event={handleSubmit}
             />
         </Box>

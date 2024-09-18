@@ -7,11 +7,9 @@ import { useState } from 'react';
 export const ConfigForm = ({
     isSmallScreen,
     theme,
-    handleAddType,
-    AddConfig,
+    addConfig,
     setFormData,
     formData,
-
 }: any) => {
     const [categories, setCategories] = useState<string[]>([]); // State for categories
     const [categoryInput, setCategoryInput] = useState<string>(''); // State for input field
@@ -35,17 +33,11 @@ export const ConfigForm = ({
     function handleType(e:any) {
         const { name, value } = e.target;
         setFormData((formData:any) => ({ ...formData, [name]: value }));
-        console.log(formData);
     }
     
-    function handleAddConfig(e:any) {
-        const { name, value } = e.target;
-        setFormData((formData:any) => ({ ...formData, [name]: value }));
-        console.log(formData);
-    }
 
     function handleSubmit(){
-        AddConfig();
+        addConfig();
     }
 
     return (
@@ -71,7 +63,6 @@ export const ConfigForm = ({
                             name="type"
                             value={formData.type}
                             onChange={handleType}
-                            defaultValue=""
                             fullWidth
                             InputLabelProps={{
                                 sx: { fontSize: isSmallScreen ? "0.8rem" : "1rem" },

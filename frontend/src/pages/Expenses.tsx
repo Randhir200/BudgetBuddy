@@ -35,6 +35,7 @@ const formInitialState = {
 const Expenses: React.FC = () => {
   const [toggleAdd, setToggleAdd] = useState(false);
   const [expensesData, setExpensesData] = useState([]);
+  const [configData, setConfigData] = useState([]);
   const [toastState, setToastState] = React.useState<State>({
     open: false,
     vertical: 'top',
@@ -86,6 +87,29 @@ const Expenses: React.FC = () => {
 
   }
 
+  //fetching config
+  async function fetchConfigs() {
+    try {
+      const response = await axios(`http://localhost:3000/config/getAllConfigs?userId=66d89bda30bb3c771a5007c6`);
+      const data = response.data;
+      setConfigData(data.data);
+      setAlertState({ ...alertState, severity: data.status, message: data.message })
+    } catch (error: any) {
+      if (AxiosError) {
+        setAlertState({ ...alertState, severity: 'error', message: error })
+      }
+      setAlertState({ ...alertState, severity: 'error', message: error.response.data.message })
+
+    } finally {
+      setToastState({ ...toastState, open: true });
+      setTimeout(() => {
+        setToastState({ ...toastState, open: false });
+      }, 2000); // Close after 2 seconds
+    }
+  }
+
+
+
   //fetching expense
   const fetchExpenses = async () => {
     try {
@@ -111,6 +135,7 @@ const Expenses: React.FC = () => {
 
   useEffect(() => {
     fetchExpenses();
+    fetchConfigs();
   }, []);
   return (
     <Container>
@@ -140,7 +165,9 @@ const Expenses: React.FC = () => {
         handleToggleAdd={handleToggleAdd}
         setFormData={setFormData}
         addExpense={addExpense}
-        formData={formData} />
+        formData={formData}
+        configData={configData}
+         />
       )}
 
       <Box sx={{ mt: 2 }}>

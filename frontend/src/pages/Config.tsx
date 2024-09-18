@@ -36,9 +36,8 @@ interface alertState extends AlertProps {
 }
 
 const formInitialState = {
-  type: 'needs',
-  categories: [{name:'food'}, {name:'bills'}],
-  createdAt: '',
+  type: '',
+  categories: [],
   userId: '66d89bda30bb3c771a5007c6'
 }
 
@@ -87,7 +86,7 @@ const Config: React.FC = () => {
     }
   }
 
-  async function addType() {
+  async function addConfig() {
     try {
       const response = await axios.post('http://localhost:3000/config/addConfig',
         formData,
@@ -157,9 +156,9 @@ const Config: React.FC = () => {
               theme={theme}
               handleAddType={() => { }}
               formData={formData}
-              addType={addType}
               setFormData={setFormData}
-              handleSubmit={() => { }} />
+              handleSubmit={() => { }}
+              addConfig={addConfig}/>
 
           }
 
