@@ -37,7 +37,7 @@ interface alertState extends AlertProps {
 
 const formInitialState = {
   type: 'needs',
-  category: 'food',
+  categories: [{name:'food'}, {name:'bills'}],
   createdAt: '',
   userId: '66d89bda30bb3c771a5007c6'
 }
@@ -158,7 +158,9 @@ const Config: React.FC = () => {
               handleAddType={() => { }}
               formData={formData}
               addType={addType}
+              setFormData={setFormData}
               handleSubmit={() => { }} />
+
           }
 
         </div>

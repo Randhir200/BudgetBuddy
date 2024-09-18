@@ -20,6 +20,7 @@ export const ConfigForm = ({
     const handleCategoryKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' && categoryInput.trim() !== '') {
             setCategories((prev) => [...prev, categoryInput.trim()]);
+            setFormData((prev:any)=>({...prev, categories:[...prev.categories, {name: categoryInput}]}))
             setCategoryInput(''); // Clear the input after adding
             e.preventDefault(); // Prevent form submission
         }
@@ -37,6 +38,12 @@ export const ConfigForm = ({
         console.log(formData);
     }
     
+    function handleAddConfig(e:any) {
+        const { name, value } = e.target;
+        setFormData((formData:any) => ({ ...formData, [name]: value }));
+        console.log(formData);
+    }
+
     function handleSubmit(){
         AddConfig();
     }
@@ -62,7 +69,7 @@ export const ConfigForm = ({
                             label="Type"
                             type="text"
                             name="type"
-                            value={formData.type || ""}
+                            value={formData.type}
                             onChange={handleType}
                             defaultValue=""
                             fullWidth
@@ -77,9 +84,9 @@ export const ConfigForm = ({
                         <TextField
                             id="category"
                             label="Category"
-                            type="text"
+                            type="categiry"
                             name="category"
-                            value={formData.category}
+                            value={categoryInput}
                             onChange={(e) => setCategoryInput(e.target.value)}
                             onKeyPress={handleCategoryKeyPress} // Handle adding category on Enter
                             placeholder="Press Enter to add category"
