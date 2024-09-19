@@ -8,19 +8,23 @@ import {
 } from '@mui/material'
 import ButtonComp from './ButtonComp'
 
-export const AddExpenseForm = ({ isSmallScreen, theme, setFormData, addExpense, formData, configData }: any) => {
+export const ExpenseForm = ({ isSmallScreen, theme, setFormData, addExpense, formData, configData }: any) => {
 
     function handleAddExpense(e: any) {
         const { name, value } = e.target;
+        //User change types then need to remove category that stored prev
+        if(name==='type'){
+            setFormData((formData: any) => ({ ...formData, ['category']: '' }));
+        }
         setFormData((formData: any) => ({ ...formData, [name]: value }));
-        console.log(formData);
     }
-
+    
     function handleSubmit() {
         addExpense();
     }
-
+    
     // Filter categories based on the selected type
+    console.log(formData.category);
     const selectedConfig = configData.find((item: any) => item.type === formData.type);
     const availableCategories = selectedConfig ? selectedConfig.categories : [];
 

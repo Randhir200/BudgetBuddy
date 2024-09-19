@@ -13,7 +13,7 @@ import ExpenseTable from "../components/ExpenseTable";
 import ButtonComp from "../components/ButtonComp";
 import axios, { AxiosError } from "axios";
 import { AlertComp } from "../components/AlertComp";
-import { AddExpenseForm } from "../components/AddExpenseForm";
+import { ExpenseForm } from "../components/ExpenseForm";
 
 
 interface State extends SnackbarOrigin {
@@ -159,7 +159,7 @@ const Expenses: React.FC = () => {
         />
       </Box>
       {toggleAdd && (
-        <AddExpenseForm 
+        <ExpenseForm 
         isSmallScreen={isSmallScreen} 
         theme={theme} 
         handleToggleAdd={handleToggleAdd}
