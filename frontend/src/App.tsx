@@ -36,7 +36,6 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />

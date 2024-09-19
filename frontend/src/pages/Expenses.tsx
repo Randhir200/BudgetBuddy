@@ -6,8 +6,6 @@ import {
   useTheme,
   useMediaQuery
 } from "@mui/material";
-import ExpensesForm from "../components/ExpensesForm";
-
 import { SnackbarOrigin } from "@mui/material/Snackbar";
 import { AlertProps } from "@mui/material/Alert";
 import ExpenseTable from "../components/ExpenseTable";

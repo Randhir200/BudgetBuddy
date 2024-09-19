@@ -1,122 +1,118 @@
-import axios from "axios";
+import axios,{ AxiosError } from "axios";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import { Snackbar } from "@mui/material";
 import MuiAlert, { AlertColor, AlertProps } from "@mui/material/Alert";
+import { AlertComp } from "../components/AlertComp";
+import { SnackbarOrigin } from "@mui/material/Snackbar";
+
 
 interface Response {
-  status: number;
-  data: {
-    message: string;
-    token: string;
-    status: string;
-  };
+    status: number;
+    data: {
+        message: string;
+        token: string;
+        status: string;
+    };
 }
 
+interface State extends SnackbarOrigin {
+    open: boolean;
+}
+
+interface alertState extends AlertProps {
+    message: string
+}
+
+
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
-  props,
-  ref
+    props,
+    ref
 ) {
-  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [open, setOpen] = React.useState(false);
-  const [error, setError] = useState("");
-  const [errorType, setErrorType] = useState<AlertColor>("success");
-  const navigate = useNavigate();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [toastState, setToastState] = React.useState<State>({
+        open: false,
+        vertical: 'top',
+        horizontal: 'center',
+    });
+    const [alertState, setAlertState] = React.useState<alertState>({ severity: "success", message: '' });
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    try {
-      if (email && password) {
-        const response: Response = await axios.post(
-          "http://localhost:9000/user/login",
-          {
-            email,
-            password,
-          }
-        );
-        console.log(response);
-        if (response.status === 201) {
-          const token = response.data.token;
-          if (token) {
+    const { open, vertical, horizontal } = toastState;
+    const navigate = useNavigate();
+
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        try {
+            const response: Response = await axios.post(
+                "http://localhost:9001/login",
+                {
+                    email,
+                    password,
+                },
+                {
+                    headers: { 'Content-Type': 'application/json', 
+                    'Authorization': 'Bearer token' }
+                  }
+            );
+            const token = response.data.token;
+            console.log(response);
+
             localStorage.setItem("auth-token", token);
-            navigate("/");
-          } else {
-            console.error("No authentication token received");
-          }
+
+            setAlertState({
+                ...alertState,
+                severity: "success",
+                message: response.data.message
+            });
+
+        } catch (error: any) {
+            if(AxiosError){
+                setAlertState({ ...alertState, severity: 'error', message: error.message })
+            }
+            console.log(error);
+            setAlertState({ ...alertState, severity: 'error', message: error.message })
+
+        } finally {
+            setToastState({ ...toastState, open: true });
+            setTimeout(() => {
+                setToastState({ ...toastState, open: false });
+            }, 2000); // Close after 2 seconds
         }
-      } else {
-        setError("Please fill all input fields");
-        setErrorType("warning");
-        setOpen(true);
-      }
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        if (err.status === 401) {
-          setError(err.response?.data.message);
-          setErrorType("warning");
-          setOpen(true);
-        }
-        console.error(err);
-      }
-    }
-  };
 
-  const handleClose = (
-    event?: React.SyntheticEvent | Event,
-    reason?: string
-  ) => {
-    if (reason === "clickaway") {
-      return;
-    }
+    };
 
-    setOpen(false);
-  };
+    return (
+        <Container>
+            <AlertComp vertical={vertical} horizontal={horizontal} open={open}
+                alertState={alertState}
+            />      <Form onSubmit={handleSubmit}>
+                <Title>Login</Title>
+                <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Email"
+                />
+                <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Password"
+                />
 
-  return (
-    <Container>
-      <Snackbar
-        open={open}
-        autoHideDuration={6000}
-        onClose={handleClose}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          onClose={handleClose}
-          severity={errorType}
-          sx={{ width: "100%" }}
-        >
-          {error}
-        </Alert>
-      </Snackbar>
-      <Form onSubmit={handleSubmit}>
-        <Title>Login</Title>
-        <Input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-        />
-        <Input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-        />
-
-        <Button type="submit">Login</Button>
-        <p className="switch">
-          New to BudgetBuddy? <Link to={"/signup"}>Signup</Link>{" "}
-        </p>
-      </Form>
-    </Container>
-  );
+                <Button type="submit">Login</Button>
+                <p className="switch">
+                    New to BudgetBuddy? <Link to={"/signup"}>Signup</Link>{" "}
+                </p>
+            </Form>
+        </Container>
+    );
 };
 
 export default Login;
@@ -126,8 +122,8 @@ const Container = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%;
   background-color: #fff;
+  height: "auto";
 `;
 
 const Form = styled.form`
