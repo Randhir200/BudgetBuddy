@@ -61,10 +61,8 @@ const Login = () => {
                   }
             );
             const token = response.data.token;
-            console.log(response);
-
             localStorage.setItem("auth-token", token);
-
+            navigate('/');
             setAlertState({
                 ...alertState,
                 severity: "success",
@@ -75,7 +73,6 @@ const Login = () => {
             if(AxiosError){
                 setAlertState({ ...alertState, severity: 'error', message: error.message })
             }
-            console.log(error);
             setAlertState({ ...alertState, severity: 'error', message: error.message })
 
         } finally {

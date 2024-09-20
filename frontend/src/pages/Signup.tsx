@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { Snackbar } from "@mui/material";
+import axios, {AxiosError} from "axios";
 import MuiAlert, { AlertColor, AlertProps } from "@mui/material/Alert";
+import { SnackbarOrigin } from "@mui/material/Snackbar";
+import { AlertComp } from "../components/AlertComp";
 
 interface Response {
   message: string;
@@ -12,6 +13,14 @@ interface Response {
   data: {
     token: string;
   };
+}
+
+interface State extends SnackbarOrigin {
+  open: boolean;
+}
+
+interface alertState extends AlertProps {
+  message: string
 }
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
@@ -27,102 +36,108 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [cpassword, setCpassword] = useState("");
-  const [open, setOpen] = React.useState(false);
   const [error, setError] = useState("");
   const [errorType, setErrorType] = useState<AlertColor>("success");
+  const [toastState, setToastState] = React.useState<State>({
+    open: false,
+    vertical: 'top',
+    horizontal: 'center',
+  });
+  const [alertState, setAlertState] = React.useState<alertState>({ severity: "error", message: '' });
+
+  const { open, vertical, horizontal } = toastState;
+
   const navigate = useNavigate();
 
   const validateEmail = (email: string) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    console.log(re.test(email));
-    return re.test(email);
+    return !re.test(email);
   };
 
   const validatePassword = (password: string) => {
     // Example: Password should be at least 8 characters, contain at least one letter and one number
     const re = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    console.log(re.test(password));
-    return re.test(password);
+    return !re.test(password);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
     try {
       if (firstName && lastName && email && password && cpassword) {
-        if (!validateEmail(email)) {
-          // setError("Invalid email address");
-          // setErrorType("error");
-          // setOpen(true);
+        if (validateEmail(email)) {
           return;
         }
-        if (!validatePassword(password)) {
-          setError(
-            "Password must be at least 8 characters long and contain at least one letter and one number"
-          );
-          setErrorType("error");
-          setOpen(true);
+        if (validatePassword(password)) {
+          setAlertState({
+            ...alertState,
+            severity: "error",
+            message: "Password must be at least 8 characters long and contain at least one letter and one number"
+          });
           setPassword("");
           setCpassword("");
-          return;
         }
         if (password === cpassword) {
           const res: Response = await axios.post(
-            "http://localhost:9000/user/signup",
-            { firstName, lastName, email, password, cpassword }
+            "http://localhost:9001/signup",
+            { firstName, lastName, email, password, cpassword },
+            {
+              headers: { 'Content-Type': 'application/json', 
+              'Authorization': 'Bearer token' }
+            }
           );
           if (res.status === 201) {
             const token = res.data.token;
-            console.log(token);
             if (token) {
               localStorage.setItem("auth-token", token);
               navigate("/login");
+              setAlertState({
+                ...alertState,
+                severity: "success",
+                message: "Signup successfully"
+              });
             } else {
-              console.error("No authentication token received");
+              setAlertState({
+                ...alertState,
+                severity: "info",
+                message: "No authentication token received"
+              });
             }
           }
         } else {
-          setError("Passwords are not matching!");
-          setErrorType("error");
-          setOpen(true);
+          setAlertState({
+            ...alertState,
+            severity: "error",
+            message: "Passwords are not matching!"
+          });
         }
       } else {
-        setError("Please fill all the inputs");
-        setErrorType("warning");
-        setOpen(true);
+        setAlertState({
+          ...alertState,
+          severity: "warning",
+          message: "Please fill all the inputs"
+        });
       }
-    } catch (err) {
-      console.error(err);
-      console.log(error);
+    } catch (error: any) {
+      if (AxiosError) {
+        setAlertState({ ...alertState, severity: 'error', message: error.message })
+      }
+      setAlertState({ ...alertState, severity: 'error', message: error.response.data.error})
+
+    } finally {
+      setToastState({ ...toastState, open: true });
+      setTimeout(() => {
+        setToastState({ ...toastState, open: false });
+      }, 2000); // Close after 2 seconds
     }
   };
 
-  const handleClose = (
-    event?: React.SyntheticEvent | Event,
-    reason?: string
-  ) => {
-    if (reason === "clickaway") {
-      return;
-    }
 
-    setOpen(false);
-  };
   return (
     <Container>
-      <Snackbar
-        open={open}
-        autoHideDuration={6000}
-        onClose={handleClose}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          onClose={handleClose}
-          severity={errorType}
-          sx={{ width: "100%" }}
-        >
-          {error}
-        </Alert>
-      </Snackbar>
-      <Form onSubmit={handleSubmit}>
+      <AlertComp vertical={vertical} horizontal={horizontal} open={open}
+        alertState={alertState}
+      />      <Form onSubmit={handleSubmit}>
         <Title>Sign Up</Title>
         <Input
           type="text"
