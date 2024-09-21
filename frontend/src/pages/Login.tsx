@@ -1,9 +1,9 @@
-import axios,{ AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import MuiAlert, { AlertColor, AlertProps } from "@mui/material/Alert";
+import {AlertProps } from "@mui/material/Alert";
 import { AlertComp } from "../components/AlertComp";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
 
@@ -25,14 +25,6 @@ interface alertState extends AlertProps {
     message: string
 }
 
-
-const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
-    props,
-    ref
-) {
-    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-});
-
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -50,18 +42,22 @@ const Login = () => {
         event.preventDefault();
         try {
             const response: Response = await axios.post(
-                "http://localhost:9001/login",
+                "http://localhost:9000/login",
                 {
                     email,
                     password,
                 },
                 {
-                    headers: { 'Content-Type': 'application/json', 
-                    'Authorization': 'Bearer token' }
-                  }
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer token'
+                    }
+                }
             );
             const token = response.data.token;
             localStorage.setItem("auth-token", token);
+            
+            //after logged in redirect to home page 
             navigate('/');
             setAlertState({
                 ...alertState,
@@ -70,7 +66,7 @@ const Login = () => {
             });
 
         } catch (error: any) {
-            if(AxiosError){
+            if (AxiosError) {
                 setAlertState({ ...alertState, severity: 'error', message: error.message })
             }
             setAlertState({ ...alertState, severity: 'error', message: error.message })
