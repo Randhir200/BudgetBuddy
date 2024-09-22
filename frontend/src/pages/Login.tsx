@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import {AlertProps } from "@mui/material/Alert";
+import MuiAlert, { AlertColor, AlertProps } from "@mui/material/Alert";
 import { AlertComp } from "../components/AlertComp";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
 
@@ -25,6 +25,7 @@ interface alertState extends AlertProps {
     message: string
 }
 
+
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -40,7 +41,11 @@ const Login = () => {
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+
+
         try {
+
+
             const response: Response = await axios.post(
                 "http://localhost:9000/login",
                 {
@@ -56,8 +61,6 @@ const Login = () => {
             );
             const token = response.data.token;
             localStorage.setItem("auth-token", token);
-            
-            //after logged in redirect to home page 
             navigate('/');
             setAlertState({
                 ...alertState,
@@ -77,6 +80,12 @@ const Login = () => {
                 setToastState({ ...toastState, open: false });
             }, 2000); // Close after 2 seconds
         }
+
+
+        await axios.get(
+            "http://localhost:9000/protected",
+              {withCredentials: true } // Add this line
+          );
 
     };
 
