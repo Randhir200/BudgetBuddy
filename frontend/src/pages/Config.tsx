@@ -9,12 +9,9 @@ import { SnackbarOrigin } from "@mui/material/Snackbar";
 import { AlertProps } from "@mui/material/Alert";
 import { AlertComp } from "../components/AlertComp";
 
+//getting userId from local storage
+const userId = localStorage.getItem('userId');
 
-// const Title = styled.h1`
-//   font-size: 1.5em;
-//   text-align: center;
-//   color: black;
-// `;
 
 const ButtonBox = styled.div`
   display:flex;
@@ -38,7 +35,7 @@ interface alertState extends AlertProps {
 const formInitialState = {
   type: '',
   categories: [],
-  userId: '66d89bda30bb3c771a5007c6'
+  userId: userId
 }
 
 const Config: React.FC = () => {
@@ -62,13 +59,9 @@ const Config: React.FC = () => {
     setToggleTypeBtn(!toggleTypeBtn)
   }
 
-  function handleToggleCatBtn() {
-    setToggleCatBtn(!toggleCatBtn)
-  }
-
   async function fetchConfigs() {
     try {
-      const response = await axios(`http://localhost:3000/config/getAllConfigs?userId=66d89bda30bb3c771a5007c6`);
+      const response = await axios(`http://localhost:3000/config/getAllConfigs?userId=${userId}`);
       const data = response.data;
       setConfigData(data.data);
       setAlertState({ ...alertState, severity: data.status, message: data.message })

@@ -6,13 +6,16 @@ import {
   useTheme,
   useMediaQuery
 } from "@mui/material";
-import { SnackbarOrigin } from "@mui/material/Snackbar";
-import { AlertProps } from "@mui/material/Alert";
 import ExpenseTable from "../components/ExpenseTable";
 import ButtonComp from "../components/ButtonComp";
 import axios, { AxiosError } from "axios";
 import { AlertComp } from "../components/AlertComp";
 import { ExpenseForm } from "../components/ExpenseForm";
+import { AlertProps } from "@mui/material/Alert";
+import { SnackbarOrigin } from "@mui/material/Snackbar";
+
+//getting userId from local storage
+const userId = localStorage.getItem('userId');
 
 
 interface State extends SnackbarOrigin {
@@ -29,7 +32,7 @@ const formInitialState = {
   item: '',
   price: 0,
   createdAt: '',
-  userId: '66d89bda30bb3c771a5007c6'
+  userId
 }
 const Expenses: React.FC = () => {
   const [toggleAdd, setToggleAdd] = useState(false);
@@ -40,9 +43,10 @@ const Expenses: React.FC = () => {
     vertical: 'top',
     horizontal: 'center',
   });
-  const [formData, setFormData] = useState(formInitialState);
   const [alertState, setAlertState] = React.useState<alertState>({ severity: "success", message: '' });
+  const [formData, setFormData] = useState(formInitialState);
   const { vertical, horizontal, open } = toastState;
+
 
   //mui theme
   const theme = useTheme();
@@ -89,7 +93,7 @@ const Expenses: React.FC = () => {
   //fetching config
   async function fetchConfigs() {
     try {
-      const response = await axios(`http://localhost:3000/config/getAllConfigs?userId=66d89bda30bb3c771a5007c6`);
+      const response = await axios(`http://localhost:3000/config/getAllConfigs?userId=${userId}`);
       const data = response.data;
       setConfigData(data.data);
       setAlertState({ ...alertState, severity: data.status, message: data.message })
@@ -112,7 +116,7 @@ const Expenses: React.FC = () => {
   //fetching expense
   const fetchExpenses = async () => {
     try {
-      const response = await axios(`http://localhost:3000/expense/getAllExpense?userId=66d89bda30bb3c771a5007c6`);
+      const response = await axios(`http://localhost:3000/expense/getAllExpense?userId=${userId}`);
       const data = response.data;
       setExpensesData(data.data);
       setAlertState({ ...alertState, severity: data.status, message: data.message })

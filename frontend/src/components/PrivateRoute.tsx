@@ -9,12 +9,12 @@ interface PrivateRouteProps {
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // Use boolean for clarity
   const [isLoading, setIsLoading] = useState(true); // Track loading state
+  const token = localStorage.getItem("auth-token"); // Retrieve the token from localStorage
 
   useEffect(() => {
     const isProtected = async () => {
       try {
-        const token = localStorage.getItem("auth-token"); // Retrieve the token from localStorage
-        if (!token) {
+        if (!token) { 
           setIsAuthenticated(false); // No token, so not authenticated
           return;
         }
@@ -42,7 +42,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
     };
 
     isProtected();
-  }, []); // Empty dependency array to run only once on component mount
+  }, [token]); // Empty dependency array to run only once on component mount
 
   // Handle loading state
   if (isLoading) {
