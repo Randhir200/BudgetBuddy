@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import axios from "axios";
+import { authApiUrl } from "../config/config";
 
 interface PrivateRouteProps {
   children: React.ReactNode;
@@ -10,7 +11,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // Use boolean for clarity
   const [isLoading, setIsLoading] = useState(true); // Track loading state
   const token = localStorage.getItem("auth-token"); // Retrieve the token from localStorage
-
+  console.log(token);
   useEffect(() => {
     const isProtected = async () => {
       try {
@@ -18,8 +19,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
           setIsAuthenticated(false); // No token, so not authenticated
           return;
         }
-
-        const response = await axios.get("http://localhost:9000/protected", {
+        const response = await axios.get(`${authApiUrl}/protected`, {
           headers: {
             Authorization: `Bearer ${token}`
           },

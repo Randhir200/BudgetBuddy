@@ -6,6 +6,8 @@ import axios, {AxiosError} from "axios";
 import MuiAlert, { AlertColor, AlertProps } from "@mui/material/Alert";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
 import { AlertComp } from "../components/AlertComp";
+import {authApiUrl} from "../config/config";
+
 
 interface Response {
   message: string;
@@ -79,7 +81,7 @@ const Signup = () => {
         }
         if (password === cpassword) {
           const res: Response = await axios.post(
-            "http://localhost:9001/signup",
+            `${authApiUrl}/signup`,
             { firstName, lastName, email, password, cpassword },
             {
               headers: { 'Content-Type': 'application/json', 

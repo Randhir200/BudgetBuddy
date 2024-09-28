@@ -8,6 +8,8 @@ import axios, { AxiosError } from "axios";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
 import { AlertProps } from "@mui/material/Alert";
 import { AlertComp } from "../components/AlertComp";
+import {budgetBuddyApiUrl} from "../config/config";
+
 
 //getting userId from local storage
 const userId = localStorage.getItem('userId');
@@ -41,7 +43,6 @@ const formInitialState = {
 const Config: React.FC = () => {
   const [toggleTypeBtn, setToggleTypeBtn] = useState(false);
   const [formData, setFormData] = useState(formInitialState);
-  const [toggleCatBtn, setToggleCatBtn] = useState(false);
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [configData, setConfigData] = useState([]);
@@ -61,7 +62,7 @@ const Config: React.FC = () => {
 
   async function fetchConfigs() {
     try {
-      const response = await axios(`http://localhost:3000/config/getAllConfigs?userId=${userId}`);
+      const response = await axios(`${budgetBuddyApiUrl}/config/getAllConfigs?userId=${userId}`);
       const data = response.data;
       setConfigData(data.data);
       setAlertState({ ...alertState, severity: data.status, message: data.message })
@@ -81,7 +82,7 @@ const Config: React.FC = () => {
 
   async function addConfig() {
     try {
-      const response = await axios.post('http://localhost:3000/config/addConfig',
+      const response = await axios.post(`${budgetBuddyApiUrl}/config/addConfig`,
         formData,
         {
           headers: {

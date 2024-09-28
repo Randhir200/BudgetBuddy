@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import {budgetBuddyApiUrl} from "../config/config";
 import {
   Box,
   Container,
@@ -59,7 +60,7 @@ const Expenses: React.FC = () => {
   //adding expense
   const addExpense = async () => {
     try {
-      const response = await axios.post('http://localhost:3000/expense/addExpense',
+      const response = await axios.post(`${budgetBuddyApiUrl}/expense/addExpense`,
         formData,
         {
           headers: { 'Content-Type': 'application/json', 
@@ -93,7 +94,7 @@ const Expenses: React.FC = () => {
   //fetching config
   async function fetchConfigs() {
     try {
-      const response = await axios(`http://localhost:3000/config/getAllConfigs?userId=${userId}`);
+      const response = await axios(`${budgetBuddyApiUrl}/config/getAllConfigs?userId=${userId}`);
       const data = response.data;
       setConfigData(data.data);
       setAlertState({ ...alertState, severity: data.status, message: data.message })
@@ -116,7 +117,7 @@ const Expenses: React.FC = () => {
   //fetching expense
   const fetchExpenses = async () => {
     try {
-      const response = await axios(`http://localhost:3000/expense/getAllExpense?userId=${userId}`);
+      const response = await axios(`${budgetBuddyApiUrl}/expense/getAllExpense?userId=${userId}`);
       const data = response.data;
       setExpensesData(data.data);
       setAlertState({ ...alertState, severity: data.status, message: data.message })

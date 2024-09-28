@@ -3,9 +3,11 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import MuiAlert, { AlertColor, AlertProps } from "@mui/material/Alert";
+import { AlertProps } from "@mui/material/Alert";
 import { AlertComp } from "../components/AlertComp";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
+import {authApiUrl} from "../config/config";
+
 
 
 interface Response {
@@ -44,10 +46,8 @@ const Login = () => {
 
 
         try {
-
-
             const response: Response = await axios.post(
-                "http://localhost:9000/login",
+                `${authApiUrl}/login`,
                 {
                     email,
                     password,
@@ -80,13 +80,6 @@ const Login = () => {
                 setToastState({ ...toastState, open: false });
             }, 2000); // Close after 2 seconds
         }
-
-
-        await axios.get(
-            "http://localhost:9000/protected",
-              {withCredentials: true } // Add this line
-          );
-
     };
 
     return (
