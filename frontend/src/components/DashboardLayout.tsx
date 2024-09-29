@@ -23,7 +23,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     setMenuOpen(!menuOpen);
   };
 
-  const topBarHieght = "50px";
 
   return (
     <Grid container direction="column">

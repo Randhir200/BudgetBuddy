@@ -30,7 +30,7 @@ const ConfigTable = ({ configs }: any) => {
   const isMobile = useMediaQuery('(max-width:600px)');
 
   const handleChangePage = (
-    event: React.MouseEvent<HTMLButtonElement> | null,
+    _event: React.MouseEvent<HTMLButtonElement> | null,
     newPage: number,
   ) => {
     setPage(newPage);

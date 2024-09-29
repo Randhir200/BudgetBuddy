@@ -6,7 +6,6 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import HomeIcon from "@mui/icons-material/Home";
 import { useTheme, useMediaQuery } from "@mui/material";
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import SettingsIcon from '@mui/icons-material/Settings';

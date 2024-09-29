@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import axios, {AxiosError} from "axios";
-import MuiAlert, { AlertColor, AlertProps } from "@mui/material/Alert";
+import { AlertProps } from "@mui/material/Alert";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
 import { AlertComp } from "../components/AlertComp";
 import {authApiUrl} from "../config/config";
@@ -25,21 +25,12 @@ interface alertState extends AlertProps {
   message: string
 }
 
-const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
-  props,
-  ref
-) {
-  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-});
-
 const Signup = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [cpassword, setCpassword] = useState("");
-  const [error, setError] = useState("");
-  const [errorType, setErrorType] = useState<AlertColor>("success");
   const [toastState, setToastState] = React.useState<State>({
     open: false,
     vertical: 'top',

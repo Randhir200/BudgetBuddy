@@ -12,7 +12,6 @@ import PrivateRoute from "./components/PrivateRoute";
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
-  const [isLogedin, setIsLogedin] = useState(true);
 
   const theme = useMemo(
     () =>
