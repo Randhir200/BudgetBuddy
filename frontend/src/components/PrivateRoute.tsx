@@ -11,7 +11,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // Use boolean for clarity
   const [isLoading, setIsLoading] = useState(true); // Track loading state
   const token = localStorage.getItem("auth-token"); // Retrieve the token from localStorage
-  console.log(token);
+
   useEffect(() => {
     const isProtected = async () => {
       try {

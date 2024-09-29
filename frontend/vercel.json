@@ -1,19 +1,16 @@
 {
   "version": 2,
-  "name": "BudgetBuddy-frontend",
   "builds": [
     {
       "src": "package.json",
       "use": "@vercel/static-build",
-      "config": {
-        "distDir": "build"
-      }
+      "config": { "distDir": "dist" }
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/"
+      "dest": "/index.html"
     }
   ]
 }
