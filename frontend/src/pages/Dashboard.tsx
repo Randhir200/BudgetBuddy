@@ -5,6 +5,7 @@ const Dashboard = () => {
     <div>
       <h1>Dashboard</h1>;
       <p content="justify">
+        Lorem
         Lorem ipsum, dolor sit amet consectetur adipisicing elit. Omnis ad
         suscipit quis veniam laboriosam quia nostrum rem ab veritatis laudantium
         dicta doloremque itaque quo dolore error, voluptatum nobis neque
