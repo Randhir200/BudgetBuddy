@@ -1,0 +1,8 @@
+/* 
+  Content-Type: text/html; charset=UTF-8
+
+/assets/* 
+  Content-Type: text/javascript
+
+/assets/*.css
+  Content-Type: text/css
