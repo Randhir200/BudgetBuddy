@@ -14,23 +14,32 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 
 // Define the columns
 const columns = [
-  { id: 'slNo', label: 'Sl.No.',},
-  { id: 'date', label: 'Date',},
-  { id: 'type', label: 'Type',},
-  { id: 'category', label: 'Category',},
-  { id: 'item', label: 'Item',},
-  { id: 'price', label: 'Price',},
-  { id: 'action', label: 'Action',},
+  { id: 'slNo', label: 'Sl.No.', },
+  { id: 'date', label: 'Date', },
+  { id: 'type', label: 'Type', },
+  { id: 'category', label: 'Category', },
+  { id: 'item', label: 'Item', },
+  { id: 'price', label: 'Price', },
+  { id: 'action', label: 'Action', },
 ];
 
 // Define the CustomTable component
-const CustomTable = ({ expenses }:any) => {
+const CustomTable = ({ expenses }: any) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // Check if screen width is less than 600px
   const isMobile = useMediaQuery('(max-width:600px)');
 
+  // Format createdAt date
+  const formatDate = (dateString: string) => {
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
   const handleChangePage = (
     _event: React.MouseEvent<HTMLButtonElement> | null,
     newPage: number,
@@ -38,7 +47,7 @@ const CustomTable = ({ expenses }:any) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event:any) => {
+  const handleChangeRowsPerPage = (event: any) => {
     setRowsPerPage(+event.target.value);
     setPage(0);
   };
@@ -67,7 +76,7 @@ const CustomTable = ({ expenses }:any) => {
                   <TableCell
                     key={column.id}
                     align={"left"} // 
-                    style={{ }} // we can put minwidth
+                    style={{}} // we can put minwidth
                   >
                     {column.label}
                   </TableCell>
@@ -78,10 +87,10 @@ const CustomTable = ({ expenses }:any) => {
           <TableBody>
             {expenses
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((expense:any, index:number) => (
+              .map((expense: any, index: number) => (
                 <TableRow hover role="checkbox" tabIndex={-1} key={expense._id}>
                   <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                  <TableCell>{new Date(expense.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>{formatDate(expense.createdAt)}</TableCell>
                   <TableCell>{expense.type}</TableCell>
                   <TableCell>{expense.category}</TableCell>
                   <TableCell>{expense.item}</TableCell>
