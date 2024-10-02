@@ -95,10 +95,10 @@ const SideMenu: React.FC<SideMenuProps> = ({ open, handleDrawerClose }) => {
       <Divider />
       <List>
         {[{ text: 'Insight', path: '/', icon: <InsightsIcon /> },
-        { text: 'Expense', path: 'expense', icon: <ReceiptLongIcon /> },
-        { text: 'Config', path: 'config', icon: <SettingsIcon /> }].map((item) => (
+        { text: 'Expense', path: '/expenses', icon: <ReceiptLongIcon /> },
+        { text: 'Config', path: '/config', icon: <SettingsIcon /> }].map((item) => (
           <ListItem key={item.text} disablePadding
-            component={Link} to={item.path}
+            button component={Link} to={item.path}
             sx={{ display: 'block' }}>
             <ListItemButton
               sx={[

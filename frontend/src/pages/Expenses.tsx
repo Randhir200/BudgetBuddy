@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import {budgetBuddyApiUrl} from "../config/config";
+import { budgetBuddyApiUrl } from "../config/config";
 import {
   Box,
-  Container,
   Typography,
   useTheme,
   useMediaQuery
@@ -14,6 +13,12 @@ import { AlertComp } from "../components/AlertComp";
 import { ExpenseForm } from "../components/ExpenseForm";
 import { AlertProps } from "@mui/material/Alert";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
+import styled from "styled-components";
+
+// Create a Wrapper component that'll render a <section> tag with some styles
+const Wrapper = styled.section`
+  padding: 0.1em;
+`;
 
 //getting userId from local storage
 const userId = localStorage.getItem('userId');
@@ -28,8 +33,8 @@ interface alertState extends AlertProps {
 }
 
 const formInitialState = {
-  type:'',
-  category:'',
+  type: '',
+  category: '',
   item: '',
   price: 0,
   createdAt: '',
@@ -63,23 +68,27 @@ const Expenses: React.FC = () => {
       const response = await axios.post(`${budgetBuddyApiUrl}/expense/addExpense`,
         formData,
         {
-          headers: { 'Content-Type': 'application/json', 
-          'Authorization': 'Bearer token' }
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer token'
+          }
         }
       );
 
       const data = response.data;
-      setAlertState({ ...alertState, 
-                      severity: data.status,
-                      message: data.message });
-      
+      setAlertState({
+        ...alertState,
+        severity: data.status,
+        message: data.message
+      });
+
       setFormData(formInitialState);
 
-    // fetch again updated expenses with 1000ms delay
-    setTimeout(()=>{fetchExpenses()},1000);
-    
+      // fetch again updated expenses with 1000ms delay
+      setTimeout(() => { fetchExpenses() }, 1000);
 
-    } catch (error:any) {
+
+    } catch (error: any) {
       setAlertState({ ...alertState, severity: 'error', message: error.response.data.message })
 
     } finally {
@@ -122,7 +131,7 @@ const Expenses: React.FC = () => {
       setExpensesData(data.data);
       setAlertState({ ...alertState, severity: data.status, message: data.message })
     } catch (error: any) {
-      if(AxiosError){
+      if (AxiosError) {
         setAlertState({ ...alertState, severity: 'error', message: error.message })
       }
       setAlertState({ ...alertState, severity: 'error', message: error.response.data.message })
@@ -142,18 +151,18 @@ const Expenses: React.FC = () => {
     fetchConfigs();
   }, []);
   return (
-    <Container>
+    <Wrapper>
       <AlertComp vertical={vertical} horizontal={horizontal} open={open}
         alertState={alertState}
       />
-      <Typography
-        variant={isSmallScreen ? "h5" : "h4"} // Adjust the heading size based on screen size
-        gutterBottom
-        sx={{ textAlign:"center", fontSize: isSmallScreen ? "1.2rem" : "2rem" }} // Smaller font for small screens
-      >
-        Expense
-      </Typography>
-      <Box sx={{ display: "flex", justifyContent: "end", mb: 2 }}>
+  
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+        <Typography
+          gutterBottom
+          sx={{ textAlign: "left", fontSize: isSmallScreen ? "1.2rem" : "1.5rem" }} // Smaller font for small screens
+        >
+          Expense
+        </Typography>
         <ButtonComp
           title="Add Expense"
           variant="contained"
@@ -163,21 +172,21 @@ const Expenses: React.FC = () => {
         />
       </Box>
       {toggleAdd && (
-        <ExpenseForm 
-        isSmallScreen={isSmallScreen} 
-        theme={theme} 
-        handleToggleAdd={handleToggleAdd}
-        setFormData={setFormData}
-        addExpense={addExpense}
-        formData={formData}
-        configData={configData}
-         />
+        <ExpenseForm
+          isSmallScreen={isSmallScreen}
+          theme={theme}
+          handleToggleAdd={handleToggleAdd}
+          setFormData={setFormData}
+          addExpense={addExpense}
+          formData={formData}
+          configData={configData}
+        />
       )}
 
       <Box sx={{ mt: 2 }}>
         <ExpenseTable expenses={expensesData} />
       </Box>
-    </Container>
+    </Wrapper>
   );
 };
 
