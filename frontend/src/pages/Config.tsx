@@ -8,7 +8,7 @@ import axios, { AxiosError } from "axios";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
 import { AlertProps } from "@mui/material/Alert";
 import { AlertComp } from "../components/AlertComp";
-import {budgetBuddyApiUrl} from "../config/config";
+import { budgetBuddyApiUrl } from "../config/config";
 
 
 //getting userId from local storage
@@ -16,7 +16,7 @@ const userId = localStorage.getItem('userId');
 
 // Create a Wrapper component that'll render a <section> tag with some styles
 const Wrapper = styled.section`
-  padding: 0.1em;
+  padding: 10px;
 `;
 
 
@@ -120,21 +120,14 @@ const Config: React.FC = () => {
         <AlertComp vertical={vertical} horizontal={horizontal} open={open}
           alertState={alertState}
         />
-        <Typography
-          variant={isSmallScreen ? "h5" : "h4"} // Adjust the heading size based on screen size
-          gutterBottom
-          sx={{ textAlign: "center", fontSize: isSmallScreen ? "1.2rem" : "2rem" }} // Smaller font for small screens
-        >
-          Config
-        </Typography>
-          
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-        <Typography
-          gutterBottom
-          sx={{ textAlign: "left", fontSize: isSmallScreen ? "1.2rem" : "1.5rem" }} // Smaller font for small screens
-        >
-          Config
-        </Typography>
+
+        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+          <Typography
+            gutterBottom
+            sx={{ textAlign: "left", fontSize: isSmallScreen ? "1.2rem" : "1.5rem" }} // Smaller font for small screens
+          >
+            Config
+          </Typography>
           <ButtonComp
             title="Add Type"
             variant="contained"
@@ -153,7 +146,7 @@ const Config: React.FC = () => {
               formData={formData}
               setFormData={setFormData}
               handleSubmit={() => { }}
-              addConfig={addConfig}/>
+              addConfig={addConfig} />
 
           }
 

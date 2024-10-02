@@ -48,7 +48,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, onTo
       <SideMenu open={open} handleDrawerClose={handleDrawerClose} />
 
       {/* Main Content */}
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+      <Box component="main" sx={{ flexGrow: 1}}>
         <DrawerHeader />
         <MainContent >{children}</MainContent>
       </Box>
