@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import ButtonComp from "../components/ButtonComp";
-import { useTheme, useMediaQuery, Typography } from "@mui/material";
+import { useTheme, useMediaQuery, Typography, Box } from "@mui/material";
 import { ConfigForm } from "../components/ConfigForm";
 import ConfigTable from "../components/ConfigTable";
 import axios, { AxiosError } from "axios";
@@ -14,12 +14,6 @@ import {budgetBuddyApiUrl} from "../config/config";
 //getting userId from local storage
 const userId = localStorage.getItem('userId');
 
-
-const ButtonBox = styled.div`
-  display:flex;
-  justify-content: end;
-  gap: 5px;
-`;
 // Create a Wrapper component that'll render a <section> tag with some styles
 const Wrapper = styled.section`
   padding: 0.1em;
@@ -133,7 +127,14 @@ const Config: React.FC = () => {
         >
           Config
         </Typography>
-        <ButtonBox>
+          
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+        <Typography
+          gutterBottom
+          sx={{ textAlign: "left", fontSize: isSmallScreen ? "1.2rem" : "1.5rem" }} // Smaller font for small screens
+        >
+          Config
+        </Typography>
           <ButtonComp
             title="Add Type"
             variant="contained"
@@ -141,7 +142,7 @@ const Config: React.FC = () => {
             size={isSmallScreen ? "small" : "medium"} // Adjust button size
             event={handleToggleTypeBtn}
           />
-        </ButtonBox>
+        </Box>
         <div>
           {
             toggleTypeBtn &&
