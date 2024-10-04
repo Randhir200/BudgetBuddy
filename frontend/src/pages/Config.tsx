@@ -40,6 +40,7 @@ const Config: React.FC = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [configData, setConfigData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [toastState, setToastState] = React.useState<State>({
     open: false,
     vertical: 'top',
@@ -59,6 +60,7 @@ const Config: React.FC = () => {
       const response = await axios(`${budgetBuddyApiUrl}/config/getAllConfigs?userId=${userId}`);
       const data = response.data;
       setConfigData(data.data);
+      setLoading(false);
       setAlertState({ ...alertState, severity: data.status, message: data.message })
     } catch (error: any) {
       if (AxiosError) {
@@ -151,7 +153,7 @@ const Config: React.FC = () => {
           }
 
         </div>
-        <ConfigTable configs={configData} />
+        <ConfigTable configs={configData} loading={loading}/>
       </Wrapper>
     </>
   );

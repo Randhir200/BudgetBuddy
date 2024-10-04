@@ -51,6 +51,7 @@ const Expenses: React.FC = () => {
   });
   const [alertState, setAlertState] = React.useState<alertState>({ severity: "success", message: '' });
   const [formData, setFormData] = useState(formInitialState);
+  const [loading, setLoading] = useState(true);
   const { vertical, horizontal, open } = toastState;
 
 
@@ -129,6 +130,7 @@ const Expenses: React.FC = () => {
       const response = await axios(`${budgetBuddyApiUrl}/expense/getAllExpense?userId=${userId}`);
       const data = response.data;
       setExpensesData(data.data);
+      setLoading(false);
       setAlertState({ ...alertState, severity: data.status, message: data.message })
     } catch (error: any) {
       if (AxiosError) {
@@ -184,7 +186,7 @@ const Expenses: React.FC = () => {
       )}
 
       <Box sx={{ mt: 2 }}>
-        <ExpenseTable expenses={expensesData} />
+        <ExpenseTable expenses={expensesData} loading={loading}/>
       </Box>
     </Wrapper>
   );

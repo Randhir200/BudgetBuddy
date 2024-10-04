@@ -11,6 +11,7 @@ import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { LinearProgress } from '@mui/material';
 
 // Define the columns
 const columns = [
@@ -22,7 +23,7 @@ const columns = [
 ];
 
 // Define the ConfigTable component
-const ConfigTable = ({ configs }: any) => {
+const ConfigTable = ({ configs, loading }: any) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -54,6 +55,7 @@ const ConfigTable = ({ configs }: any) => {
   return (
     <Paper style={{ width: '100%', overflowX: 'auto' }}>
       <TableContainer style={{ maxHeight: 440 }}>
+      {loading && <LinearProgress/>}
         <Table
           stickyHeader
           aria-label="customized table"
