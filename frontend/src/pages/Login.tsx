@@ -7,6 +7,7 @@ import { AlertProps } from "@mui/material/Alert";
 import { AlertComp } from "../components/AlertComp";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
 import {authApiUrl} from "../config/config";
+import {LinearProgress} from "@mui/material";
 
 
 
@@ -31,6 +32,7 @@ interface alertState extends AlertProps {
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
     const [toastState, setToastState] = React.useState<State>({
         open: false,
         vertical: 'top',
@@ -43,9 +45,8 @@ const Login = () => {
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-
-
         try {
+            setLoading(true);
             const response: Response = await axios.post(
                 `${authApiUrl}/login`,
                 {
@@ -79,6 +80,7 @@ const Login = () => {
             setTimeout(() => {
                 setToastState({ ...toastState, open: false });
             }, 2000); // Close after 2 seconds
+            setLoading(false);
         }
     };
 
@@ -86,7 +88,8 @@ const Login = () => {
         <Container>
             <AlertComp vertical={vertical} horizontal={horizontal} open={open}
                 alertState={alertState}
-            />      <Form onSubmit={handleSubmit}>
+            />  
+            <Form onSubmit={handleSubmit}  style={{marginTop:"2rem"}}>
                 <Title>Login</Title>
                 <Input
                     type="email"
@@ -99,9 +102,11 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Password"
-                />
+                    />
 
-                <Button type="submit">Login</Button>
+                {loading && <LinearProgress style={{borderRadius:"0.5rem 0.5rem 0 0"}}/>}
+                <Button type="submit">
+                    Login</Button>
                 <p className="switch">
                     New to BudgetBuddy? <Link to={"/signup"}>Signup</Link>{" "}
                 </p>

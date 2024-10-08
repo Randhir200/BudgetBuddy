@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import PageNotFound from "./pages/PageNotFound";
 import PrivateRoute from "./components/PrivateRoute";
+import Income from "./pages/Income";
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -75,6 +76,19 @@ const App: React.FC = () => {
                   darkMode={darkMode}
                 >
                   <Config />
+                </DashboardLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/income"
+            element={
+              <PrivateRoute>
+                <DashboardLayout
+                  onToggleDarkMode={toggleDarkMode}
+                  darkMode={darkMode}
+                >
+                  <Income />
                 </DashboardLayout>
               </PrivateRoute>
             }

@@ -36,7 +36,6 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
           setIsAuthenticated(false); // Not authenticated
         }
       } catch (err) {
-        console.error("Error fetching protected route:", err);
         setIsAuthenticated(false); // Error occurred, assume not authenticated
       } finally {
         setIsLoading(false); // Stop loading once check is complete

@@ -24,7 +24,6 @@ export const ExpenseForm = ({ isSmallScreen, theme, setFormData, addExpense, for
     }
     
     // Filter categories based on the selected type
-    console.log(formData.category);
     const selectedConfig = configData.find((item: any) => item.type === formData.type);
     const availableCategories = selectedConfig ? selectedConfig.categories : [];
 

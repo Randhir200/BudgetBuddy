@@ -7,6 +7,7 @@ import { AlertProps } from "@mui/material/Alert";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
 import { AlertComp } from "../components/AlertComp";
 import {authApiUrl} from "../config/config";
+import {LinearProgress} from "@mui/material";
 
 
 interface Response {
@@ -31,6 +32,7 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [cpassword, setCpassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const [toastState, setToastState] = React.useState<State>({
     open: false,
     vertical: 'top',
@@ -71,6 +73,7 @@ const Signup = () => {
           setCpassword("");
         }
         if (password === cpassword) {
+          setLoading(true);
           const res: Response = await axios.post(
             `${authApiUrl}/signup`,
             { firstName, lastName, email, password, cpassword },
@@ -112,12 +115,14 @@ const Signup = () => {
         });
       }
     } catch (error: any) {
+      setLoading(false);
       if (AxiosError) {
         setAlertState({ ...alertState, severity: 'error', message: error.message })
       }
       setAlertState({ ...alertState, severity: 'error', message: error.response.data.error})
 
     } finally {
+      setLoading(false);
       setToastState({ ...toastState, open: true });
       setTimeout(() => {
         setToastState({ ...toastState, open: false });
@@ -162,6 +167,8 @@ const Signup = () => {
           onChange={(e) => setCpassword(e.target.value)}
           placeholder="Confirm Password"
         />
+
+        {loading && <LinearProgress style={{borderRadius:"0.5rem 0.5rem 0 0"}}/>}
         <Button type="submit">Sign Up</Button>
         <p className="switch">
           Already a user? <Link to={"/login"}>login</Link>{" "}
