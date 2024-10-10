@@ -12,10 +12,14 @@ const initialState = {
 }
 const Income: React.FC<IncomeProps> = () => {
     const [formData, setFormData] = useState(initialState)
-    const handleChange = (e:any) => {
-        const { name, value } = e?.target;
-        console.log(`name : ${name}, value: ${value}`);
-    }
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { id, value } = e.target;
+        setFormData((prevState) => ({
+            ...prevState, // Spread the previous state
+            [id]: value, // Update the field that matches the input's id
+        }));
+    };
+    
     return (
         <>
             <div className={styles.container}>
