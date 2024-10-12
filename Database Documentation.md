@@ -157,3 +157,5 @@ $lt: ISODate("2024-10-01T00:00:00Z") // End of the month
 
 - If the number of categories becomes too large, we could consider normalizing the categories into their own collection, but this isn't necessary for the current design.
 - Additional metadata (e.g., custom category colors, icons) could be added to the categories array in the future if needed.
+
+## Income document is pending...
