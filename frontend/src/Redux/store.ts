@@ -1,3 +1,9 @@
-import { createStore } from "react-redux";
+import { createStore, combineReducers, applyMiddleware } from "redux";
+import { thunk } from 'redux-thunk'
+import incomeReducer from "./reducers/incomeReducer";
 
-const store = createStore()
+const rootReducer = combineReducers({ incomeReducer });
+
+const store = createStore(rootReducer, applyMiddleware(thunk));
+
+export default store;

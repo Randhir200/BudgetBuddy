@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styles from "./Income.module.css";
+import {UseDispatch, useDispatch, useSelector} from "react-redux";
 
 interface IncomeProps {
 
@@ -11,7 +12,11 @@ const initialState = {
     date: ''
 }
 const Income: React.FC<IncomeProps> = () => {
-    const [formData, setFormData] = useState(initialState)
+    const [formData, setFormData] = useState(initialState);
+    const dispatch = useDispatch();
+    const incomeState = useSelector((state:any)=>state.incomeReducer);
+    console.log(incomeState);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
         setFormData((prevState) => ({
@@ -19,6 +24,11 @@ const Income: React.FC<IncomeProps> = () => {
             [id]: value, // Update the field that matches the input's id
         }));
     };
+
+   const handleSubmit = (e: React.ChangeEvent<HTMLInputElement>) => {
+        e.preventDefault();
+        dispatch({type:"add", payload: formData});
+   }
     
     return (
         <>
@@ -53,7 +63,7 @@ const Income: React.FC<IncomeProps> = () => {
                     </div>
 
 
-                    <button className={styles.btn} style={{ flexGrow: 0.5 }}>Submit</button>
+                    <button onClick={handleSubmit} className={styles.btn} style={{ flexGrow: 0.5 }}>Submit</button>
                 </form>
             </div>
         </>
