@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./Income.module.css";
 import {UseDispatch, useDispatch, useSelector} from "react-redux";
+import { incomeActions } from "../Redux/actionCreator/incomeActions";
 
 interface IncomeProps {
 
@@ -27,8 +28,13 @@ const Income: React.FC<IncomeProps> = () => {
 
    const handleSubmit = (e: React.ChangeEvent<HTMLInputElement>) => {
         e.preventDefault();
-        dispatch({type:"add", payload: formData});
+        const userId = localStorage.getItem('userId') || '';
+        dispatch(incomeActions(userId));
    }
+
+   useEffect(()=>{
+
+   },[]);
     
     return (
         <>

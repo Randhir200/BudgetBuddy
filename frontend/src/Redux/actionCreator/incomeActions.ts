@@ -7,7 +7,7 @@ import {
 import { budgetBuddyApiUrl } from '../../config/config';
 
 export const incomeActions = (userId: string) => {
-    return async (dispatch: any) => {
+    return async (dispatch: (arg0: { type: string; payload?: any; }) => void) => {
         dispatch({ type: FETCH_INCOME_REQUEST })
         try {
             const response = await axios.get(`${budgetBuddyApiUrl}/expense/getAllExpense?userId=${userId}`);
