@@ -6,13 +6,13 @@ interface IncomeProps {
 }
 
 const initialState = {
-    type: '',
+    type: 'salary',
     income: 0,
     date: ''
 }
 const Income: React.FC<IncomeProps> = () => {
     const [formData, setFormData] = useState(initialState)
-    const handleChange = (e:any) => {
+    const handleChange = (e: any) => {
         const { name, value } = e?.target;
         console.log(`name : ${name}, value: ${value}`);
     }
@@ -25,7 +25,8 @@ const Income: React.FC<IncomeProps> = () => {
                 </div>
                 <form className={styles.form}>
                     <div className={styles.floatingLabel} style={{ flexGrow: 1 }}>
-                        <input type="text" id="type"
+                        <input type="text"
+                            id="type"
                             value={formData.type}
                             placeholder=" "
                             onChange={handleChange}
