@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -28,6 +28,8 @@ const columns = [
 const CustomTable = ({ expenses, loading }: any) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  console.log('re-renders')
 
   // Check if screen width is less than 600px
   const isMobile = useMediaQuery('(max-width:600px)');
@@ -131,4 +133,4 @@ const CustomTable = ({ expenses, loading }: any) => {
   );
 };
 
-export default CustomTable;
+export default memo(CustomTable);

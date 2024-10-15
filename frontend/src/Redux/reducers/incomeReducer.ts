@@ -1,7 +1,7 @@
 const initialState:any = {
     incomeData: [],
     isLoading: false,
-    isError: false
+    error: '',
 };
 const incomeReducer = (state=initialState, action:any)=>{
     switch(action.type) {

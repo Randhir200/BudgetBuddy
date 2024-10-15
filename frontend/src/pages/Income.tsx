@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import styles from "./Income.module.css";
-import {UseDispatch, useDispatch, useSelector} from "react-redux";
-import { incomeActions } from "../Redux/actionCreator/incomeActions";
+import { useDispatch, useSelector } from "react-redux";
+// import { incomeActions } from "../Redux/actionCreator/incomeActions";
+import { fetchIncome } from "../ReduxToolkit/incomeSlice/incomeSlice";
+import { AppDispatch, RootState } from "../ReduxToolkit/store";
 
 interface IncomeProps {
 
@@ -14,8 +16,8 @@ const initialState = {
 }
 const Income: React.FC<IncomeProps> = () => {
     const [formData, setFormData] = useState(initialState);
-    const dispatch = useDispatch();
-    const incomeState = useSelector((state:any)=>state.incomeReducer);
+    const dispatch: AppDispatch = useDispatch();
+    const incomeState = useSelector((state: RootState) => state.incomeReducer);
     console.log(incomeState);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,16 +28,16 @@ const Income: React.FC<IncomeProps> = () => {
         }));
     };
 
-   const handleSubmit = (e: React.ChangeEvent<HTMLInputElement>) => {
-        e.preventDefault();
-        const userId = localStorage.getItem('userId') || '';
-        dispatch(incomeActions(userId));
-   }
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault(); // Prevent form default behavior (page refresh)
+        const userId = localStorage.getItem("userId") || "";
+        dispatch(fetchIncome(userId));
+        console.log(incomeState);
+      };
+    useEffect(() => {
 
-   useEffect(()=>{
+    }, []);
 
-   },[]);
-    
     return (
         <>
             <div className={styles.container}>
@@ -43,7 +45,7 @@ const Income: React.FC<IncomeProps> = () => {
                     <h2 className={styles.headingTitle}>Income</h2>
                     <button className={styles.btn}>Add Income</button>
                 </div>
-                <form className={styles.form}>
+                <form className={styles.form} onSubmit={handleSubmit}>
                     <div className={styles.floatingLabel} style={{ flexGrow: 1 }}>
                         <input type="text" id="type"
                             value={formData.type}
@@ -69,8 +71,9 @@ const Income: React.FC<IncomeProps> = () => {
                     </div>
 
 
-                    <button onClick={handleSubmit} className={styles.btn} style={{ flexGrow: 0.5 }}>Submit</button>
-                </form>
+                    <button type="submit" className={styles.btn} style={{ flexGrow: 0.5 }}>
+                        Submit
+                    </button>                </form>
             </div>
         </>
     );
