@@ -6,6 +6,8 @@
   ],
   "compilerOptions": {
     "types": ["jest", "node"],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
     "jsx": "react-jsx", // For React 17+ JSX transform, use "react-jsx" or "react-jsxdev"
     "lib": ["dom", "esnext"] // Ensure DOM types are included
     // Other necessary options...
