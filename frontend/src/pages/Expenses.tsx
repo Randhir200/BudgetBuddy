@@ -145,9 +145,7 @@ const Expenses: React.FC = () => {
       }, 2000); // Close after 2 seconds
     }
   }
-
-
-
+  console.log(`Expense page: re-render`);
   useEffect(() => {
     fetchExpenses();
     fetchConfigs();
@@ -192,4 +190,4 @@ const Expenses: React.FC = () => {
   );
 };
 
-export default Expenses;
+export default React.memo(Expenses);

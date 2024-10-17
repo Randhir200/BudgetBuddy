@@ -16,6 +16,7 @@ import {
 const ExpensesForm: React.FC = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  console.log('Expense Form: re-renders')
 
   return (
     <Container maxWidth="sm" sx={{ mt: 4, mb: 4, width: "100%" }}>

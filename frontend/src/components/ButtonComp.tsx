@@ -10,6 +10,7 @@ interface ButtonCompProps {
 }
 
 const ButtonComp: React.FC<ButtonCompProps> = ({ title,variant = "contained", color = "primary", size = "small", event }) => {
+    console.log('Btn: re-renders');
     return (
         <>
             <Button variant={variant} color={color} size={size} onClick={event}>

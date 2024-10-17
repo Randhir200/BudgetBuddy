@@ -29,7 +29,7 @@ const CustomTable = ({ expenses, loading }: any) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  console.log('re-renders')
+  console.log('Expense Table: re-renders')
 
   // Check if screen width is less than 600px
   const isMobile = useMediaQuery('(max-width:600px)');

@@ -27,7 +27,7 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, onToggleDarkMode, darkMode }) => {
   const [open, setOpen] = React.useState(false);
-
+  console.log('Dashboard: re-renders')
   const handleDrawerOpen = () => {
     setOpen(true);
   };
