@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import { budgetBuddyApiUrl } from "../config/config";
 import {
   Box,
@@ -14,6 +14,9 @@ import { ExpenseForm } from "../components/Expense/ExpenseForm";
 import { AlertProps } from "@mui/material/Alert";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
 import styled from "styled-components";
+import { fetchExpense } from "../ReduxToolkit/slices/expenseSlice";
+import { AppDispatch, RootState } from "../ReduxToolkit/store";
+import { useDispatch, useSelector } from "react-redux";
 
 // Create a Wrapper component that'll render a <section> tag with some styles
 const Wrapper = styled.section`
@@ -54,6 +57,9 @@ const Expenses: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { vertical, horizontal, open } = toastState;
 
+  const dispatch: AppDispatch = useDispatch();
+  const expenseState = useSelector((state: RootState) => state.expenseReducer)
+
 
   //mui theme
   const theme = useTheme();
@@ -86,7 +92,7 @@ const Expenses: React.FC = () => {
       setFormData(formInitialState);
 
       // fetch again updated expenses with 1000ms delay
-      setTimeout(() => { fetchExpenses() }, 1000);
+      setTimeout(() => { dispatch(fetchExpense(userId)) }, 1000);
 
 
     } catch (error: any) {
@@ -125,38 +131,37 @@ const Expenses: React.FC = () => {
 
 
   //fetching expense
-  const fetchExpenses = async () => {
-    try {
-      const response = await axios(`${budgetBuddyApiUrl}/expense/getAllExpense?userId=${userId}`);
-      const data = response.data;
-      setExpenses(data.data);
-      console.log('data....', data)
-      setLoading(false);
-      setAlertState({ ...alertState, severity: data.status, message: data.message })
-    } catch (error: any) {
-      if (AxiosError) {
-        setAlertState({ ...alertState, severity: 'error', message: error.message })
-      }
-      setAlertState({ ...alertState, severity: 'error', message: error.response.data.message })
+  // const fetchExpenses = async () => {
+  //   try {
+  //     const response = await axios(`${budgetBuddyApiUrl}/expense/getAllExpense?userId=${userId}`);
+  //     const data = response.data;
+  //     setExpenses(data.data);
+  //     setLoading(false);
+  //     setAlertState({ ...alertState, severity: data.status, message: data.message })
+  //   } catch (error: any) {
+  //     if (AxiosError) {
+  //       setAlertState({ ...alertState, severity: 'error', message: error.message })
+  //     }
+  //     setAlertState({ ...alertState, severity: 'error', message: error.response.data.message })
 
-    } finally {
-      setToastState({ ...toastState, open: true });
-      setTimeout(() => {
-        setToastState({ ...toastState, open: false });
-      }, 2000); // Close after 2 seconds
-    }
-  }
-  console.log(`Expense page: re-render`);
+  //   } finally {
+  //     setToastState({ ...toastState, open: true });
+  //     setTimeout(() => {
+  //       setToastState({ ...toastState, open: false });
+  //     }, 2000); // Close after 2 seconds
+  //   }
+  // }
   useEffect(() => {
-    fetchExpenses();
-    fetchConfigs();
+    // fetchExpenses();
+    // fetchConfigs();
+    dispatch(fetchExpense(userId))
   }, []);
   return (
     <Wrapper>
       <AlertComp vertical={vertical} horizontal={horizontal} open={open}
         alertState={alertState}
       />
-  
+
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
         <Typography
           gutterBottom
@@ -185,7 +190,7 @@ const Expenses: React.FC = () => {
       )}
 
       <Box sx={{ mt: 2 }}>
-        <ExpenseTable expenses={expenses} loading={loading}/>
+        <ExpenseTable />
       </Box>
     </Wrapper>
   );

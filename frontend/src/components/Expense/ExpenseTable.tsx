@@ -1,17 +1,21 @@
 import { memo, useState } from 'react';
-import Paper from '@mui/material/Paper';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
-import TableRow from '@mui/material/TableRow';
-import IconButton from '@mui/material/IconButton';
+import {
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  IconButton,
+  useMediaQuery
+} from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import useMediaQuery from '@mui/material/useMediaQuery';
 import { LinearProgress } from '@mui/material';
+import { RootState } from "../../ReduxToolkit/store";
+import { useSelector } from 'react-redux';
 
 // Define the columns
 const columns = [
@@ -25,11 +29,10 @@ const columns = [
 ];
 
 // Define the CustomTable component
-const CustomTable = ({ expenses, loading }: any) => {
+const CustomTable = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-
-  console.log('Expense Table: re-renders')
+  const expenseState = useSelector((state:RootState)=>state.expenseReducer);
 
   // Check if screen width is less than 600px
   const isMobile = useMediaQuery('(max-width:600px)');
@@ -58,7 +61,7 @@ const CustomTable = ({ expenses, loading }: any) => {
   return (
     <Paper style={{ width: '100%', overflowX: 'auto' }}>
       <TableContainer style={{ maxHeight: 440 }}>
-        {loading && <LinearProgress/>}
+        {expenseState.loading && <LinearProgress />}
         <Table
           stickyHeader
           aria-label="customized table"
@@ -89,7 +92,7 @@ const CustomTable = ({ expenses, loading }: any) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {expenses
+            {expenseState.expenses
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((expense: any, index: number) => (
                 <TableRow hover role="checkbox" tabIndex={-1} key={expense._id}>
@@ -115,7 +118,7 @@ const CustomTable = ({ expenses, loading }: any) => {
       <TablePagination
         rowsPerPageOptions={[10, 25, 100]}
         component="div"
-        count={expenses.length}
+        count={expenseState.expenses.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}

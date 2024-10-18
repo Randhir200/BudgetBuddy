@@ -113,7 +113,6 @@ const ExpenseType: React.FC = () => {
 
   }
 
-  console.log(expenseTypes);
 
   useEffect(() => {
     fetchExpenseTypes();

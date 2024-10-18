@@ -24,7 +24,6 @@ const columns = [
 
 // Define the typeItemTable component
 const ExpenseTypeTable = ({ expenseTypes, loading }: any) => {
-  console.log(expenseTypes);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import styles from "./Income.module.css";
 import { useDispatch, useSelector } from "react-redux";
 // import { incomeActions } from "../Redux/actionCreator/incomeActions";
-import { fetchIncome } from "../ReduxToolkit/incomeSlice/incomeSlice";
+import { fetchIncome } from "../ReduxToolkit/slices/incomeSlice";
 import { AppDispatch, RootState } from "../ReduxToolkit/store";
 
 interface IncomeProps {
@@ -18,7 +18,6 @@ const Income: React.FC<IncomeProps> = () => {
     const [formData, setFormData] = useState(initialState);
     const dispatch: AppDispatch = useDispatch();
     const incomeState = useSelector((state: RootState) => state.incomeReducer);
-    console.log(incomeState);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
@@ -32,7 +31,6 @@ const Income: React.FC<IncomeProps> = () => {
         e.preventDefault(); // Prevent form default behavior (page refresh)
         const userId = localStorage.getItem("userId") || "";
         dispatch(fetchIncome(userId));
-        console.log(incomeState);
       };
     useEffect(() => {
 
