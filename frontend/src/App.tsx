@@ -1,15 +1,15 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
-import { DashboardLayout } from "./components/DashboardLayout";
-import Config from "./pages/Config";
+import { DashboardLayout } from "./components/Common/DashboardLayout";
 import React, { useState, useMemo } from "react";
 import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
-import Expenses from "./pages/Expenses";
+import Expense from "./pages/Expense";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import PageNotFound from "./pages/PageNotFound";
-import PrivateRoute from "./components/PrivateRoute";
+import PrivateRoute from "./components/Common/PrivateRoute";
 import Income from "./pages/Income";
+import ExpenseType from "./pages/ExpenseType";
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -55,27 +55,27 @@ const App: React.FC = () => {
             }
           />
           <Route
-            path="/expenses"
+            path="/expense"
             element={
               <PrivateRoute>
                 <DashboardLayout
                   onToggleDarkMode={toggleDarkMode}
                   darkMode={darkMode}
                 >
-                  <Expenses />
+                  <Expense />
                 </DashboardLayout>
               </PrivateRoute>
             }
           />
           <Route
-            path="/config"
+            path="/expenseType"
             element={
               <PrivateRoute>
                 <DashboardLayout
                   onToggleDarkMode={toggleDarkMode}
                   darkMode={darkMode}
                 >
-                  <Config />
+                  <ExpenseType />
                 </DashboardLayout>
               </PrivateRoute>
             }

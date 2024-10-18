@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import axios, {AxiosError} from "axios";
 import { AlertProps } from "@mui/material/Alert";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
-import { AlertComp } from "../components/AlertComp";
+import { AlertComp } from "../components/Common/AlertComp";
 import {authApiUrl} from "../config/config";
 import {LinearProgress} from "@mui/material";
 

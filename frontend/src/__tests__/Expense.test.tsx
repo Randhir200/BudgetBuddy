@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import '@testing-library/jest-dom';
-import Expense from "../pages/Expenses";
+import Expense from "../pages/Expense";
 
 test('demo', () => {
     expect(true).toBe(true)

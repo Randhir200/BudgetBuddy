@@ -1,13 +1,13 @@
 import {
     Box, TextField, Chip
 } from '@mui/material';
-import ButtonComp from './ButtonComp';
+import ButtonComp from '../Common/ButtonComp';
 import { useState } from 'react';
 
-export const ConfigForm = ({
+export const ExpenseTypeForm = ({
     isSmallScreen,
     theme,
-    addConfig,
+    addExpenseType,
     setFormData,
     formData,
 }: any) => {
@@ -37,7 +37,7 @@ export const ConfigForm = ({
     
 
     function handleSubmit(){
-        addConfig();
+        addExpenseType();
     }
 
     return (

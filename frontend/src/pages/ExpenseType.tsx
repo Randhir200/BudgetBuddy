@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import ButtonComp from "../components/ButtonComp";
+import ButtonComp from "../components/Common/ButtonComp";
 import { useTheme, useMediaQuery, Typography, Box } from "@mui/material";
-import { ConfigForm } from "../components/ConfigForm";
-import ConfigTable from "../components/ConfigTable";
+import { ExpenseTypeForm } from "../components/ExpenseType/ExpenseTypeForm";
 import axios, { AxiosError } from "axios";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
 import { AlertProps } from "@mui/material/Alert";
-import { AlertComp } from "../components/AlertComp";
+import { AlertComp } from "../components/Common/AlertComp";
 import { budgetBuddyApiUrl } from "../config/config";
+import ExpenseTypeTable from "../components/ExpenseType/ExpenseTypeTable";
 
 
 //getting userId from local storage
@@ -34,12 +34,12 @@ const formInitialState = {
   userId: userId
 }
 
-const Config: React.FC = () => {
+const ExpenseType: React.FC = () => {
   const [toggleTypeBtn, setToggleTypeBtn] = useState(false);
   const [formData, setFormData] = useState(formInitialState);
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
-  const [configData, setConfigData] = useState([]);
+  const [expenseTypes, setExpenseTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toastState, setToastState] = React.useState<State>({
     open: false,
@@ -55,11 +55,11 @@ const Config: React.FC = () => {
     setToggleTypeBtn(!toggleTypeBtn)
   }
 
-  async function fetchConfigs() {
+  async function fetchExpenseTypes() {
     try {
       const response = await axios(`${budgetBuddyApiUrl}/config/getAllConfigs?userId=${userId}`);
       const data = response.data;
-      setConfigData(data.data);
+      setExpenseTypes(data.data);
       setLoading(false);
       setAlertState({ ...alertState, severity: data.status, message: data.message })
     } catch (error: any) {
@@ -76,7 +76,7 @@ const Config: React.FC = () => {
     }
   }
 
-  async function addConfig() {
+  async function addExpenseType() {
     try {
       const response = await axios.post(`${budgetBuddyApiUrl}/config/addConfig`,
         formData,
@@ -98,7 +98,7 @@ const Config: React.FC = () => {
       setFormData(formInitialState);
 
       // fetch again updated expenses with 1000ms delay
-      setTimeout(() => { fetchConfigs() }, 1000);
+      setTimeout(() => { fetchExpenseTypes() }, 1000);
 
 
     } catch (error: any) {
@@ -113,8 +113,10 @@ const Config: React.FC = () => {
 
   }
 
+  console.log(expenseTypes);
+
   useEffect(() => {
-    fetchConfigs();
+    fetchExpenseTypes();
   }, []);
   return (
     <>
@@ -141,22 +143,22 @@ const Config: React.FC = () => {
         <div>
           {
             toggleTypeBtn &&
-            <ConfigForm CateForm={false}
+            <ExpenseTypeForm CateForm={false}
               isSmallScreen={isSmallScreen}
               theme={theme}
               handleAddType={() => { }}
               formData={formData}
               setFormData={setFormData}
               handleSubmit={() => { }}
-              addConfig={addConfig} />
+              addExpenseType={addExpenseType} />
 
           }
 
         </div>
-        <ConfigTable configs={configData} loading={loading}/>
+        <ExpenseTypeTable expenseTypes={expenseTypes} loading={loading}/>
       </Wrapper>
     </>
   );
 };
 
-export default Config;
+export default ExpenseType;

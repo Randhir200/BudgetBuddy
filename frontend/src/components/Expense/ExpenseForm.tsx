@@ -6,7 +6,7 @@ import {
     Select,
     TextField,
 } from '@mui/material'
-import ButtonComp from './ButtonComp'
+import ButtonComp from '../Common/ButtonComp'
 
 export const ExpenseForm = ({ isSmallScreen, theme, setFormData, addExpense, formData, configData }: any) => {
 

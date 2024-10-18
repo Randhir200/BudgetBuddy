@@ -6,11 +6,11 @@ import {
   useTheme,
   useMediaQuery
 } from "@mui/material";
-import ExpenseTable from "../components/ExpenseTable";
-import ButtonComp from "../components/ButtonComp";
+import ExpenseTable from "../components/Expense/ExpenseTable";
+import ButtonComp from "../components/Common/ButtonComp";
 import axios, { AxiosError } from "axios";
-import { AlertComp } from "../components/AlertComp";
-import { ExpenseForm } from "../components/ExpenseForm";
+import { AlertComp } from "../components/Common/AlertComp";
+import { ExpenseForm } from "../components/Expense/ExpenseForm";
 import { AlertProps } from "@mui/material/Alert";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
 import styled from "styled-components";
@@ -42,7 +42,7 @@ const formInitialState = {
 }
 const Expenses: React.FC = () => {
   const [toggleAdd, setToggleAdd] = useState(false);
-  const [expensesData, setExpensesData] = useState([]);
+  const [expenses, setExpenses] = useState([]);
   const [configData, setConfigData] = useState([]);
   const [toastState, setToastState] = React.useState<State>({
     open: false,
@@ -129,7 +129,8 @@ const Expenses: React.FC = () => {
     try {
       const response = await axios(`${budgetBuddyApiUrl}/expense/getAllExpense?userId=${userId}`);
       const data = response.data;
-      setExpensesData(data.data);
+      setExpenses(data.data);
+      console.log('data....', data)
       setLoading(false);
       setAlertState({ ...alertState, severity: data.status, message: data.message })
     } catch (error: any) {
@@ -184,7 +185,7 @@ const Expenses: React.FC = () => {
       )}
 
       <Box sx={{ mt: 2 }}>
-        <ExpenseTable expenses={expensesData} loading={loading}/>
+        <ExpenseTable expenses={expenses} loading={loading}/>
       </Box>
     </Wrapper>
   );

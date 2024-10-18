@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import axios from "axios";
-import { authApiUrl } from "../config/config";
+import { authApiUrl } from "../../config/config";
 import { LinearProgress } from "@mui/material";
 
 interface PrivateRouteProps {

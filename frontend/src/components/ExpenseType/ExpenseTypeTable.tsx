@@ -22,8 +22,9 @@ const columns = [
   { id: 'action', label: 'Action',},
 ];
 
-// Define the ConfigTable component
-const ConfigTable = ({ configs, loading }: any) => {
+// Define the typeItemTable component
+const ExpenseTypeTable = ({ expenseTypes, loading }: any) => {
+  console.log(expenseTypes);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -80,16 +81,16 @@ const ConfigTable = ({ configs, loading }: any) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {configs
+            {expenseTypes
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((config: any, index: number) => (
-                <TableRow hover role="checkbox" tabIndex={-1} key={config._id}>
+              .map((typeItem: any, index: number) => (
+                <TableRow hover role="checkbox" tabIndex={-1} key={typeItem._id}>
                   <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                  <TableCell>{config.type}</TableCell>
+                  <TableCell>{typeItem.type}</TableCell>
                   <TableCell>
-                    {config.categories.map((category: any) => category.name).join(', ')}
+                    {typeItem.categories.map((category: any) => category.name).join(', ')}
                   </TableCell>
-                  <TableCell>{formatDate(config.createdAt)}</TableCell>
+                  <TableCell>{formatDate(typeItem.createdAt)}</TableCell>
                   <TableCell align="left">
                     <IconButton aria-label="edit" size={isMobile ? 'small' : 'medium'}>
                       <EditIcon fontSize={isMobile ? 'small' : 'medium'} />
@@ -106,7 +107,7 @@ const ConfigTable = ({ configs, loading }: any) => {
       <TablePagination
         rowsPerPageOptions={[10, 25, 100]}
         component="div"
-        count={configs.length}
+        count={expenseTypes.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}
@@ -124,4 +125,4 @@ const ConfigTable = ({ configs, loading }: any) => {
   );
 };
 
-export default ConfigTable;
+export default ExpenseTypeTable;

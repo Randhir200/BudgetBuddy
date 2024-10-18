@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { AlertProps } from "@mui/material/Alert";
-import { AlertComp } from "../components/AlertComp";
+import { AlertComp } from "../components/Common/AlertComp";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
 import {authApiUrl} from "../config/config";
 import {LinearProgress} from "@mui/material";
