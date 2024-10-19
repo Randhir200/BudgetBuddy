@@ -6,23 +6,35 @@ import {
     Select,
     TextField,
 } from '@mui/material'
-import ButtonComp from '../Common/ButtonComp'
+import ButtonComp from '../Common/ButtonComp';
+import { RootState, AppDispatch } from '../../ReduxToolkit/store'
+import { useSelector, useDispatch } from 'react-redux';
+import { createExpense } from "../../ReduxToolkit/slices/expenseSlice";
 
-export const ExpenseForm = ({ isSmallScreen, theme, setFormData, addExpense, formData, configData }: any) => {
+export const ExpenseForm = ({
+    isSmallScreen,
+    theme,
+    setFormData,
+    addExpense,
+    formData,
+    configData }: any) => {
+    const dispatch: AppDispatch = useDispatch();
+    const expenseState = useSelector((state: RootState) => { state.expenseReducer });
 
     function handleAddExpense(e: any) {
         const { name, value } = e.target;
         //User change types then need to remove category that stored prev
-        if(name==='type'){
+        if (name === 'type') {
             setFormData((formData: any) => ({ ...formData, ['category']: '' }));
         }
         setFormData((formData: any) => ({ ...formData, [name]: value }));
     }
-    
+
     function handleSubmit() {
-        addExpense();
+        // addExpense();
+        dispatch(createExpense(formData))
     }
-    
+
     // Filter categories based on the selected type
     const selectedConfig = configData.find((item: any) => item.type === formData.type);
     const availableCategories = selectedConfig ? selectedConfig.categories : [];
@@ -44,7 +56,7 @@ export const ExpenseForm = ({ isSmallScreen, theme, setFormData, addExpense, for
             <FormControl fullWidth>
                 <InputLabel
                     id="type-label"
-                    sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }} 
+                    sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }}
                 >
                     Type
                 </InputLabel>
@@ -55,7 +67,7 @@ export const ExpenseForm = ({ isSmallScreen, theme, setFormData, addExpense, for
                     name="type"
                     value={formData.type}
                     onChange={handleAddExpense}
-                    sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }} 
+                    sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }}
                 >
                     {configData.map((item: any) => (
                         <MenuItem key={item._id} value={item.type}>

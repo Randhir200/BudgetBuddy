@@ -6,24 +6,33 @@ import { budgetBuddyApiUrl } from "../../config/config";
 
 export const fetchExpense = createAsyncThunk(
     'expense/read',
-    async (userId:string|null) => {
-        const response = await axios.get(`${budgetBuddyApiUrl}/expense/read?userId=${userId}`);
-        return response.data;
+    async (userId: string | null, { rejectWithValue }) => {
+        try {
+            const response = await axios.get(`${budgetBuddyApiUrl}/expense/getAllExpense?userId=${userId}`);
+            return response.data;
+        } catch (err) {
+            return rejectWithValue(err);
+        }
     }
 )
 
 export const createExpense = createAsyncThunk(
     'expense/create',
-    async (body) => {
-        await axios.post(`${budgetBuddyApiUrl}/expense/create`,
-            body,
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer token'
+    async (formData, { rejectWithValue }) => {
+        try {
+            const res = await axios.post(`${budgetBuddyApiUrl}/expense/addExpense`,
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer token'
+                    }
                 }
-            }
-        )
+            )
+            return res.data;
+        } catch (err) {
+            return rejectWithValue(err);
+        }
     }
 )
 
@@ -68,10 +77,11 @@ const expenseSlice = createSlice({
             })
             .addCase(fetchExpense.fulfilled, (state, action: PayloadAction<any>) => {
                 state.loading = false;
-                state.expenses = action.payload
+                state.expenses = action.payload.data
                 state.error = null;
             })
             .addCase(fetchExpense.rejected, (state, action: PayloadAction<any>) => {
+                console.log(action);
                 state.loading = false;
                 state.error = action.payload.error.message || 'Failed to fetch expense';
             })
@@ -79,4 +89,4 @@ const expenseSlice = createSlice({
 })
 
 
-export const {reducer: expenseReducer} = expenseSlice;
+export const { reducer: expenseReducer } = expenseSlice;

@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import {
   Paper,
   Table,
@@ -14,8 +14,9 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { LinearProgress } from '@mui/material';
-import { RootState } from "../../ReduxToolkit/store";
-import { useSelector } from 'react-redux';
+import { RootState, AppDispatch } from "../../ReduxToolkit/store";
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchExpense } from '../../ReduxToolkit/slices/expenseSlice';
 
 // Define the columns
 const columns = [
@@ -32,7 +33,10 @@ const columns = [
 const CustomTable = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const dispatch:AppDispatch = useDispatch();
   const expenseState = useSelector((state:RootState)=>state.expenseReducer);
+
+  console.log(expenseState);
 
   // Check if screen width is less than 600px
   const isMobile = useMediaQuery('(max-width:600px)');
@@ -57,6 +61,11 @@ const CustomTable = () => {
     setRowsPerPage(+event.target.value);
     setPage(0);
   };
+
+  const userId = localStorage.getItem(  'userId');
+  useEffect(()=>{
+    dispatch(fetchExpense(userId));
+  },[])
 
   return (
     <Paper style={{ width: '100%', overflowX: 'auto' }}>
