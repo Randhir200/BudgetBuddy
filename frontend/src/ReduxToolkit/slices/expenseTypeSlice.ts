@@ -2,7 +2,37 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { budgetBuddyApiUrl } from "../../config/config";
 
+interface AlertState {
+    showAlert: boolean;
+    message: string;
+    type: 'success' | 'error' | '';  // You can extend this as needed
+}
 
+interface ExpenseTypeState {
+    fetchLoading: boolean;
+    addLoading: boolean;
+    expenseTypes: any[];
+    addMessage: string;
+    fetchError: string | null;
+    addError: string | null;
+    alert: AlertState; // New alert state added here
+}
+
+const initialState: ExpenseTypeState = {
+    fetchLoading: false,
+    addLoading: false,
+    expenseTypes: [],
+    addMessage: '',
+    fetchError: null,
+    addError: null,
+    alert: {
+        showAlert: false,
+        message: '',
+        type: '',
+    },
+};
+
+// Thunk for fetching expense types
 export const fetchExpenseType = createAsyncThunk(
     `expenseType/fetch`,
     async (userId: string | null, { rejectWithValue }) => {
@@ -15,40 +45,46 @@ export const fetchExpenseType = createAsyncThunk(
     }
 );
 
+// Thunk for adding a new expense type
 export const addExpenseType = createAsyncThunk(
     'expesnseType/add',
-    async (formData : Object, { rejectWithValue }) => {
+    async (formData: Object, { rejectWithValue }) => {
         try {
             const res = await axios.post(`${budgetBuddyApiUrl}/config/addConfig`,
                 formData,
                 {
                     headers: {
                         'Content-type': 'application/json',
-                        'Authorization': 'berear token'
+                        'Authorization': 'Bearer token',
                     }
                 }
-            )
+            );
             return res.data;
         } catch (err) {
             return rejectWithValue(err);
         }
     }
-)
+);
 
 const expenseTypeSlice = createSlice({
     name: 'expenseType',
-    initialState: {
-        fetchLoading: false,
-        addLoading: false,
-        expenseTypes: [],
-        addMessage: '',
-        fetchError: null,
-        addError: null
-
+    initialState,
+    reducers: {
+        // Reducers to manage alert state
+        showAlert: (state, action: PayloadAction<{ message: string, type: 'success' | 'error' }>) => {
+            state.alert.showAlert = true;
+            state.alert.message = action.payload.message;
+            state.alert.type = action.payload.type;
+        },
+        hideAlert: (state) => {
+            state.alert.showAlert = false;
+            state.alert.message = '';
+            state.alert.type = '';
+        },
     },
-    reducers: {},
-    extraReducers: ((builder) => {
+    extraReducers: (builder) => {
         builder
+            // Handling fetchExpenseType thunk
             .addCase(fetchExpenseType.pending, (state) => {
                 state.fetchLoading = true;
                 state.fetchError = null;
@@ -57,25 +93,32 @@ const expenseTypeSlice = createSlice({
                 state.fetchLoading = false;
                 state.expenseTypes = action.payload.data;
                 state.fetchError = null;
+                state.alert = { showAlert: true, message: 'Expenses fetched successfully!', type: 'success' }; // Success alert
             })
             .addCase(fetchExpenseType.rejected, (state, action: PayloadAction<any>) => {
                 state.fetchLoading = false;
                 state.fetchError = action.payload?.error?.message || 'Failed to fetch expenses';
+                state.alert = { showAlert: true, message: 'Failed to fetch expenses!', type: 'error' }; // Error alert
             })
+
+            // Handling addExpenseType thunk
             .addCase(addExpenseType.pending, (state) => {
                 state.addLoading = true;
                 state.addError = null;
             })
             .addCase(addExpenseType.fulfilled, (state, action: PayloadAction<any>) => {
                 state.addLoading = false;
-                state.addMessage = action.payload.message || 'Expense type uploaded succssfully';
+                state.addMessage = action.payload.message || 'Expense type added successfully';
                 state.addError = null;
+                state.alert = { showAlert: true, message: 'Expense type added successfully!', type: 'success' }; // Success alert
             })
             .addCase(addExpenseType.rejected, (state, action: PayloadAction<any>) => {
                 state.addLoading = false;
-                state.addError = action.payload.err.message || 'Somthing went wrong!'
-            })
-    })
-})
+                state.addError = action.payload?.error?.message || 'Something went wrong!';
+                state.alert = { showAlert: true, message: 'Failed to add expense type!', type: 'error' }; // Error alert
+            });
+    }
+});
 
+export const { showAlert, hideAlert } = expenseTypeSlice.actions;
 export const { reducer: expenseTypeReducer } = expenseTypeSlice;
