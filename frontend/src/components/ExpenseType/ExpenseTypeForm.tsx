@@ -3,17 +3,22 @@ import {
 } from '@mui/material';
 import ButtonComp from '../Common/ButtonComp';
 import { useState } from 'react';
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "../../ReduxToolkit/store";
+import { addExpenseType } from '../../ReduxToolkit/slices/expenseTypeSlice';
+
 
 export const ExpenseTypeForm = ({
     isSmallScreen,
     theme,
-    addExpenseType,
     setFormData,
     formData,
 }: any) => {
     const [categories, setCategories] = useState<string[]>([]); // State for categories
     const [categoryInput, setCategoryInput] = useState<string>(''); // State for input field
-    
+    const {addLoading} = useSelector((state:RootState)=>state.expenseTypeReducer);
+    const dispatch:AppDispatch = useDispatch();
+
     // Handle keypress (Enter) to add categories
     const handleCategoryKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' && categoryInput.trim() !== '') {
@@ -37,7 +42,8 @@ export const ExpenseTypeForm = ({
     
 
     function handleSubmit(){
-        addExpenseType();
+        // addExpenseType();
+        dispatch(addExpenseType(formData));
     }
 
     return (
@@ -94,6 +100,7 @@ export const ExpenseTypeForm = ({
                     color="primary"
                     size={isSmallScreen ? "small" : "medium"}
                     event={handleSubmit}
+                    loading = {addLoading}
                 />
             </Box>
                 {/* Display added categories as chips */}

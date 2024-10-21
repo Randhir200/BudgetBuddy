@@ -34,9 +34,7 @@ const CustomTable = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const dispatch:AppDispatch = useDispatch();
-  const expenseState = useSelector((state:RootState)=>state.expenseReducer);
-
-  console.log(expenseState);
+  const {fetchLoading, expenses} = useSelector((state:RootState)=>state.expenseReducer);
 
   // Check if screen width is less than 600px
   const isMobile = useMediaQuery('(max-width:600px)');
@@ -70,7 +68,7 @@ const CustomTable = () => {
   return (
     <Paper style={{ width: '100%', overflowX: 'auto' }}>
       <TableContainer style={{ maxHeight: 440 }}>
-        {expenseState.loading && <LinearProgress />}
+        {fetchLoading && <LinearProgress />}
         <Table
           stickyHeader
           aria-label="customized table"
@@ -101,7 +99,7 @@ const CustomTable = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {expenseState.expenses
+            {expenses
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((expense: any, index: number) => (
                 <TableRow hover role="checkbox" tabIndex={-1} key={expense._id}>
@@ -127,7 +125,7 @@ const CustomTable = () => {
       <TablePagination
         rowsPerPageOptions={[10, 25, 100]}
         component="div"
-        count={expenseState.expenses.length}
+        count={expenses.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}

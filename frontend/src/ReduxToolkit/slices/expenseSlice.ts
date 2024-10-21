@@ -16,9 +16,9 @@ export const fetchExpense = createAsyncThunk(
     }
 )
 
-export const createExpense = createAsyncThunk(
+export const addExpense = createAsyncThunk(
     'expense/create',
-    async (formData, { rejectWithValue }) => {
+    async (formData : Object, { rejectWithValue }) => {
         try {
             const res = await axios.post(`${budgetBuddyApiUrl}/expense/addExpense`,
                 formData,
@@ -64,29 +64,46 @@ export const expenseDelete = createAsyncThunk(
 const expenseSlice = createSlice({
     name: 'expense',
     initialState: {
-        loading: false,
+        fetchLoading: false,   
+        addLoading: false,     
         expenses: [],
-        error: null
+        addMessage: '',        
+        fetchError: null,     
+        addError: null        
     },
     reducers: {},
     extraReducers: (builder) => {
+        // Handling fetchExpense states
         builder
             .addCase(fetchExpense.pending, (state) => {
-                state.loading = true;
-                state.error = null;
+                state.fetchLoading = true;
+                state.fetchError = null;
             })
             .addCase(fetchExpense.fulfilled, (state, action: PayloadAction<any>) => {
-                state.loading = false;
-                state.expenses = action.payload.data
-                state.error = null;
+                state.fetchLoading = false;
+                state.expenses = action.payload.data;
+                state.fetchError = null;
             })
             .addCase(fetchExpense.rejected, (state, action: PayloadAction<any>) => {
-                console.log(action);
-                state.loading = false;
-                state.error = action.payload.error.message || 'Failed to fetch expense';
+                state.fetchLoading = false;
+                state.fetchError = action.payload?.error?.message || 'Failed to fetch expenses';
             })
+            
+            // Handling addExpense states
+            .addCase(addExpense.pending, (state) => {
+                state.addLoading = true;
+                state.addError = null;
+            })
+            .addCase(addExpense.fulfilled, (state, action: PayloadAction<any>) => {
+                state.addLoading = false;
+                state.addMessage = action.payload.data;
+                state.addError = null;
+            })
+            .addCase(addExpense.rejected, (state, action: PayloadAction<any>) => {
+                state.addLoading = false;
+                state.addError = action.payload?.error?.message || 'Failed to add expense';
+            });
     }
-})
-
+});
 
 export const { reducer: expenseReducer } = expenseSlice;

@@ -7,19 +7,18 @@ import {
     TextField,
 } from '@mui/material'
 import ButtonComp from '../Common/ButtonComp';
-import { RootState, AppDispatch } from '../../ReduxToolkit/store'
-import { useSelector, useDispatch } from 'react-redux';
-import { createExpense } from "../../ReduxToolkit/slices/expenseSlice";
+import { AppDispatch, RootState } from '../../ReduxToolkit/store'
+import { useDispatch, useSelector } from 'react-redux';
+import { addExpense, fetchExpense } from "../../ReduxToolkit/slices/expenseSlice";
 
 export const ExpenseForm = ({
     isSmallScreen,
     theme,
     setFormData,
-    addExpense,
     formData,
     configData }: any) => {
     const dispatch: AppDispatch = useDispatch();
-    const expenseState = useSelector((state: RootState) => { state.expenseReducer });
+    const { addLoading } = useSelector((state: RootState) => state.expenseReducer);
 
     function handleAddExpense(e: any) {
         const { name, value } = e.target;
@@ -32,7 +31,8 @@ export const ExpenseForm = ({
 
     function handleSubmit() {
         // addExpense();
-        dispatch(createExpense(formData))
+        dispatch(addExpense(formData))
+        dispatch(fetchExpense(localStorage.getItem('userId')));
     }
 
     // Filter categories based on the selected type
@@ -155,6 +155,7 @@ export const ExpenseForm = ({
                 color="primary"
                 size={isSmallScreen ? "small" : "medium"}
                 event={handleSubmit}
+                loading={addLoading}
             />
         </Box>
     )

@@ -153,7 +153,7 @@ const Expenses: React.FC = () => {
   // }
   useEffect(() => {
     // fetchExpenses();
-    // fetchConfigs();
+    fetchConfigs();
     dispatch(fetchExpense(userId))
   }, []);
   return (

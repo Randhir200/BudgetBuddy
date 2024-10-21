@@ -1,32 +1,39 @@
-import { useState } from 'react';
-import Paper from '@mui/material/Paper';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
-import TableRow from '@mui/material/TableRow';
+import { useEffect, useState } from 'react';
+import {
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  useMediaQuery
+} from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import useMediaQuery from '@mui/material/useMediaQuery';
 import { LinearProgress } from '@mui/material';
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "../../ReduxToolkit/store";
+import { fetchExpenseType } from '../../ReduxToolkit/slices/expenseTypeSlice';
+
 
 // Define the columns
 const columns = [
-  { id: 'slNo', label: 'Sl.No.',  },
-  { id: 'type', label: 'Type',},
-  { id: 'categories', label: 'Categories',},
-  { id: 'createdAt', label: 'Created At',},
-  { id: 'action', label: 'Action',},
+  { id: 'slNo', label: 'Sl.No.', },
+  { id: 'type', label: 'Type', },
+  { id: 'categories', label: 'Categories', },
+  { id: 'createdAt', label: 'Created At', },
+  { id: 'action', label: 'Action', },
 ];
 
 // Define the typeItemTable component
-const ExpenseTypeTable = ({ expenseTypes, loading }: any) => {
+const ExpenseTypeTable = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-
+  const dispatch:AppDispatch = useDispatch();
+  const {expenseTypes, fetchLoading} = useSelector((state:RootState)=>state.expenseTypeReducer)
   // Check if screen width is less than 600px
   const isMobile = useMediaQuery('(max-width:600px)');
 
@@ -52,10 +59,15 @@ const ExpenseTypeTable = ({ expenseTypes, loading }: any) => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
+ const userId = localStorage.getItem('userId');
+  useEffect(()=>{
+    dispatch(fetchExpenseType(userId));
+  }, [])
+
   return (
     <Paper style={{ width: '100%', overflowX: 'auto' }}>
       <TableContainer style={{ maxHeight: 440 }}>
-      {loading && <LinearProgress/>}
+        {fetchLoading && <LinearProgress />}
         <Table
           stickyHeader
           aria-label="customized table"
@@ -72,7 +84,7 @@ const ExpenseTypeTable = ({ expenseTypes, loading }: any) => {
                 <TableCell
                   key={column.id}
                   align="left"
-                  style={{ }}
+                  style={{}}
                 >
                   {column.label}
                 </TableCell>
