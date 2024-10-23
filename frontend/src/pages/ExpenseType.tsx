@@ -3,14 +3,12 @@ import styled from "styled-components";
 import ButtonComp from "../components/Common/ButtonComp";
 import { useTheme, useMediaQuery, Typography, Box } from "@mui/material";
 import { ExpenseTypeForm } from "../components/ExpenseType/ExpenseTypeForm";
-import axios, { AxiosError } from "axios";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
 import { AlertProps } from "@mui/material/Alert";
 import { AlertComp } from "../components/Common/AlertComp";
-import { budgetBuddyApiUrl } from "../config/config";
 import ExpenseTypeTable from "../components/ExpenseType/ExpenseTypeTable";
-import { UseDispatch, useSelector } from "react-redux";
-import { RootState, AppDispatch } from "../ReduxToolkit/store";
+import { useSelector } from "react-redux";
+import { RootState } from "../ReduxToolkit/store";
 
 //getting userId from local storage
 const userId = localStorage.getItem('userId');
@@ -40,6 +38,7 @@ const ExpenseType: React.FC = () => {
   const [formData, setFormData] = useState(formInitialState);
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const {alert} = useSelector((state:RootState)=> state.expenseTypeReducer);
   // const [expenseTypes, setExpenseTypes] = useState([]);
   // const [loading, setLoading] = useState(true);
   const [toastState, setToastState] = React.useState<State>({
@@ -120,8 +119,8 @@ const ExpenseType: React.FC = () => {
   return (
     <>
       <Wrapper>
-        <AlertComp vertical={vertical} horizontal={horizontal} open={open}
-          alertState={alertState}
+        <AlertComp vertical={vertical} horizontal={horizontal} open={alert.showAlert}
+          alertState={alert}
         />
 
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>

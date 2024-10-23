@@ -5,7 +5,7 @@ import { budgetBuddyApiUrl } from "../../config/config";
 interface AlertState {
     showAlert: boolean;
     message: string;
-    type: 'success' | 'error' | '';  // You can extend this as needed
+    severity: 'success' | 'error' | '';  // You can extend this as needed
 }
 
 interface ExpenseTypeState {
@@ -28,7 +28,7 @@ const initialState: ExpenseTypeState = {
     alert: {
         showAlert: false,
         message: '',
-        type: '',
+        severity: '',
     },
 };
 
@@ -74,12 +74,12 @@ const expenseTypeSlice = createSlice({
         showAlert: (state, action: PayloadAction<{ message: string, type: 'success' | 'error' }>) => {
             state.alert.showAlert = true;
             state.alert.message = action.payload.message;
-            state.alert.type = action.payload.type;
+            state.alert.severity = action.payload.type;
         },
         hideAlert: (state) => {
             state.alert.showAlert = false;
             state.alert.message = '';
-            state.alert.type = '';
+            state.alert.severity = '';
         },
     },
     extraReducers: (builder) => {
@@ -93,12 +93,12 @@ const expenseTypeSlice = createSlice({
                 state.fetchLoading = false;
                 state.expenseTypes = action.payload.data;
                 state.fetchError = null;
-                state.alert = { showAlert: true, message: 'Expenses fetched successfully!', type: 'success' }; // Success alert
+                state.alert = { showAlert: true, message: 'Expenses fetched successfully!', severity: 'success' }; // Success alert
             })
             .addCase(fetchExpenseType.rejected, (state, action: PayloadAction<any>) => {
                 state.fetchLoading = false;
                 state.fetchError = action.payload?.error?.message || 'Failed to fetch expenses';
-                state.alert = { showAlert: true, message: 'Failed to fetch expenses!', type: 'error' }; // Error alert
+                state.alert = { showAlert: true, message: 'Failed to fetch expenses!', severity: 'error' }; // Error alert
             })
 
             // Handling addExpenseType thunk
@@ -110,12 +110,12 @@ const expenseTypeSlice = createSlice({
                 state.addLoading = false;
                 state.addMessage = action.payload.message || 'Expense type added successfully';
                 state.addError = null;
-                state.alert = { showAlert: true, message: 'Expense type added successfully!', type: 'success' }; // Success alert
+                state.alert = { showAlert: true, message: 'Expense type added successfully!', severity: 'success' }; // Success alert
             })
             .addCase(addExpenseType.rejected, (state, action: PayloadAction<any>) => {
                 state.addLoading = false;
                 state.addError = action.payload?.error?.message || 'Something went wrong!';
-                state.alert = { showAlert: true, message: 'Failed to add expense type!', type: 'error' }; // Error alert
+                state.alert = { showAlert: true, message: 'Failed to add expense type!', severity: 'error' }; // Error alert
             });
     }
 });
