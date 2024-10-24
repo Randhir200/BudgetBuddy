@@ -16,7 +16,7 @@ const Wrapper = styled.section`
 `;
 
 const ExpenseType: React.FC = () => {
-  const [toggleTypeBtn, setToggleTypeBtn] = useState(false);
+  const [toggleTypeAdd, setToggleTypeAdd] = useState(false);
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const { message, variant } = useSelector((state: RootState) => state.alertReducer);
@@ -24,8 +24,8 @@ const ExpenseType: React.FC = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch: AppDispatch = useDispatch();
 
-  function handleToggleTypeBtn() {
-    setToggleTypeBtn(!toggleTypeBtn)
+  function handleToggleTypeAdd() {
+    setToggleTypeAdd(!toggleTypeAdd)
   }
 
   useEffect(() => {
@@ -38,7 +38,7 @@ const ExpenseType: React.FC = () => {
   useEffect(() => {
     //close form if data is upload otherwise wait.
     if (addStatus === 'success') {
-      setToggleTypeBtn(false);
+      setToggleTypeAdd(false);
       dispatch(fetchExpenseType(localStorage.getItem('userId')))
     }
   }, [addStatus])
@@ -58,12 +58,12 @@ const ExpenseType: React.FC = () => {
             variant="contained"
             color="primary"
             size={isSmallScreen ? "small" : "medium"} // Adjust button size
-            event={handleToggleTypeBtn}
+            event={handleToggleTypeAdd}
           />
         </Box>
         <div>
           {
-            toggleTypeBtn &&
+            toggleTypeAdd &&
             <ExpenseTypeForm
               isSmallScreen={isSmallScreen}
               theme={theme}

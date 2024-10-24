@@ -1,7 +1,9 @@
+import { memo, useEffect, useState } from 'react';
 import {
     Box,
     FormControl,
     InputLabel,
+    LinearProgress,
     MenuItem,
     Select,
     TextField,
@@ -9,16 +11,29 @@ import {
 import ButtonComp from '../Common/ButtonComp';
 import { AppDispatch, RootState } from '../../ReduxToolkit/store'
 import { useDispatch, useSelector } from 'react-redux';
-import { addExpense, fetchExpense } from "../../ReduxToolkit/slices/expenseSlice";
+import { addExpense } from "../../ReduxToolkit/slices/expenseSlice";
+import { fetchExpenseType } from '../../ReduxToolkit/slices/expenseTypeSlice';
 
-export const ExpenseForm = ({
+//getting userId from local storage
+const userId = localStorage.getItem('userId');
+
+const formInitialState = {
+    type: '',
+    category: '',
+    item: '',
+    price: 0,
+    createdAt: '',
+    userId
+  }
+
+export const ExpenseForm = memo(({
     isSmallScreen,
     theme,
-    setFormData,
-    formData,
-    configData }: any) => {
+}: any) => {
     const dispatch: AppDispatch = useDispatch();
     const { addLoading } = useSelector((state: RootState) => state.expenseReducer);
+    const { expenseTypes, fetchLoading } = useSelector((state: RootState) => state.expenseTypeReducer);
+    const [formData, setFormData] = useState(formInitialState);
 
     function handleAddExpense(e: any) {
         const { name, value } = e.target;
@@ -30,13 +45,14 @@ export const ExpenseForm = ({
     }
 
     function handleSubmit() {
-        // addExpense();
         dispatch(addExpense(formData))
-        dispatch(fetchExpense(localStorage.getItem('userId')));
     }
 
+    useEffect(() => {
+        dispatch(fetchExpenseType(localStorage.getItem('userId')));
+    }, []);
     // Filter categories based on the selected type
-    const selectedConfig = configData.find((item: any) => item.type === formData.type);
+    const selectedConfig = expenseTypes.find((item: any) => item.type === formData.type);
     const availableCategories = selectedConfig ? selectedConfig.categories : [];
 
     return (
@@ -53,29 +69,34 @@ export const ExpenseForm = ({
             }}
         >
             {/* Type Field */}
-            <FormControl fullWidth>
-                <InputLabel
-                    id="type-label"
-                    sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }}
-                >
-                    Type
-                </InputLabel>
-                <Select
-                    labelId="type-label"
-                    id="type"
-                    label="Type"
-                    name="type"
-                    value={formData.type}
-                    onChange={handleAddExpense}
-                    sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }}
-                >
-                    {configData.map((item: any) => (
-                        <MenuItem key={item._id} value={item.type}>
-                            {item.type}
-                        </MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
+            {fetchLoading ?
+                <LinearProgress />
+                :
+                <FormControl fullWidth>
+                    <InputLabel
+                        id="type-label"
+                        sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }}
+                    >
+                        Type
+                    </InputLabel>
+                    <Select
+                        labelId="type-label"
+                        id="type"
+                        label="Type"
+                        name="type"
+                        value={formData.type}
+                        onChange={handleAddExpense}
+                        sx={{ fontSize: isSmallScreen ? "0.8rem" : "1rem" }}
+                    >
+                        {expenseTypes.map((item: any) => (
+                            <MenuItem key={item._id} value={item.type}>
+                                {item.type}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+            }
+
 
             {/* Category Field */}
             <FormControl fullWidth>
@@ -159,4 +180,4 @@ export const ExpenseForm = ({
             />
         </Box>
     )
-}
+});

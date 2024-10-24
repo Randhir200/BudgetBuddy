@@ -35,12 +35,14 @@ export const fetchExpenseType = createAsyncThunk(
             dispatch(setAlert({ message: res.data.message, variant: 'success' }));
             return res.data;
         } catch (err: any) {
-            if (err.response) {
-                dispatch(setAlert({ message: err.response.data.message, variant: 'error' }));
-                return;
-            }
-            dispatch(setAlert({ message: err.message, variant: 'error' }));
-            return rejectWithValue(err);
+            const errorMessage = err.response
+                ? Array.isArray(err.response.data.message)
+                    ? err.response.data.message.join(',')
+                    : err.response.data.message || err.message
+                : err.message;
+
+            dispatch(setAlert({ message: errorMessage, variant: 'error' }));
+            return rejectWithValue({ message: errorMessage, code: err.code });
         }
     }
 );
@@ -66,7 +68,7 @@ export const addExpenseType = createAsyncThunk(
             const errorMessage = err.response
                 ? Array.isArray(err.response.data.message)
                     ? err.response.data.message.join(',')
-                    : err.response.data.message
+                    : err.response.data.message || err.message
                 : err.message;
 
             dispatch(setAlert({ message: errorMessage, variant: 'error' }));

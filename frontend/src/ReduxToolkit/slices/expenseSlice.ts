@@ -1,24 +1,53 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { budgetBuddyApiUrl } from "../../config/config";
+import { setAlert } from "./alertSlice";
+
+interface ExpenseState {
+    fetchLoading: boolean;
+    addLoading: boolean;
+    fetchStatus: string | null;
+    addStatus: string | null;
+    expenses: any[];
+    addMessage: string;
+    fetchError: string | null;
+    addError: string | null;
+}
 
 
+const initialState: ExpenseState = {
+    fetchLoading: false,
+    addLoading: false,
+    fetchStatus: null,
+    addStatus: null,
+    expenses: [],
+    addMessage: '',
+    fetchError: null,
+    addError: null,
+}
 
 export const fetchExpense = createAsyncThunk(
     'expense/read',
-    async (userId: string | null, { rejectWithValue }) => {
+    async (userId: string | null, { rejectWithValue, dispatch }) => {
         try {
-            const response = await axios.get(`${budgetBuddyApiUrl}/expense/getAllExpense?userId=${userId}`);
-            return response.data;
-        } catch (err) {
-            return rejectWithValue(err);
+            const res = await axios.get(`${budgetBuddyApiUrl}/expense/getAllExpense?userId=${userId}`);
+            dispatch(setAlert({ message: res.data.message, variant: "success" }));
+            return res.data;
+        } catch (err: any) {
+            const errorMessage = err.response
+                ? Array.isArray(err.response.data.message)
+                    ? err.response.data.message.join(',')
+                    : err.response.data.message || err.message
+                : err.message;
+            dispatch(setAlert({ message: errorMessage, variant: "error" }));
+            return rejectWithValue({ message: errorMessage, code: err.code });
         }
     }
 )
 
 export const addExpense = createAsyncThunk(
-    'expense/create',
-    async (formData : Object, { rejectWithValue }) => {
+    'expense/add',
+    async (formData: Object, { rejectWithValue, dispatch }) => {
         try {
             const res = await axios.post(`${budgetBuddyApiUrl}/expense/addExpense`,
                 formData,
@@ -29,9 +58,16 @@ export const addExpense = createAsyncThunk(
                     }
                 }
             )
+            dispatch(setAlert({ message: res.data.message, variant: "success" }));
             return res.data;
-        } catch (err) {
-            return rejectWithValue(err);
+        } catch (err: any) {
+            const errorMessage = err.response
+                ? Array.isArray(err.response.data.message)
+                    ? err.response.data.message.join(',')
+                    : err.response.data.message || err.message
+                : err.message;
+            dispatch(setAlert({ message: errorMessage, variant: 'error' }))
+            return rejectWithValue({ message: errorMessage, code: err.code });
         }
     }
 )
@@ -63,14 +99,7 @@ export const expenseDelete = createAsyncThunk(
 //Expense Slice
 const expenseSlice = createSlice({
     name: 'expense',
-    initialState: {
-        fetchLoading: false,   
-        addLoading: false,     
-        expenses: [],
-        addMessage: '',        
-        fetchError: null,     
-        addError: null        
-    },
+    initialState,
     reducers: {},
     extraReducers: (builder) => {
         // Handling fetchExpense states
@@ -78,30 +107,36 @@ const expenseSlice = createSlice({
             .addCase(fetchExpense.pending, (state) => {
                 state.fetchLoading = true;
                 state.fetchError = null;
+                state.fetchStatus = null;
             })
             .addCase(fetchExpense.fulfilled, (state, action: PayloadAction<any>) => {
                 state.fetchLoading = false;
+                state.fetchStatus = action.payload.status;
                 state.expenses = action.payload.data;
                 state.fetchError = null;
             })
             .addCase(fetchExpense.rejected, (state, action: PayloadAction<any>) => {
                 state.fetchLoading = false;
-                state.fetchError = action.payload?.error?.message || 'Failed to fetch expenses';
+                state.fetchStatus = 'failed';
+                state.fetchError = action.payload.message || 'Failed to fetch expenses';
             })
-            
+
             // Handling addExpense states
             .addCase(addExpense.pending, (state) => {
                 state.addLoading = true;
                 state.addError = null;
+                state.addStatus = null;
             })
             .addCase(addExpense.fulfilled, (state, action: PayloadAction<any>) => {
                 state.addLoading = false;
+                state.addStatus = action.payload.status;
                 state.addMessage = action.payload.data;
                 state.addError = null;
             })
             .addCase(addExpense.rejected, (state, action: PayloadAction<any>) => {
                 state.addLoading = false;
-                state.addError = action.payload?.error?.message || 'Failed to add expense';
+                state.addStatus = 'failed';
+                state.addError = action.payload.message || 'Failed to add expense';
             });
     }
 });
