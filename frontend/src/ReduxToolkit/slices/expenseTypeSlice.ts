@@ -84,6 +84,7 @@ const expenseTypeSlice = createSlice({
             .addCase(fetchExpenseType.pending, (state) => {
                 state.fetchLoading = true;
                 state.fetchError = null;
+                state.fetchStatus = null;
             })
             .addCase(fetchExpenseType.fulfilled, (state, action: PayloadAction<any>) => {
                 state.fetchLoading = false;
@@ -101,6 +102,7 @@ const expenseTypeSlice = createSlice({
             .addCase(addExpenseType.pending, (state) => {
                 state.addLoading = true;
                 state.addError = null;
+                state.addStatus = null;
             })
             .addCase(addExpenseType.fulfilled, (state, action: PayloadAction<any>) => {
                 state.addLoading = false;

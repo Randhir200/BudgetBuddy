@@ -2,7 +2,7 @@ import {
     Box, TextField, Chip
 } from '@mui/material';
 import ButtonComp from '../Common/ButtonComp';
-import { useState } from 'react';
+import { useState, memo} from 'react';
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../ReduxToolkit/store";
 import { addExpenseType } from '../../ReduxToolkit/slices/expenseTypeSlice';
@@ -15,7 +15,7 @@ const formInitialState = {
     userId: userId
   }
 
-export const ExpenseTypeForm = ({
+export const ExpenseTypeForm = memo(({
     isSmallScreen,
     theme,
 }: any) => {
@@ -123,4 +123,4 @@ export const ExpenseTypeForm = ({
                         </Box>
         </>
     );
-};
+});

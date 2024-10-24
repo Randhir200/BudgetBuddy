@@ -8,6 +8,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../ReduxToolkit/store";
 import { useSnackbar } from 'notistack';
 import { clearAlert } from "../ReduxToolkit/slices/alertSlice";
+import { fetchExpenseType } from "../ReduxToolkit/slices/expenseTypeSlice";
 
 // Create a Wrapper component that'll render a <section> tag with some styles
 const Wrapper = styled.section`
@@ -38,6 +39,7 @@ const ExpenseType: React.FC = () => {
     //close form if data is upload otherwise wait.
     if (addStatus === 'success') {
       setToggleTypeBtn(false);
+      dispatch(fetchExpenseType(localStorage.getItem('userId')))
     }
   }, [addStatus])
 
