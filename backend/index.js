@@ -3,7 +3,7 @@ const express = require("express");
 const mongoose = require('mongoose');
 const cors = require("cors");
 const helmet = require("helmet");
-const connection = require("./db/connection");
+const connection = require("./configs/dbConfig");
 const masterRoute = require("./routes/masterRoute");
 const globalErrorHandler = require("./controllers/errorController");
 const AppError = require("./utils/appError");
@@ -14,16 +14,14 @@ app.use(express.json());
 //cors
 app.use(cors());
 
-// app.all('*', (req, res, next) => {
-//   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404))
-// })
-
-
 // Use Helmet to set various HTTP headers for security
 app.use(helmet());
 
 app.use(masterRoute);
 
+app.all('*', (req, res, next) => {
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+})
 app.use(globalErrorHandler);
 
 app.get("/health",async (req, res)=>{
