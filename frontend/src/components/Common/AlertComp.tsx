@@ -1,4 +1,4 @@
-import { Alert, Snackbar, AlertTitle } from '@mui/material';
+import { Alert, AlertTitle } from '@mui/material';
 import { SnackbarProvider } from 'notistack';
 
 
@@ -10,7 +10,7 @@ interface AlertCompProps {
   alertState: any;
 }
 
-export const AlertComp = ({ vertical, horizontal, open, alertState }: AlertCompProps) => {
+export const AlertComp = ({ alertState }: AlertCompProps) => {
   return (
     // <Snackbar
     //   anchorOrigin={{ vertical, horizontal }}

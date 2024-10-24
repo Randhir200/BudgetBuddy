@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import styles from "./Income.module.css";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 // import { incomeActions } from "../Redux/actionCreator/incomeActions";
 import { fetchIncome } from "../ReduxToolkit/slices/incomeSlice";
-import { AppDispatch, RootState } from "../ReduxToolkit/store";
+import { AppDispatch } from "../ReduxToolkit/store";
 
 interface IncomeProps {
 
@@ -17,7 +17,6 @@ const initialState = {
 const Income: React.FC<IncomeProps> = () => {
     const [formData, setFormData] = useState(initialState);
     const dispatch: AppDispatch = useDispatch();
-    const incomeState = useSelector((state: RootState) => state.incomeReducer);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
