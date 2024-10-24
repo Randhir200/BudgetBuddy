@@ -15,7 +15,6 @@ const ButtonComp: React.FC<ButtonCompProps> = ({ title, variant = "contained",
     size = "small",
     event,
     loading = false }) => {
-    console.log('Btn: re-renders');
     return (
         <>
             <Button variant={variant} color={color} size={size} onClick={event}>

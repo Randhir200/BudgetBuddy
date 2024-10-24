@@ -33,7 +33,7 @@ const ExpenseTypeTable = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const dispatch:AppDispatch = useDispatch();
-  const {expenseTypes, fetchLoading} = useSelector((state:RootState)=>state.expenseTypeReducer)
+  const {expenseTypes, fetchLoading, addMessage} = useSelector((state:RootState)=>state.expenseTypeReducer)
   // Check if screen width is less than 600px
   const isMobile = useMediaQuery('(max-width:600px)');
 
@@ -62,7 +62,7 @@ const ExpenseTypeTable = () => {
  const userId = localStorage.getItem('userId');
   useEffect(()=>{
     dispatch(fetchExpenseType(userId));
-  }, [])
+  }, [dispatch, addMessage])
 
   return (
     <Paper style={{ width: '100%', overflowX: 'auto' }}>

@@ -7,15 +7,21 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../ReduxToolkit/store";
 import { addExpenseType } from '../../ReduxToolkit/slices/expenseTypeSlice';
 
+const userId = localStorage.getItem('userId');
+
+const formInitialState = {
+    type: '',
+    categories: [],
+    userId: userId
+  }
 
 export const ExpenseTypeForm = ({
     isSmallScreen,
     theme,
-    setFormData,
-    formData,
 }: any) => {
     const [categories, setCategories] = useState<string[]>([]); // State for categories
     const [categoryInput, setCategoryInput] = useState<string>(''); // State for input field
+    const [formData, setFormData] = useState(formInitialState); 
     const {addLoading} = useSelector((state:RootState)=>state.expenseTypeReducer);
     const dispatch:AppDispatch = useDispatch();
 
@@ -42,8 +48,9 @@ export const ExpenseTypeForm = ({
     
 
     function handleSubmit(){
-        // addExpenseType();
         dispatch(addExpenseType(formData));
+        setFormData(formInitialState);
+        setCategories([]);
     }
 
     return (
