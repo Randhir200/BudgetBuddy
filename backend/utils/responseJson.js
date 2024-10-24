@@ -12,7 +12,7 @@ exports.responseJson = (res, status, message, data=[])=>{
     return res.status(statusMap[status]||404).json({
         status,
         message,
-        data,
+        data: `${statusMap[status]}`.startsWith('2') ? data : undefined,
         statusCode: statusMap[status]
     })
 } 

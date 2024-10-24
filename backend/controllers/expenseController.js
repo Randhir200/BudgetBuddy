@@ -1,15 +1,14 @@
 const Expense = require("../models/expenseModel");
+const { catchAsync } = require("../utils/catchAsync");
 const { responseJson } = require("../utils/responseJson");
-const mongoose = require('mongoose');
 
-const getAllExpense = async (req, res)=>{
-    const {userId} = req.query;
-    try{        
-        // Check if userId is valid and non-empty before querying
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-        console.info(`INFO: Invalid or missing userId!\n`);
-        return responseJson(res, "badRequest", "Invalid or missing userId");
-    }
+exports.createExpense = catchAsync(async (req, res) => {
+        const resData = await Expense.create(req.body);
+        return responseJson(res, 'success', 'data has been uploaded', resData);
+});
+
+exports.fetchExpense = catchAsync(async (req, res) => {
+    const { userId } = req.query;
 
     // Query the database with a valid userId
     const expenseRaw = await Expense.find({ userId });
@@ -23,10 +22,9 @@ const getAllExpense = async (req, res)=>{
     // Return success response with the expense data
     console.info(`INFO: Expenses retrieved successfully!\n`);
     return responseJson(res, "success", "Expenses retrieved successfully", expenseRaw);
-    }catch(err){
-        console.error(`ERROR: Somthing went wrong! ${err} \n`);
-        return responseJson(res, "internalError", `Somthing went wrong! ${err}`);
-    }
-}
 
-module.exports = getAllExpense;
+});
+
+exports.updateExpense = (req, res) => { }
+
+exports.deleteExpense = (req, res) => { }

@@ -1,6 +1,6 @@
 const express = require('express');
-const expenseRoute = require('./expenseRoute');
-const configRoute = require('./configRoute');
+const expenseRoute = require('./expenseRoutes');
+const configRoute = require('./configRoutes');
 const masterRoute = express.Router();
 
 masterRoute.use('/expense', expenseRoute);

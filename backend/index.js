@@ -5,6 +5,8 @@ const cors = require("cors");
 const helmet = require("helmet");
 const connection = require("./db/connection");
 const masterRoute = require("./routes/masterRoute");
+const globalErrorHandler = require("./controllers/errorController");
+const AppError = require("./utils/appError");
 const app = express();
 
 app.use(express.json());
@@ -12,11 +14,17 @@ app.use(express.json());
 //cors
 app.use(cors());
 
+// app.all('*', (req, res, next) => {
+//   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404))
+// })
+
+
 // Use Helmet to set various HTTP headers for security
 app.use(helmet());
 
 app.use(masterRoute);
 
+app.use(globalErrorHandler);
 
 app.get("/health",async (req, res)=>{
   try{
