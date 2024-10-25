@@ -1,18 +1,18 @@
-const statusMap = {
-    success: 200,
-    created: 201,
-    badRequest: 400,
-    unauthorized: 401,
-    forbidden: 403,
-    notFound: 404,
-    internalError: 500,
-};
+const statusMap = new Map([
+    [200, 'success'],
+    [201, 'created'],
+    [400, 'badRequest'],
+    [401, 'unauthorized'],
+    [403, 'forbidden'],
+    [404, 'notFound'],
+    [500, 'internalError']
+]);
 
 exports.responseJson = (res, status, message, data=[])=>{
-    return res.status(statusMap[status]||404).json({
-        status,
+    return res.status(status||500).json({
+        status: statusMap.get(status),
         message,
-        data: `${statusMap[status]}`.startsWith('2') ? data : undefined,
-        statusCode: statusMap[status]
+        data: `${status}`.startsWith('2') ? data : undefined,
+        statusCode: status
     })
 } 

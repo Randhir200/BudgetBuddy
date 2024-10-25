@@ -1,11 +1,12 @@
 const joi = require('joi');
 const mongoose = require('mongoose');
 const { responseJson } = require('../../utils/responseJson');
+const  AppError  = require('../../utils/appError');
 
 
 const objectIdValidation = (value, helpers) => {
     if (!mongoose.Types.ObjectId.isValid(value)) {
-        return helpers.message('"{{#label}}" must be a valid userId');
+        return helpers.message('Must be a valid userId');
     }
     return value;
 };
@@ -53,7 +54,8 @@ const validateExpense = (schema) => {
         const { error } = schema.validate(data);
         if (error) {
             console.info(`INFO: ${error.details[0].message}!\n`);
-            return responseJson(res, 'badRequest', error.details[0].message)
+            // return responseJson(res, 400, error.details[0].message)
+            next(new AppError(error.details[0].message, 400))
         }
         next();
     };

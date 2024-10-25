@@ -7,6 +7,7 @@ const connection = require("./configs/dbConfig");
 const masterRoute = require("./routes/masterRoute");
 const globalErrorHandler = require("./controllers/errorController");
 const AppError = require("./utils/appError");
+const { catchAsync } = require("./utils/catchAsync");
 const app = express();
 
 app.use(express.json());
@@ -19,27 +20,26 @@ app.use(helmet());
 
 app.use(masterRoute);
 
+//DB connection check
+app.get("/health", catchAsync(async (req, res) => {
+  const mongoState = mongoose.STATES[mongoose.connection.readyState];
+  
+  if (mongoState === "connected") {
+    res.status(200).json({
+      status: "up", dbState: mongoState
+    })
+  } else {
+    res.status(500).json({ status: "down", dbState: mongoState });
+  }
+  
+}))
+
+//Validation for unlisted routes
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
-})
+});
+
 app.use(globalErrorHandler);
-
-app.get("/health",async (req, res)=>{
-  try{
-    const mongoState = mongoose.STATES[mongoose.connection.readyState];
-    
-    if(mongoState === "connected"){
-      res.status(200).json({
-        status: "up", dbState: mongoState
-      })
-    }else{
-      res.status(500).json({ status: "down", dbState: mongoState });    
-    }
-  }catch(err){
-    res.status(500).json({ status: "failed", message: `something went wrong! ${err}` });    
-  }
-})
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {

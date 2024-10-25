@@ -1,10 +1,16 @@
 class AppError extends Error {
+   static errorMap = new Map([
+        [400, 'badRequest'],
+        [401, 'unauthorized'],
+        [403, 'forbidden'],
+        [404, 'notFound'],
+        [500, 'internalError']
+    ]);
     constructor(message, statusCode){
-        super(message)
-
+        super(message);
         this.statusCode = statusCode;
-        this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
         this.isOperational = true;
+        this.status = AppError.errorMap.get(this.statusCode);
         
         // to trace error capturing it in the stack
         Error.captureStackTrace(this, this.constructor)
