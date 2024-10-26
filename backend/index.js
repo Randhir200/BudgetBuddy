@@ -45,7 +45,7 @@ app.get("/health", catchAsync(async (req, res) => {
 
 //Validation for unlisted routes
 app.all('*', (req, res, next) => {
-  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+  next(new AppError(`Can't find this endpoint:  ${req.originalUrl} on this server!`, 404));
 });
 
 app.use(globalErrorHandler);

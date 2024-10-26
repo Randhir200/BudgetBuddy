@@ -1,10 +1,10 @@
 const express = require('express');
-const expenseRoute = require('./expenseRoutes');
-const configRoute = require('./configRoutes');
+const expenseRoute = require('./expenseRoute');
+const expenseTypeRoute = require('./expenseTypeRoute');
 const masterRoute = express.Router();
 
 masterRoute.use('/expense', expenseRoute);
-masterRoute.use('/config', configRoute)
+masterRoute.use('/expenseType', expenseTypeRoute)
 
 module.exports = masterRoute;
 
