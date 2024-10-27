@@ -17,7 +17,7 @@ const handleValidationErrorDB = (err) => {
     return new AppError(message, 400);
 }
 const sendErrorDev = (err, res) => {
-    console.log(`err from dev`, err);
+
     res.status(err.statusCode).json({
         status: err.status,
         error: err,
@@ -32,6 +32,7 @@ const sendErrorProd = (err, res) => {
         return res.status(err.statusCode).json({
             status: err.status,
             message: err.message,
+            statusCode: err.statusCode
         })
 
         //Programming or other unknown error: don't leak error details
@@ -41,6 +42,8 @@ const sendErrorProd = (err, res) => {
         return res.status(500).json({
             status: 'error',
             message: 'Somthing went wrong!',
+            statusCode: 500
+
         })
     }
 }

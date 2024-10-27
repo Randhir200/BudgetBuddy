@@ -7,13 +7,14 @@ class AppError extends Error {
         [500, 'internalError']
     ]);
     constructor(message, statusCode){
-        super(message);
+        super();
         this.statusCode = statusCode;
         this.isOperational = true;
+        this.message = message;
         this.status = AppError.errorMap.get(this.statusCode);
         
         // to trace error capturing it in the stack
-        Error.captureStackTrace(this, this.constructor)
+        Error.captureStackTrace(this, this.constructor);
     }
 }
 
