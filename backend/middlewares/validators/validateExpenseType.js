@@ -64,5 +64,6 @@ const validateExpenseType = (schema) => {
 }
 
 module.exports = {
-    validateCreateExpenseType: validateExpenseType(createExpenseTypeSchema)
+    validateCreateExpenseType: validateExpenseType(createExpenseTypeSchema),
+    validateFetchExpenseType: validateExpenseType(fetchExpenseTypeSchema)
 }
