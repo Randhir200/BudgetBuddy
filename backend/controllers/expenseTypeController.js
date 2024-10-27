@@ -6,7 +6,7 @@ const { responseJson } = require("../utils/responseJson");
 exports.createExepnesType = catchAsync(async (req, res, next) => {
     const { type } = req.body;
     const resData = await ExpenseType.create(req.body);
-    return responseJson(res, 200, 'Config has been uploaded!', resData);
+    return responseJson(res, 200, 'ExpenseType has been uploaded!', resData);
 })
 
 exports.fetchExpenseType = catchAsync(async (req, res, next) => {
@@ -14,15 +14,16 @@ exports.fetchExpenseType = catchAsync(async (req, res, next) => {
 
     // Query the database with a valid userId
     const ExpenseTypeRaw = await ExpenseType.find({ userId });
-
+    
+    console.log(ExpenseTypeRaw.length);
     // If no expense data is found, handle accordingly
     if (!ExpenseTypeRaw || ExpenseTypeRaw.length === 0) {
-        console.info(`INFO: No configs found for the given userId!\n`);
-        next(new AppError("No ExpenseTypes found for the given userId", 404))
+        console.info(`INFO: ExpenseType doesn't found for the given userId!\n`);
+        return next(new AppError("ExpenseType doesn't found for the given userId", 404))
     }
 
     // Return success response with the expense data
-    console.info(`INFO: Configs retrieved successfully!\n`);
-    return responseJson(res, "success", "Config retrieved successfully", ExpenseTypeRaw);
+    console.info(`INFO: ExpenseTypes retrieved successfully!\n`);
+    return responseJson(res, 200, "ExpenseTypes retrieved successfully", ExpenseTypeRaw);
 
 })
