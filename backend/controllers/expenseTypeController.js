@@ -16,7 +16,7 @@ exports.fetchExpenseType = catchAsync(async (req, res, next) => {
     const ExpenseTypeRaw = await ExpenseType.find({ userId });
     
     console.log(ExpenseTypeRaw.length);
-    // If no expense data is found, handle accordingly
+    // If no expense data is found, handle according"ExpenseType doesn't found for the given userId"ly
     if (!ExpenseTypeRaw || ExpenseTypeRaw.length === 0) {
         console.info(`INFO: ExpenseType doesn't found for the given userId!\n`);
         return next(new AppError("ExpenseType doesn't found for the given userId", 404))

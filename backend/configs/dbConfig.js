@@ -1,12 +1,14 @@
 const mongoose = require("mongoose");
 
-const uri = "mongodb+srv://mailrandhirkr:Budget00@cluster.bkudr.mongodb.net/BudgetBuddy";
+const uri = process.env.MONGODB_URI;
 const dbConfig = async () => {
   try {
-    await mongoose.connect(uri)
+    await mongoose.connect(uri); // Options are no longer needed
+    console.log("Connected to MongoDB");
   } catch (err) {
-    throw (err)
+    console.error("Error connecting to MongoDB", err);
+    throw err;
   }
-}
+};
 
-module.exports = dbConfig
+module.exports = dbConfig;

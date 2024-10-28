@@ -1,5 +1,16 @@
 {
-  "name": "BudgetBuddy-backend",
-  "outputDirectory": "build",
-  "buildCommand": "npm run build"
-}
+    "version": 2,
+    "builds": [
+      {
+        "src": "index.js",
+        "use": "@vercel/node"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/(.*)",
+        "dest": "index.js"
+      }
+    ]
+  }
+  
