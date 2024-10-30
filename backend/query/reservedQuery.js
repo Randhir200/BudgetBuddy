@@ -110,3 +110,110 @@ const duplicates = db.expensetypes.aggregate([
 duplicates.forEach(doc => {
   db.expensetypes.deleteMany({ _id: { $in: doc.ids } });
 });
+
+
+// type based expenses
+
+db.Expense.aggregate([
+  {
+    $match: {
+      createdAt: {
+        $gte: ISODate('2024-10-01T00:00:00.000Z'),
+        $lte: ISODate('2024-10-31T23:59:59.999Z')
+      }
+    }
+  },
+  {
+    $group: {
+      _id: '$type',
+      totalExpenseType: { $sum: 1 },
+      totalExpense: { $sum: '$price' },
+    },
+    $group : {
+        _id: '$category',
+         totalCat : {$sum : 1},
+         totalCatAmount: {$sum : '$category'}           
+    },
+  }]);
+
+  //
+
+
+  //optimized
+
+  db.Expense.aggregate([
+    {
+      $match: {
+        createdAt: {
+          $gte: ISODate('2024-10-01T00:00:00.000Z'),
+          $lte: ISODate('2024-10-31T23:59:59.999Z')
+        }
+      }
+    },
+    // Step 1: Group by type and category to get totalCat and totalCatAmount for each category
+    {
+      $group: {
+        _id: { type: "$type", category: "$category" },
+        totalCat: { $sum: 1 },
+        totalCatAmount: { $sum: "$price" }
+      }
+    },
+    // Step 2: Regroup by type and create an array of categories
+    {
+      $group: {
+        _id: "$_id.type",
+        categories: {
+          $push: {
+            category: "$_id.category",
+            totalCat: "$totalCat",
+            totalCatAmount: "$totalCatAmount"
+          }
+        },
+        totalTypeAmount: { $sum: "$totalCatAmount" }
+      }
+    },
+    // Optional: Rename _id field to type for clarity
+    {
+      $project: {
+        type: "$_id",
+        categories: 1,
+        totalTypeAmount: 1,
+        _id: 0
+      }
+    }
+  ]);
+  
+
+
+  ///
+  db.Expense.aggregate([
+    {
+      $match: {
+        createdAt: {
+          $gte: ISODate('2024-10-01T00:00:00.000Z'),
+          $lte: ISODate('2024-10-31T23:59:59.999Z')
+        }
+      }
+    },
+    // Step 1: Group by type and category to get totalCat and totalCatAmount for each category
+    {
+      $group: {
+        _id: { type: "$type", category: "$category" },
+        totalCat: { $sum: 1 },
+        totalCatAmount: { $sum: "$price" }
+      }
+    },
+    {
+      $group: {
+        _id: "$_id.type",
+        categories: {
+          $push: {
+            category: "$_id.category",
+            totalCat: "$totalCat",
+            totalCatAmount: "$totalCatAmount"
+          }
+        },
+        totalTypeAmount: { $sum: "$totalCatAmount" }
+      }
+    },
+  ]);

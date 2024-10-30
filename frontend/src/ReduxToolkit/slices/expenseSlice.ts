@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { budgetBuddyApiUrl } from "../../config/config";
+import { budgetBuddyApiUrl } from "../../configs/apiURLs";
 import { setAlert } from "./alertSlice";
 
 interface ExpenseState {
@@ -30,7 +30,7 @@ export const fetchExpense = createAsyncThunk(
     'expense/read',
     async (userId: string | null, { rejectWithValue, dispatch }) => {
         try {
-            const res = await axios.get(`${budgetBuddyApiUrl}/expense/getAllExpense?userId=${userId}`);
+            const res = await axios.get(`${budgetBuddyApiUrl}/expense/fetch?userId=${userId}`);
             dispatch(setAlert({ message: res.data.message, variant: "success" }));
             return res.data;
         } catch (err: any) {
@@ -49,7 +49,7 @@ export const addExpense = createAsyncThunk(
     'expense/add',
     async (formData: Object, { rejectWithValue, dispatch }) => {
         try {
-            const res = await axios.post(`${budgetBuddyApiUrl}/expense/addExpense`,
+            const res = await axios.post(`${budgetBuddyApiUrl}/expense/create`,
                 formData,
                 {
                     headers: {

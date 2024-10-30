@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import axios from "axios";
-import { authApiUrl } from "../../config/config";
+import { authApiUrl } from "../../configs/apiURLs";
 import { LinearProgress } from "@mui/material";
 
 interface PrivateRouteProps {
@@ -29,7 +29,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
 
         if (response.status === 200) {
           //storing userId in local storage
-          localStorage.setItem('userId', response.data.userId);
+          // localStorage.setItem('userId', response.data.userId);
           setIsAuthenticated(true); // Authenticated
           setIsLoading(false); 
         } else {
@@ -47,7 +47,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
 
   // Handle loading state
   if (isLoading) {
-    return <> {isLoading && <LinearProgress/>}</> // Or a spinner, etc.
+    return <> {isLoading && <LinearProgress/>}</> 
   }
 
   // If authenticated, render children; otherwise, redirect to login

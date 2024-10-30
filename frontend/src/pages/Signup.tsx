@@ -6,7 +6,7 @@ import axios, {AxiosError} from "axios";
 import { AlertProps } from "@mui/material/Alert";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
 import { AlertComp } from "../components/Common/AlertComp";
-import {authApiUrl} from "../config/config";
+import {authApiUrl} from "../configs/apiURLs";
 import {LinearProgress} from "@mui/material";
 
 

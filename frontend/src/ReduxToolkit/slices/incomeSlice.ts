@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { budgetBuddyApiUrl } from '../../config/config';
+import { budgetBuddyApiUrl } from '../../configs/apiURLs';
 
 interface IncomeState {
     loading: boolean;

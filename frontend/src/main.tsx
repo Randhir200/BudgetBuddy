@@ -6,11 +6,11 @@ import { store } from "./ReduxToolkit/store";
 import { SnackbarProvider } from "notistack";
 createRoot(document.getElementById("root")!).render(
     <>
-        <Provider store={store}>
-            <SnackbarProvider maxSnack={3} autoHideDuration={2000}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
+        <SnackbarProvider maxSnack={3} autoHideDuration={2000}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
+            <Provider store={store}>
                 <App />
-            </SnackbarProvider>
-        </Provider>
+            </Provider>
+        </SnackbarProvider>
     </>
 );

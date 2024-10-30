@@ -6,10 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { AlertProps } from "@mui/material/Alert";
 import { AlertComp } from "../components/Common/AlertComp";
 import { SnackbarOrigin } from "@mui/material/Snackbar";
-import {authApiUrl} from "../config/config";
+import {authApiUrl} from "../configs/apiURLs";
 import {LinearProgress} from "@mui/material";
-
-
 
 interface Response {
     status: number;
@@ -27,7 +25,6 @@ interface State extends SnackbarOrigin {
 interface alertState extends AlertProps {
     message: string
 }
-
 
 const Login = () => {
     const [email, setEmail] = useState("");

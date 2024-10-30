@@ -1,11 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import {
   Box,
   Typography,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  LinearProgress
 } from "@mui/material";
-import ExpenseTable from "../components/Expense/ExpenseTable";
+// import ExpenseTable from "../components/Expense/ExpenseTable";
+
+const LazyExpenseTable = React.lazy(()=>import('../components/Expense/ExpenseTable'));
 import ButtonComp from "../components/Common/ButtonComp";
 import { ExpenseForm } from "../components/Expense/ExpenseForm";
 import styled from "styled-components";
@@ -43,7 +46,7 @@ const Expenses: React.FC = () => {
       setToggleAdd(false);
       dispatch(fetchExpense(userId))
     }
-  }, [addStatus]);
+  }, [addStatus, userId]);
 
 
   useEffect(() => {
@@ -78,7 +81,10 @@ const Expenses: React.FC = () => {
       )}
 
       <Box sx={{ mt: 2 }}>
-        <ExpenseTable />
+        {/* <ExpenseTable /> */}
+        <Suspense fallback={<LinearProgress/>}>
+          <LazyExpenseTable/>
+        </Suspense>
       </Box>
     </Wrapper>
   );

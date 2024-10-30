@@ -1,5 +1,4 @@
-import { Alert, AlertTitle } from '@mui/material';
-import { SnackbarProvider } from 'notistack';
+import { Alert, AlertTitle, Snackbar } from '@mui/material';
 
 
 
@@ -10,23 +9,21 @@ interface AlertCompProps {
   alertState: any;
 }
 
-export const AlertComp = ({ alertState }: AlertCompProps) => {
+export const AlertComp = ({vertical, horizontal, open, alertState }: AlertCompProps) => {
   return (
-    // <Snackbar
-    //   anchorOrigin={{ vertical, horizontal }}
-    //   open={open}
-    //   autoHideDuration={2000}
-    //   onClose={() => { }}
-    //   message=""
-    //   key={vertical + horizontal}
-    // >
-      <SnackbarProvider>
+    <Snackbar
+      anchorOrigin={{ vertical, horizontal }}
+      open={open}
+      autoHideDuration={2000}
+      onClose={() => { }}
+      message=""
+      key={vertical + horizontal}
+    >
         <Alert severity={alertState.severity} sx={{ textAlign: "left" }}>
           <AlertTitle>{alertState.severity}</AlertTitle>
           {alertState.message}
         </Alert>
-      </SnackbarProvider>
 
-    // </Snackbar>
+    </Snackbar>
   );
 }
