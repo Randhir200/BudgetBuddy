@@ -31,7 +31,7 @@ app.use(masterRoute);
 
 //DB connection check
 app.get("/health", catchAsync(async (req, res) => {
-  const mongoState = mongoos.STATES[mongoose.connection.readyState];
+  const mongoState = mongoose.STATES[mongoose.connection.readyState];
   
   if (mongoState === "connected") {
     res.status(200).json({
