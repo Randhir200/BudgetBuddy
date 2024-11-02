@@ -5,27 +5,52 @@ const { responseJson } = require("../utils/responseJson");
 
 exports.createExpense = catchAsync(async (req, res) => {
         const resData = await Expense.create(req.body); 
-        return responseJson(res, 200, 'data has been uploaded', resData);
+        return responseJson(res, 200, 'Expense added successfully', resData);
 });
 
 exports.fetchExpense = catchAsync(async (req, res, next) => {
     const { userId } = req.query;
 
     // Query the database with a valid userId
-    const expenseRaw = await Expense.find({userId});
+    const expenses = await Expense.find({userId});
     
     // If no expense data is found, handle accordingly
-    if (!expenseRaw || expenseRaw.length === 0) {
+    if (!expenses || expenses.length === 0) {
         console.info(`INFO: Expenses Doesn't found for the given userId!\n`);
         return next(new AppError(`Expenses Doesn't found for the given userId!`, 404));
     }
 
     // Return success response with the expense data
     console.info(`INFO: Expenses retrieved successfully!\n`);
-    return responseJson(res, 200, "Expenses retrieved successfully", expenseRaw);
+    return responseJson(res, 200, "Expenses retrieved successfully", expenses);
 
 });
 
-exports.updateExpense = (req, res) => { }
+exports.updateExpense = catchAsync(async (req, res, next) => {
+    const { expenseId } = req.params;
 
-exports.deleteExpense = (req, res) => { }
+    const updateExpense = await Expense.findByIdAndUpdate(
+        expenseId,
+        req.body,
+        { new: true, runValidators: true }
+    );
+
+    if (!updateExpense) {
+        return next(new AppError('Expense record not found', 404))
+    }
+
+    return responseJson(res, 200, 'Expense updated successfully!', updateExpense);
+
+});
+
+exports.deleteExpense = catchAsync(async (req, res) => {
+    const { expenseId } = req.params; 
+
+    const deletedExpense = await Expense.findByIdAndDelete(expenseId);
+
+    if (!deletedExpense) {
+        return next(new AppError('Expense record not found', 404))
+    }
+
+    return responseJson(res, 200, 'Expense deleted successfully!', deletedExpense);
+})

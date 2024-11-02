@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const updateCurrentBalance = require('./plugins/updateCurrentBalance');
 
 const expenseSchema =  new mongoose.Schema({
     type: {type: String, required: true},
@@ -9,6 +10,10 @@ const expenseSchema =  new mongoose.Schema({
     userId : {type: String, ref: 'User', required: true}
 });
 
+//update current balance plugin
+expenseSchema.plugin(updateCurrentBalance);
+
 const Expense = mongoose.model('Expense', expenseSchema, 'Expense');
+
 
 module.exports = Expense;
