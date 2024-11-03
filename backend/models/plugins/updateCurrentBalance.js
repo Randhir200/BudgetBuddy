@@ -1,93 +1,81 @@
+const AppError = require("../../utils/appError");
+const { catchAsync } = require("../../utils/catchAsync");
 const Balance = require("../balanceModel");
 
 function updateCurrentBalance(schema) {
-
- const getBalanceChange = (doc)=>{
-    const modelName = this.constructor.modelName;
-    return (modelName === 'Income' ? doc.amount : doc.price);
- }
-
   
-  // Post-save hook to update balance after creating an Income or Expense
-  schema.post('save', async function (doc, next) {
-    try {
+  // Utility function to determine balance change based on model type
+  function getBalanceChange(doc, modelName) {
+    return modelName === 'Income' ? doc.amount : doc.price;
+  }
+
+  // // After creating an Income or Expense, update balance
+  catchAsync(schema.post('save', async function (doc, next) {
+    const modelName = this.constructor.modelName;
+
       let balance = await Balance.findOne({ userId: doc.userId });
-      
-      // If no balance document exists, create one
       if (!balance) {
-        balance = new Balance({
-          userId: doc.userId,
-          currentBalance: 0
-        });
+        balance = new Balance({ userId: doc.userId, currentBalance: 0 });
       }
 
+      const balanceChange = getBalanceChange(doc, modelName);
+      balance.currentBalance += modelName === 'Income' ? balanceChange : -balanceChange;
 
-      // Update balance depending on the model
-      if (modelName === 'Income') {
-        balance.currentBalance += getBalanceChange(doc);
-      } else if (modelName === 'Expense') {
-        balance.currentBalance -= getBalanceChange(doc);
-      }
-
-      // Save the updated balance
       await balance.save();
+      console.info(`INFO: Current balance updated`);
+      
       next();
-    } catch (error) {
-      next(error); // Handle any errors
-    }
-  });
+  }));
 
-  // Pre-update hook to store original amount or price for balance adjustment
-  schema.pre('findOneAndUpdate', async function (next) {
-    try {
+  // Before updating, store the original value for balance adjustment
+  catchAsync(schema.pre('findOneAndUpdate', async function (next) {
       const docToUpdate = await this.model.findOne(this.getQuery());
 
-      // Store original amount or price based on model type
-      this._oldValue = getBalanceChange(docToUpdate);
-      next();
-    } catch (error) {
-      next(error);
-    }
-  });
+      if (!docToUpdate) {
+        // If document does not exist, skip the balance update
+        return next(new AppError("Data not found to update", 404));
+      }
 
-  // Post-update hook to adjust balance based on difference
-  schema.post('delete', async function (doc, next) {
+      this._oldValue = getBalanceChange(docToUpdate, this.model.modelName);
+      next();
+  }));
+
+  // After updating, adjust balance based on the difference
+  catchAsync(schema.post('findOneAndUpdate', async function (doc, next) {
+    const modelName = this.model.modelName;
     if (doc) {
-      try {
-        const newValue = getBalanceChange(doc);
-        const balanceChange = this.constructor.modelName === 'Income' ? newValue - this._oldValue : this._oldValue - newValue;
+        const newValue = getBalanceChange(doc, modelName);
+        console.log('old value', this._oldValue);
+        
+        const balanceChange = modelName === 'Income' 
+          ? newValue - this._oldValue 
+          : this._oldValue - newValue;
 
         const balance = await Balance.findOne({ userId: doc.userId });
-
         if (balance) {
           balance.currentBalance += balanceChange;
           await balance.save();
+          console.info(`INFO: Current balance updated`);
         }
         next();
-      } catch (error) {
-        next(error);
-      }
     }
-  });
+  }));
 
-  // Post-delete hook to update balance after deleting an Income or Expense
-  schema.post('findOneAndDelete', async function (doc, next) {
+  // After deleting, update balance by reversing the effect of the deleted doc
+  catchAsync(schema.post('findOneAndDelete', async function (doc, next) {
+    const modelName = this.model.modelName;
     if (doc) {
-      try {
-        const balanceChange = this.constructor.modelName === 'Income' ? -doc.amount : doc.price;
-       
+        const balanceChange = getBalanceChange(doc, modelName);
         const balance = await Balance.findOne({ userId: doc.userId });
-        
+
         if (balance) {
-          balance.currentBalance -= balanceChange;
+          balance.currentBalance += modelName === 'Income' ? -balanceChange : balanceChange;
           await balance.save();
+          console.info(`INFO: Current balance updated`);
         }
         next();
-      } catch (error) {
-        next(error);
-      }
     }
-  });
+  }));
 }
 
 module.exports = updateCurrentBalance;

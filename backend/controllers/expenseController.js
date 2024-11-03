@@ -12,7 +12,7 @@ exports.fetchExpense = catchAsync(async (req, res, next) => {
     const { userId } = req.query;
 
     // Query the database with a valid userId
-    const expenses = await Expense.find({userId});
+    const expenses = await Expense.find({userId}).sort({createdAt: -1});
     
     // If no expense data is found, handle accordingly
     if (!expenses || expenses.length === 0) {
@@ -43,7 +43,7 @@ exports.updateExpense = catchAsync(async (req, res, next) => {
 
 });
 
-exports.deleteExpense = catchAsync(async (req, res) => {
+exports.deleteExpense = catchAsync(async (req, res, next) => {
     const { expenseId } = req.params; 
 
     const deletedExpense = await Expense.findByIdAndDelete(expenseId);

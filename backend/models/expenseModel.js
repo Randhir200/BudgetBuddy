@@ -7,6 +7,7 @@ const expenseSchema =  new mongoose.Schema({
     price: {type: Number, required: true},
     item: {type: String, required: true},
     createdAt: {type: Date, default: Date.now},
+    updatedAt: {type: Date, default: Date.now},
     userId : {type: String, ref: 'User', required: true}
 });
 

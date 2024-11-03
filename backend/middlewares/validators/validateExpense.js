@@ -83,7 +83,14 @@ const deleteExpenseSchema = Joi.object({
 const validateExpense = (schema) => {
     return (req, res, next) => {
         // Determine the source of the data based on the request method
-        const data = req.method === 'GET' ? req.query : req.body;
+        const data = req.method === 'GET'
+        ? req.query
+        : req.method === 'DELETE'
+          ? req.params
+          : req.method === 'PATCH'
+            ? { ...req.params, ...req.body }
+            : req.body;      
+      
         const { error } = schema.validate(data);
         if (error) {
             console.error(`ERROR: ${error.details[0].message}!\n`);

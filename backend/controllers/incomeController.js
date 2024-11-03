@@ -41,7 +41,7 @@ exports.updateIncome = catchAsync(async (req, res, next) => {
 
 });
 
-exports.deleteIncome = catchAsync(async (req, res) => {
+exports.deleteIncome = catchAsync(async (req, res, next) => {
     const { incomeId } = req.params; 
 
     const deletedIncome = await Income.findByIdAndDelete(incomeId);

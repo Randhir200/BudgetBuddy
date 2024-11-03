@@ -217,3 +217,19 @@ db.Expense.aggregate([
       }
     },
   ]);
+
+
+  // 
+
+
+const totalExpense = db.Expense.aggregate([
+  { $match: { userId: ObjectId('6638bbb72ee0057ac3f3e21a') } },
+  { $group: { _id: null, totalPrice: { $sum: "$price" } } }
+]).toArray();
+
+const expenseTotal = totalExpense[0]?.totalPrice || 0;
+
+db.Balance.updateOne(
+  { userId: ObjectId('6638bbb72ee0057ac3f3e21a')  },
+  { $inc: { currentBalance: -expenseTotal } }
+);
