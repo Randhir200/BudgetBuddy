@@ -7,7 +7,6 @@ import {
   LinearProgress
 } from "@mui/material";
 // import ExpenseTable from "../components/Expense/ExpenseTable";
-
 const LazyExpenseTable = React.lazy(()=>import('../components/Expense/ExpenseTable'));
 import ButtonComp from "../components/Common/ButtonComp";
 import { ExpenseForm } from "../components/Expense/ExpenseForm";

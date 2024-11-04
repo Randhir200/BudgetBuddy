@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
+import Insight from "./pages/Insight";
 import { DashboardLayout } from "./components/Common/DashboardLayout";
 import React, { useState, useMemo } from "react";
 import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
@@ -49,7 +49,7 @@ const App: React.FC = () => {
                   onToggleDarkMode={toggleDarkMode}
                   darkMode={darkMode}
                 >
-                  <Dashboard />
+                  <Insight />
                 </DashboardLayout>
               </PrivateRoute>
             }
