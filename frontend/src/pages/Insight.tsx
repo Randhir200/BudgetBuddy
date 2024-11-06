@@ -5,6 +5,8 @@ import { PieChart, BarChart } from 'echarts/charts';
 import { TitleComponent, TooltipComponent, GridComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import InsightCard from '../components/Insight/InsightCard';
+import MonthYearPicker from '../components/Common/MonthYearPicker';
+import { Box } from '@mui/material';
 
 echarts.use([TitleComponent, TooltipComponent, GridComponent, PieChart, BarChart, CanvasRenderer]);
 
@@ -82,7 +84,7 @@ const Insight: React.FC = () => {
       }
     ]
   };
-  
+
   const emptyOptions = {
     title: { text: '' },
     xAxis: { type: 'category', data: [] },
@@ -142,24 +144,27 @@ const Insight: React.FC = () => {
   };
 
   return (
-    <div style={{ overflow: 'true' }}>
+    <Box sx={{ overflow: 'true' }} p={2}>
       <InsightCard />
-      <ReactEChartsCore
-        echarts={echarts}
-        option={pieOptions}
-        style={{ width: '100%', height: '400px' }}
-        onEvents={{
-          click: handlePieClick
-        }}
-      />
-      <div ref={barChartRef}> {/* Ref for bar chart container */}
+      <MonthYearPicker />
+      <Box mt={2}>
         <ReactEChartsCore
           echarts={echarts}
-          option={barOptions}
-          style={{ width: '100%', height: '400px', marginTop: '20px' }}
+          option={pieOptions}
+          style={{ width: '100%', height: '400px' }}
+          onEvents={{
+            click: handlePieClick
+          }}
         />
-      </div>
-    </div>
+        <div ref={barChartRef}> {/* Ref for bar chart container */}
+          <ReactEChartsCore
+            echarts={echarts}
+            option={barOptions}
+            style={{ width: '100%', height: '400px', marginTop: '20px' }}
+          />
+        </div>
+      </Box>
+    </Box>
   );
 };
 

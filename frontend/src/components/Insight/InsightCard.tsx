@@ -17,7 +17,7 @@ const CurrentMonth = "November 2024"; // Adjust as needed
 
 const InsightCard: React.FC = () => {
   return (
-    <Box sx={{ padding: 2 }}>
+    <Box>
     <Grid container spacing={2}>
       {data.map((item) => (
         <Grid item xs={12} sm={6} md={3} key={item.title}>
