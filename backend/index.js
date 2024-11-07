@@ -50,7 +50,7 @@ app.all('*', (req, res, next) => {
 
 app.use(globalErrorHandler);
 
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, async () => {
   try {
   await connection();

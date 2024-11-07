@@ -68,5 +68,5 @@ exports.balance = catchAsync(async (req, res, next) => {
         next(new AppError(`Balance doesn't found`, 404));
     }
 
-    responseJson(res, 200, 'Balance retrieved successfully', data);
+    responseJson(res, 200, 'Balance retrieved successfully', data[0]);
 });
