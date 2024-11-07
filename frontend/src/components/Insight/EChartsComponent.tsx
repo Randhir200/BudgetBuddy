@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import ReactEcharts from 'echarts-for-react';
 import * as echarts from 'echarts';
 

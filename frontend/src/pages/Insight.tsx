@@ -9,7 +9,7 @@ import MonthYearPicker from '../components/Common/MonthYearPicker';
 import { Box } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux'; 
 import { RootState, AppDispatch } from '../ReduxToolkit/store';
-import {fetchBalance, fetchMonthlyOverview} from '../ReduxToolkit/slices/insightSlice';
+import {fetchMonthlyOverview} from '../ReduxToolkit/slices/insightSlice';
 
 echarts.use([TitleComponent, TooltipComponent, GridComponent, PieChart, BarChart, CanvasRenderer]);
 
