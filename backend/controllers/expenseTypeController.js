@@ -15,7 +15,6 @@ exports.fetchExpenseType = catchAsync(async (req, res, next) => {
     // Query the database with a valid userId
     const ExpenseTypeRaw = await ExpenseType.find({ userId });
     
-    console.log(ExpenseTypeRaw.length);
     // If no expense data is found, handle according"ExpenseType doesn't found for the given userId"ly
     if (!ExpenseTypeRaw || ExpenseTypeRaw.length === 0) {
         console.info(`INFO: ExpenseType doesn't found for the given userId!\n`);
@@ -47,7 +46,7 @@ exports.updateExpenseType = catchAsync(async (req, res, next) => {
 
 exports.deleteExpenseType = catchAsync(async (req, res, next) => {
     const { expenseTypeId } = req.params; 
-    
+
     const deletedExpenseType = await ExpenseType.findByIdAndDelete(expenseTypeId);
 
     if (!deletedExpenseType) {

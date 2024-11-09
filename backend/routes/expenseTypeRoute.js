@@ -6,8 +6,8 @@ const expenseTypeRoute = express.Router();
 
 expenseTypeRoute.get('/fetch', validateFetchExpenseType, fetchExpenseType);
 expenseTypeRoute.post('/create', validateCreateExpenseType, createExepnesType);
-expenseRoute.patch('/update/:expenseTypeId', validateUpdateExpenseType, updateExpenseType);
-expenseRoute.delete('/delete/:expenseTypeId', validateDeleteExpenseType, deleteExpenseType);
+expenseTypeRoute.patch('/update/:expenseTypeId', validateUpdateExpenseType, updateExpenseType);
+expenseTypeRoute.delete('/delete/:expenseTypeId', validateDeleteExpenseType, deleteExpenseType);
 
 
 module.exports = expenseTypeRoute;
