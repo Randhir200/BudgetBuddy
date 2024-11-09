@@ -29,7 +29,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
 
         if (response.status === 200) {
           //storing userId in local storage
-          // localStorage.setItem('userId', response.data.userId);
+          localStorage.setItem('userId', response.data.userId);
           setIsAuthenticated(true); // Authenticated
           setIsLoading(false); 
         } else {

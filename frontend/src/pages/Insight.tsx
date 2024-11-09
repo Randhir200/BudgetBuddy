@@ -1,10 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ReactEChartsCore from 'echarts-for-react/lib/core';
 import * as echarts from 'echarts/core';
 import { PieChart, BarChart } from 'echarts/charts';
 import { TitleComponent, TooltipComponent, GridComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import InsightCard from '../components/Insight/InsightCard';
+import MonthYearPicker from '../components/Common/MonthYearPicker';
+import { Box } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux'; 
+import { RootState, AppDispatch } from '../ReduxToolkit/store';
+import {fetchMonthlyOverview} from '../ReduxToolkit/slices/insightSlice';
 
 echarts.use([TitleComponent, TooltipComponent, GridComponent, PieChart, BarChart, CanvasRenderer]);
 
@@ -46,9 +51,13 @@ const data = [
   }
 ];
 
+const userId = localStorage.getItem('userId');
+
 const Insight: React.FC = () => {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const barChartRef = useRef<HTMLDivElement | null>(null); // Ref for bar chart
+  const { monthlyOverviews} = useSelector((state: RootState) => state.insightReducer);
+  const dispatch:AppDispatch = useDispatch();
 
   const pieOptions = {
     title: {
@@ -64,7 +73,7 @@ const Insight: React.FC = () => {
         name: 'Type',
         type: 'pie',
         radius: '50%',
-        data: data.map(item => ({
+        data: monthlyOverviews.map((item:any) => ({
           name: item.type,
           value: item.totalTypeAmount
         })),
@@ -82,7 +91,7 @@ const Insight: React.FC = () => {
       }
     ]
   };
-  
+
   const emptyOptions = {
     title: { text: '' },
     xAxis: { type: 'category', data: [] },
@@ -141,25 +150,32 @@ const Insight: React.FC = () => {
     }
   };
 
+  useEffect(()=>{
+    dispatch(fetchMonthlyOverview(userId||''));
+  },[])
+
   return (
-    <div style={{ overflow: 'true' }}>
+    <Box sx={{ overflow: 'true' }} p={2}>
       <InsightCard />
-      <ReactEChartsCore
-        echarts={echarts}
-        option={pieOptions}
-        style={{ width: '100%', height: '400px' }}
-        onEvents={{
-          click: handlePieClick
-        }}
-      />
-      <div ref={barChartRef}> {/* Ref for bar chart container */}
+      <MonthYearPicker />
+      <Box mt={2}>
         <ReactEChartsCore
           echarts={echarts}
-          option={barOptions}
-          style={{ width: '100%', height: '400px', marginTop: '20px' }}
+          option={pieOptions}
+          style={{ width: '100%', height: '400px' }}
+          onEvents={{
+            click: handlePieClick
+          }}
         />
-      </div>
-    </div>
+        <div ref={barChartRef}> {/* Ref for bar chart container */}
+          <ReactEChartsCore
+            echarts={echarts}
+            option={barOptions}
+            style={{ width: '100%', height: '400px', marginTop: '20px' }}
+          />
+        </div>
+      </Box>
+    </Box>
   );
 };
 
