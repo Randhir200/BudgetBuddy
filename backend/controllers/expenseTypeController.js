@@ -26,4 +26,33 @@ exports.fetchExpenseType = catchAsync(async (req, res, next) => {
     console.info(`INFO: ExpenseTypes retrieved successfully!\n`);
     return responseJson(res, 200, "ExpenseTypes retrieved successfully", ExpenseTypeRaw);
 
-})
+});
+
+exports.updateExpenseType = catchAsync(async (req, res, next) => {
+    const { expenseTypeId } = req.params;
+
+    const updateExpenseType = await ExpenseType.findByIdAndUpdate(
+        expenseTypeId,
+        req.body,
+        { new: true, runValidators: true }
+    );
+
+    if (!updateExpenseType) {
+        return next(new AppError('ExpenseType record not found', 404))
+    }
+
+    return responseJson(res, 200, 'ExpenseType updated successfully!', updateExpenseType);
+
+});
+
+exports.deleteExpenseType = catchAsync(async (req, res, next) => {
+    const { expenseTypeId } = req.params; 
+    
+    const deletedExpenseType = await ExpenseType.findByIdAndDelete(expenseTypeId);
+
+    if (!deletedExpenseType) {
+        return next(new AppError('ExpenseType record not found', 404))
+    }
+
+    return responseJson(res, 200, 'ExpenseType deleted successfully!', deletedExpenseType);
+});

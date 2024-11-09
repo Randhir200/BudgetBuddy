@@ -53,4 +53,4 @@ exports.deleteExpense = catchAsync(async (req, res, next) => {
     }
 
     return responseJson(res, 200, 'Expense deleted successfully!', deletedExpense);
-})
+});

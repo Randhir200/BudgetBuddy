@@ -1,10 +1,13 @@
 const express = require('express');
-const { createExepnesType, fetchExpenseType } = require('../controllers/expenseTypeController');
-const { validateCreateExpenseType, validateFetchExpenseType } = require('../middlewares/validators/validateExpenseType');
+const { createExepnesType, fetchExpenseType, updateExpenseType, deleteExpenseType } = require('../controllers/expenseTypeController');
+const { validateCreateExpenseType, validateFetchExpenseType, validateUpdateExpenseType, validateDeleteExpenseType } = require('../middlewares/validators/validateExpenseType');
 
 const expenseTypeRoute = express.Router();
 
 expenseTypeRoute.get('/fetch', validateFetchExpenseType, fetchExpenseType);
 expenseTypeRoute.post('/create', validateCreateExpenseType, createExepnesType);
+expenseRoute.patch('/update/:expenseTypeId', validateUpdateExpenseType, updateExpenseType);
+expenseRoute.delete('/delete/:expenseTypeId', validateDeleteExpenseType, deleteExpenseType);
+
 
 module.exports = expenseTypeRoute;
