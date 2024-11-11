@@ -233,3 +233,53 @@ db.Balance.updateOne(
   { userId: ObjectId('6638bbb72ee0057ac3f3e21a')  },
   { $inc: { currentBalance: -expenseTotal } }
 );
+
+
+///
+
+
+
+db.Expense.aggregate([
+  {
+    $match: {
+      userId: '6638bbb72ee0057ac3f3e21a', // Match specific user if needed
+      createdAt: {
+        $gte: ISODate("2024-11-01T00:00:00.000Z"),  // Start date
+        $lte: ISODate("2024-11-31T23:59:59.999Z")   // End date
+      }
+    }
+  },
+  {
+    $group: {
+      _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, // Group by unique date
+      totalExpense: { $sum: "$price" },     // Sum of all prices for that date
+      expenses: { $push: "$$ROOT" }         // Array of all expense docs for that date
+    }
+  },
+  {
+    $sort: { "_id": 1 }  // Sort by date in ascending order; use -1 for descending
+  }
+]);
+
+
+//
+
+
+db.ExpenseType.updateOne(
+  {
+    _id: ObjectId("671d1872f0c2afc6720eee9a"),   // Document identifier
+    "categories.0": { $exists: true }            // Checks if categories array has at least one element
+  },
+  {
+    $push: {
+      categories: {
+        name: "Faimly care",
+        description: "",
+        isActive: true,
+        _id: ObjectId()  // Generates a new ObjectId for the new category
+      }
+    }
+  }
+);
+
+///
