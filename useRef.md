@@ -19,12 +19,12 @@ const getRandomColor = () => {
       }
     });
 ```
-- Persistence Across Renders: The colorMappingRef object created by useRef will not be reinitialized on every render. This ensures that the colors assigned to each type remain consistent, even if the component re-renders multiple times.
-- Mutable Object: Unlike state variables, updating a useRef object does not trigger a re-render of the component. This is useful for storing values that need to persist without causing unnecessary re-renders.
-- Initial Assignment: The useEffect hook is used to assign random colors to each type only once when the monthlyOverviews data changes. This ensures that the colors are assigned consistently and only when necessary.
+- __Persistence Across Renders__: The colorMappingRef object created by useRef will not be reinitialized on every render. This ensures that the colors assigned to each type remain consistent, even if the component re-renders multiple times.
+- __Mutable Object__: Unlike state variables, updating a useRef object does not trigger a re-render of the component. This is useful for storing values that need to persist without causing unnecessary re-renders.
+- __Initial Assignment__: The useEffect hook is used to assign random colors to each type only once when the monthlyOverviews data changes. This ensures that the colors are assigned consistently and only when necessary.
 Here’s a simplified explanation of how it works in your code:
 
-- Initialization: colorMappingRef is initialized as an empty object using useRef.
-- Color Assignment: Inside the useEffect hook, colors are assigned to each type in monthlyOverviews if they don’t already have a color.
-- Usage: The colors stored in colorMappingRef are then used in both the pie chart and the bar chart to ensure consistency.
+- __Initialization__: colorMappingRef is initialized as an empty object using useRef.
+- __Color Assignment__: Inside the useEffect hook, colors are assigned to each type in monthlyOverviews if they don’t already have a color.
+- __Usage__: The colors stored in colorMappingRef are then used in both the pie chart and the bar chart to ensure consistency.
 By using useRef, you ensure that the color mapping is stable and doesn’t change unexpectedly on each render or user interaction.
