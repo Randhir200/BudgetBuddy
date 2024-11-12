@@ -17,8 +17,6 @@ const CurrentMonth = "November 2024"; // Adjust as needed
 const InsightCard: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { balance, balanceLoading } = useSelector((state: RootState) => state.insightReducer);
- !balanceLoading && console.log(balance);
-
 
   const data = [
     { title: 'Income', amount: 50000, color: 'rgba(128, 128, 128, 0.8)' },    // Blue for Income

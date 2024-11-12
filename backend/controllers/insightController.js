@@ -5,15 +5,15 @@ const { catchAsync } = require("../utils/catchAsync");
 const { responseJson } = require("../utils/responseJson");
 
 exports.monthlyTransactions = catchAsync(async (req, res, next) => {
-    const { userId, startDate, endDate } = req.query;
+    const { userId, firstDate, lastDate } = req.query;
 
     const data = await Expense.aggregate(
         [
             {
                 $match: {
                     createdAt: {
-                        $gte: new Date("Fri Oct 01 2024 00:00:00 GMT+0530 (India Standard Time)"),
-                        $lte: new Date("Fri Oct 31 2024 00:00:00 GMT+0530 (India Standard Time)")
+                        $gte: new Date(firstDate),  
+                        $lte: new Date( lastDate)
                     },
                     userId
                 }

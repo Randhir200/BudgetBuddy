@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, {useEffect, useState, useRef } from 'react';
 import ReactEChartsCore from 'echarts-for-react/lib/core';
 import * as echarts from 'echarts/core';
 import { PieChart, BarChart } from 'echarts/charts';
@@ -7,57 +7,47 @@ import { CanvasRenderer } from 'echarts/renderers';
 import InsightCard from '../components/Insight/InsightCard';
 import MonthYearPicker from '../components/Common/MonthYearPicker';
 import { Box } from '@mui/material';
-import { useDispatch, useSelector } from 'react-redux'; 
-import { RootState, AppDispatch } from '../ReduxToolkit/store';
-import {fetchMonthlyOverview} from '../ReduxToolkit/slices/insightSlice';
+import { useSelector } from 'react-redux'; 
+import { RootState } from '../ReduxToolkit/store';
 
 echarts.use([TitleComponent, TooltipComponent, GridComponent, PieChart, BarChart, CanvasRenderer]);
 
-const data = [
-  {
-    categories: [
-      { category: 'Outside Food', totalCat: 2, totalCatAmount: 296 },
-      { category: 'Outing', totalCat: 11, totalCatAmount: 2009 },
-      { category: 'Snacks', totalCat: 2, totalCatAmount: 30 }
-    ],
-    totalTypeAmount: 2335,
-    type: 'Wants'
-  },
-  {
-    categories: [{ category: 'FD', totalCat: 1, totalCatAmount: 35000 }],
-    totalTypeAmount: 35000,
-    type: 'Savings'
-  },
-  {
-    categories: [
-      { category: 'Groceries', totalCat: 28, totalCatAmount: 4482 },
-      { category: 'Cloths', totalCat: 2, totalCatAmount: 1541 },
-      { category: 'Body Care', totalCat: 3, totalCatAmount: 1019 },
-      { category: 'Shampoo', totalCat: 1, totalCatAmount: 50 },
-      { category: 'Dairy', totalCat: 1, totalCatAmount: 50 },
-      { category: 'Loan', totalCat: 2, totalCatAmount: 5048 },
-      { category: 'Fuel', totalCat: 1, totalCatAmount: 150 },
-      { category: 'Mobile Recharge', totalCat: 1, totalCatAmount: 161 },
-      { category: 'Foods', totalCat: 17, totalCatAmount: 994 },
-      { category: 'Bills', totalCat: 5, totalCatAmount: 21908.72 },
-    ],
-    totalTypeAmount: 35403.72,
-    type: 'Needs'
-  },
-  {
-    categories: [{ category: 'Family', totalCat: 1, totalCatAmount: 10000 }],
-    totalTypeAmount: 10000,
-    type: 'Lend'
-  }
-];
+interface Category {
+  category: string;
+  tatalCat: number;
+  totalCatAmount: number;
+}
 
-const userId = localStorage.getItem('userId');
+interface Overview {
+  categories: Category[];
+  totalTypeAmount: number;
+  type: string;
+}
+
+// Function to generate a random color
+const getRandomColor = () => {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  console.log(color);
+  return color;
+};
 
 const Insight: React.FC = () => {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const barChartRef = useRef<HTMLDivElement | null>(null); // Ref for bar chart
-  const { monthlyOverviews} = useSelector((state: RootState) => state.insightReducer);
-  const dispatch:AppDispatch = useDispatch();
+  const { monthlyOverviews } = useSelector((state: RootState) => state.insightReducer);
+
+  // Use useRef to store colorMapping to persist colors across renders
+  const colorMappingRef = useRef<{ [key: string]: string }>({});
+ 
+    monthlyOverviews.forEach((item: Overview) => {
+      if (!colorMappingRef.current[item.type]) {
+        colorMappingRef.current[item.type] = getRandomColor();
+      }
+    });
 
   const pieOptions = {
     title: {
@@ -73,9 +63,12 @@ const Insight: React.FC = () => {
         name: 'Type',
         type: 'pie',
         radius: '50%',
-        data: monthlyOverviews.map((item:any) => ({
+        data: monthlyOverviews.map((item: any) => ({
           name: item.type,
-          value: item.totalTypeAmount
+          value: item.totalTypeAmount,
+          itemStyle: {
+            color: colorMappingRef.current[item.type] // Use the color from the mapping
+          }
         })),
         emphasis: {
           itemStyle: {
@@ -99,10 +92,16 @@ const Insight: React.FC = () => {
     series: [{ data: [], type: 'bar' }]
   };
 
-  const categories = data.find(item => item.type === selectedType)?.categories || [];
-  const categoryLabels = categories.map(cat => cat.category);
-  const categoryValues = categories.map(cat => cat.totalCatAmount);
+  const handlePieClick = (e: any) => {
+    setSelectedType(e.name);
+    if (barChartRef.current) {
+      barChartRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
+  const categories = monthlyOverviews.find((item: Overview) => item.type === selectedType)?.categories || [];
+  const categoryLabels = categories.map((cat: Category) => cat.category);
+  const categoryValues = categories.map((cat: Category) => cat.totalCatAmount);
   const barOptions = selectedType
     ? {
       title: {
@@ -137,22 +136,15 @@ const Insight: React.FC = () => {
           data: categoryValues,
           type: 'bar',
           barWidth: categoryLabels.length === 1 ? '30%' : '60%', // Adjust for single bar
-          barMaxWidth: 50 // Maximum width limit to avoid very wide bars
+          barMaxWidth: 50, // Maximum width limit to avoid very wide bars
+          itemStyle: {
+            color: colorMappingRef.current[selectedType] // Use the color from the mapping
+          }
         }
       ]
     }
     : emptyOptions;
 
-  const handlePieClick = (e: any) => {
-    setSelectedType(e.name);
-    if (barChartRef.current) {
-      barChartRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
-  useEffect(()=>{
-    dispatch(fetchMonthlyOverview(userId||''));
-  },[])
 
   return (
     <Box sx={{ overflow: 'true' }} p={2}>

@@ -7,13 +7,31 @@ interface Balance {
     currentBalance : number;
 }
 
+interface Category {
+    category : string,
+    tatalCat : number,
+    totalCatAmount : number
+}
+
+interface Overview {
+    categories : Category[],
+    totalTypeAmount : number,
+    type : string
+}
+
+
 interface IncomeState {
     monthlyOverviewLoading: boolean;
     balanceLoading: boolean;
-    monthlyOverviews: [];
+    monthlyOverviews: Overview[];
     balance: Balance,
     monthlyOverviewError: string | null;
     balanceError: string | null;
+}
+
+interface DateRange {
+    firstDate : Date,
+    lastDate: Date
 }
 
 const initialState: IncomeState = {
@@ -28,8 +46,9 @@ const initialState: IncomeState = {
 
 export const fetchMonthlyOverview = createAsyncThunk(
     'insight/monthlyOverview',
-    async (userId: string) => {
-        const response = await axios.get(`${budgetBuddyApiUrl}/insight/monthlyOverview?userId=${userId}`);
+    async ({userId, dateRange}:{ userId: string, dateRange : DateRange}) => {
+        const response = await axios.get(`${budgetBuddyApiUrl}/insight/monthlyOverview?userId=${userId}&firstDate=${dateRange.firstDate}&lastDate=${dateRange.lastDate}`);
+
         return response.data;
     });
 
@@ -37,7 +56,6 @@ export const fetchBalance = createAsyncThunk(
     'insight/balance',
     async (userId: string) => {
         const response = await axios.get(`${budgetBuddyApiUrl}/insight/balance?userId=${userId}`);
-        console.log(response.data);
         return response.data;
     }
 )
