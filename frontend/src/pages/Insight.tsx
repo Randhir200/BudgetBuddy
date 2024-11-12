@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef } from 'react';
+import React, {useState, useRef } from 'react';
 import ReactEChartsCore from 'echarts-for-react/lib/core';
 import * as echarts from 'echarts/core';
 import { PieChart, BarChart } from 'echarts/charts';
