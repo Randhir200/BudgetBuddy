@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 const updateCurrentBalance = require('./plugins/updateCurrentBalance');
 
+const payBackShcema = new mongoose.Schema({
+    isPayback: {type:Boolean, default: false},
+    amount: {type:Number, default: 0}
+})
+
 const expenseSchema =  new mongoose.Schema({
     type: {type: String, required: true},
     category: {type: String, required: true},
@@ -8,6 +13,7 @@ const expenseSchema =  new mongoose.Schema({
     item: {type: String, required: true},
     createdAt: {type: Date, default: Date.now},
     updatedAt: {type: Date, default: Date.now},
+    payBack: payBackShcema,
     userId : {type: String, ref: 'User', required: true}
 });
 

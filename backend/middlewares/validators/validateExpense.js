@@ -68,6 +68,9 @@ const updateExpenseSchema = Joi.object({
     userId: Joi.string().custom(objectIdValidation).required().messages({
         'string.base': 'userId must be a string',
         'any.required': 'userId is required!'
+    }),
+    payBack: Joi.object().optional().messages({
+        'date.base': 'payback must be a boolean!'
     })
 });
 

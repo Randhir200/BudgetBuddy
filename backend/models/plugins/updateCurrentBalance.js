@@ -9,7 +9,7 @@ function updateCurrentBalance(schema) {
     return modelName === 'Income' ? doc.amount : doc.price;
   }
 
-  // // After creating an Income or Expense, update balance
+  // After creating an Income or Expense, update balance
   catchAsync(schema.post('save', async function (doc, next) {
     const modelName = this.constructor.modelName;
 
@@ -22,7 +22,6 @@ function updateCurrentBalance(schema) {
       balance.currentBalance += modelName === 'Income' ? balanceChange : -balanceChange;
 
       await balance.save();
-      console.info(`INFO: Current balance updated`);
       
       next();
   }));
@@ -30,13 +29,13 @@ function updateCurrentBalance(schema) {
   // Before updating, store the original value for balance adjustment
   catchAsync(schema.pre('findOneAndUpdate', async function (next) {
       const docToUpdate = await this.model.findOne(this.getQuery());
-
+      
       if (!docToUpdate) {
         // If document does not exist, skip the balance update
         return next(new AppError("Data not found to update", 404));
       }
-
       this._oldValue = getBalanceChange(docToUpdate, this.model.modelName);
+      this._oldPayBack = docToUpdate.payBack || false;
       next();
   }));
 
@@ -44,12 +43,21 @@ function updateCurrentBalance(schema) {
   catchAsync(schema.post('findOneAndUpdate', async function (doc, next) {
     const modelName = this.model.modelName;
     if (doc) {
-        const newValue = getBalanceChange(doc, modelName);
-        console.log('old value', this._oldValue);
-        
-        const balanceChange = modelName === 'Income' 
-          ? newValue - this._oldValue 
-          : this._oldValue - newValue;
+      const newValue = getBalanceChange(doc, modelName);
+      
+      function handlePaybackBalance(doc, modelName, oldValue){
+          if(modelName === 'Income'){
+             return newValue - oldValue;
+            }
+            
+            if(doc.payBack.isPaybakc === true){
+              return oldValue;
+            }
+            console.log(this._oldValue);
+            return oldValue - doc.payBack.amount
+          }
+          const balanceChange = handlePaybackBalance(doc, modelName, this._oldValue);
+          
 
         const balance = await Balance.findOne({ userId: doc.userId });
         if (balance) {
