@@ -35,7 +35,8 @@ function updateCurrentBalance(schema) {
         return next(new AppError("Data not found to update", 404));
       }
       this._oldValue = getBalanceChange(docToUpdate, this.model.modelName);
-      this._oldPayBack = docToUpdate.payBack || false;
+     
+      this._oldPayBack = docToUpdate.payBack || {};
       next();
   }));
 
@@ -45,18 +46,21 @@ function updateCurrentBalance(schema) {
     if (doc) {
       const newValue = getBalanceChange(doc, modelName);
       
-      function handlePaybackBalance(doc, modelName, oldValue){
+  
+      function handleBalance(doc, modelName, oldValue, oldPayback){
           if(modelName === 'Income'){
              return newValue - oldValue;
             }
             
-            if(doc.payBack.isPaybakc === true){
-              return oldValue;
+            if(doc.payBack.isPayback === true){
+              if( doc.payBack.amount > doc.price){
+                return next(new AppError("Payback amount shoudn't be greater than item price!", 400));
+              }
+              return  doc.payBack.amount - oldPayback.amount;
             }
-            console.log(this._oldValue);
-            return oldValue - doc.payBack.amount
+            return oldValue - doc.price 
           }
-          const balanceChange = handlePaybackBalance(doc, modelName, this._oldValue);
+          const balanceChange = handleBalance(doc, modelName, this._oldValue, this._oldPayBack);
           
 
         const balance = await Balance.findOne({ userId: doc.userId });

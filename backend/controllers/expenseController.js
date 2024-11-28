@@ -5,6 +5,7 @@ const { responseJson } = require("../utils/responseJson");
 
 exports.createExpense = catchAsync(async (req, res) => {
         const resData = await Expense.create(req.body); 
+        console.info(`INFO: Expense added successfully!\n`);
         return responseJson(res, 200, 'Expense added successfully', resData);
 });
 
