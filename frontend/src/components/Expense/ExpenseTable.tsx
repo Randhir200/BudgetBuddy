@@ -9,10 +9,13 @@ import {
   TablePagination,
   TableRow,
   IconButton,
-  useMediaQuery
+  useMediaQuery,
+  Box
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ThumbDownOffAltIcon from '@mui/icons-material/ThumbDownOffAlt';
+import ThumbUpOffAltIcon from '@mui/icons-material/ThumbUpOffAlt';
 import { LinearProgress } from '@mui/material';
 import { RootState, AppDispatch } from "../../ReduxToolkit/store";
 import { useSelector, useDispatch } from 'react-redux';
@@ -26,6 +29,7 @@ const columns = [
   { id: 'category', label: 'Category', },
   { id: 'item', label: 'Item', },
   { id: 'price', label: 'Price', },
+  { id: 'payBack', label: 'Payback', },
   { id: 'action', label: 'Action', },
 ];
 
@@ -33,8 +37,8 @@ const columns = [
 const CustomTable = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const dispatch:AppDispatch = useDispatch();
-  const {fetchLoading, expenses} = useSelector((state:RootState)=>state.expenseReducer);
+  const dispatch: AppDispatch = useDispatch();
+  const { fetchLoading, expenses } = useSelector((state: RootState) => state.expenseReducer);
 
   // Check if screen width is less than 600px
   const isMobile = useMediaQuery('(max-width:600px)');
@@ -60,10 +64,10 @@ const CustomTable = () => {
     setPage(0);
   };
 
-  const userId = localStorage.getItem(  'userId');
-  useEffect(()=>{
+  const userId = localStorage.getItem('userId');
+  useEffect(() => {
     dispatch(fetchExpense(userId));
-  },[])
+  }, [])
 
   return (
     <Paper style={{ width: '100%', overflowX: 'auto' }}>
@@ -108,13 +112,22 @@ const CustomTable = () => {
                   <TableCell>{expense.type}</TableCell>
                   <TableCell>{expense.category}</TableCell>
                   <TableCell>{expense.item}</TableCell>
-                  <TableCell align="left">{expense.price}</TableCell>
+                  <TableCell align="left">₹{expense.price}</TableCell>
+                  <TableCell align="left">
+                    <Box sx={{display:"flex", flexWrap:"wrap" , justifyContent:"center", alignItems:"center"}}>
+                      <IconButton sx={{ cursor: "default" }} >
+                        {expense.payBack.isPayback ? <ThumbUpOffAltIcon color="success" fontSize={isMobile ? 'small' : 'medium'} />
+                          : <ThumbDownOffAltIcon color="info" fontSize={isMobile ? 'small' : 'medium'} />}
+                      </IconButton>
+                      ₹{expense.payBack.amount}
+                    </Box>
+                  </TableCell>
                   <TableCell align="left">
                     <IconButton aria-label="edit" size={isMobile ? 'small' : 'medium'}>
-                      <EditIcon fontSize={isMobile ? 'small' : 'medium'} />
+                      <EditIcon color="info" fontSize={isMobile ? 'small' : 'medium'} />
                     </IconButton>
                     <IconButton aria-label="delete" size={isMobile ? 'small' : 'medium'}>
-                      <DeleteIcon fontSize={isMobile ? 'small' : 'medium'} />
+                      <DeleteIcon color="warning" fontSize={isMobile ? 'small' : 'medium'} />
                     </IconButton>
                   </TableCell>
                 </TableRow>
