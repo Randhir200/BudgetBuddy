@@ -70,7 +70,7 @@ const CustomTable = () => {
   }, [])
 
   return (
-    <Paper style={{ width: '100%', overflowX: 'auto' }}>
+    <Paper style={{ width: '99%', overflowX: 'auto' }}>
       <TableContainer style={{ maxHeight: 440 }}>
         {fetchLoading && <LinearProgress />}
         <Table
@@ -78,8 +78,8 @@ const CustomTable = () => {
           aria-label="customized table"
           sx={{
             '& .MuiTableCell-root': {
-              fontSize: isMobile ? '10px' : '14px',
-              padding: isMobile ? '4px' : '10px',
+              fontSize: isMobile ? '8px' : '12px',
+              padding: isMobile ? '3px' : '9px',
             },
           }}
         >
