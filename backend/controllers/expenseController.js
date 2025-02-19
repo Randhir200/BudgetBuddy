@@ -55,3 +55,42 @@ exports.deleteExpense = catchAsync(async (req, res, next) => {
 
     return responseJson(res, 200, 'Expense deleted successfully!', deletedExpense);
 });
+
+exports.filteredExpenses = catchAsync(async (req, res) => {
+    const { userId, type, category } = req.query;
+    const matchQuery = {userId};
+    if (type) matchQuery.type = type;
+    if (category) matchQuery.category = category;   
+
+    const filteredExpensesData = await Expense.aggregate([
+        {
+          $match: matchQuery  // Filter by selected type (e.g., "Need", "Want")
+        },
+        {
+          $group: {
+            _id: null,
+            totalCount: { $sum: 1 },      // Count total records
+            totalExpense: { $sum: "$price" }, // Sum total expenses
+            records: { $push: "$$ROOT" }  // Collect all matching records
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            totalCount: 1,
+            totalExpense: 1,
+            records: 1
+          }
+        }
+      ]);
+    if (!filteredExpensesData || filteredExpensesData.length === 0) {
+        console.info(`INFO: Filtered Expenses Doesn't found for the given userId!\n`);
+        return next(new AppError(`Filtered Expenses Doesn't found for the given userId!`, 404));
+    }
+
+
+
+    // Return success response with the expense data
+    console.info(`INFO: Filtered Expenses retrieved successfully!\n`);
+    return responseJson(res, 200, "Filtered Expenses retrieved successfully", filteredExpensesData);
+});
