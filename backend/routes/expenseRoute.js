@@ -12,6 +12,6 @@ expenseRoute.get('/fetch', validateFetchExpense, fetchExpense);
 expenseRoute.post('/create', validateCreateExpense, createExpense);
 expenseRoute.patch('/update/:expenseId', validateUpdateExpense, updateExpense);
 expenseRoute.delete('/delete/:expenseId', validateDeleteExpense, deleteExpense);
-expenseRoute.get('/filtere', filteredExpenses);
+expenseRoute.get('/filter', filteredExpenses);
 
 module.exports = expenseRoute;

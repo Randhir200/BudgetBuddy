@@ -43,6 +43,12 @@ const fetchExpenseSchema = Joi.object({
         'string.base': 'userId must be a string',
         'any.required': 'userId is required!'
     }),
+    type: Joi.string().optional().messages({
+        'string.base': 'type must be a string',
+    }),
+    category: Joi.string().optional().messages({
+        'string.base': 'category must be a string',
+    }),
 });
 
 const updateExpenseSchema = Joi.object({
