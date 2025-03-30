@@ -25,24 +25,58 @@ const Wrapper = styled.section`
 //getting userId from local storage
 const userId = localStorage.getItem('userId');
 
+const formInitialState = {
+  id:null,
+  type: '',
+  category: '',
+  item: '',
+  price: 0,
+  createdAt: '',
+  userId
+}
+
 const Expenses: React.FC = () => {
-  const [toggleAdd, setToggleAdd] = useState(false);
+  const [toggle, setToggle] = useState({toggleType:"add", isToggle:false});
   const dispatch: AppDispatch = useDispatch();
   const { addStatus } = useSelector((state: RootState) => state.expenseReducer);
   const { message, variant } = useSelector((state: RootState) => state.alertReducer);
+  const [formState, setFormState] = useState(formInitialState);
 
   //mui theme
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const handleToggleAdd = () => {
-    setToggleAdd(!toggleAdd);
+
+  //to identify same event clicked
+  // const isSameEvent = (e) => {
+  //   const isIt = false;
+  //   if(formState.id === e.id) return true;
+  //   return isIt;
+  // }
+
+  const handleToggle = (toggleType:string, event:any) => {
+    console.log("e---\n", event);
+    let isToggle = true;
+    if(toggleType==="add"){
+      if(event.id){
+        return;
+      }
+     isToggle =  isToggle ? false : true;
+
+    }else{
+      if(formState.id === event.id){
+        return;
+      }
+      isToggle =  isToggle ? false : true;
+    }
+    console.log("isToggle---\n", isToggle);
+    setToggle({...toggle, toggleType, isToggle});
   };
 
   useEffect(() => {
     //close form if data is upload otherwise wait.
     if (addStatus === 'success') {
-      setToggleAdd(false);
+      setToggle({...toggle, isToggle:false});
       dispatch(fetchExpense(userId))
     }
   }, [addStatus, userId]);
@@ -69,10 +103,10 @@ const Expenses: React.FC = () => {
           variant="contained"
           color="primary"
           size={isSmallScreen ? "small" : "medium"} // Adjust button size
-          event={handleToggleAdd}
+          onClick={(event) => handleToggle("add", event)}
         />
       </Box>
-      {toggleAdd && (
+      {toggle.isToggle && (
         <ExpenseForm
           isSmallScreen={isSmallScreen}
           theme={theme}
@@ -82,7 +116,7 @@ const Expenses: React.FC = () => {
       <Box sx={{ mt: 2 }}>
         {/* <ExpenseTable /> */}
         <Suspense fallback={<LinearProgress/>}>
-          <LazyExpenseTable/>
+          <LazyExpenseTable handleToggle={handleToggle}/>
         </Suspense>
       </Box>
     </Wrapper>

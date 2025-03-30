@@ -14,21 +14,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addExpense } from "../../ReduxToolkit/slices/expenseSlice";
 import { fetchExpenseType } from '../../ReduxToolkit/slices/expenseTypeSlice';
 
-//getting userId from local storage
-const userId = localStorage.getItem('userId');
 
-const formInitialState = {
-    type: '',
-    category: '',
-    item: '',
-    price: 0,
-    createdAt: '',
-    userId
-  }
 
 export const ExpenseForm = memo(({
     isSmallScreen,
     theme,
+    formInitialState
 }: any) => {
     const dispatch: AppDispatch = useDispatch();
     const { addLoading } = useSelector((state: RootState) => state.expenseReducer);
@@ -175,7 +166,7 @@ export const ExpenseForm = memo(({
                 variant="contained"
                 color="primary"
                 size={isSmallScreen ? "small" : "medium"}
-                event={handleSubmit}
+                onClick={handleSubmit}
                 loading={addLoading}
             />
         </Box>

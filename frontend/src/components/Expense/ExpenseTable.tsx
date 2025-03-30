@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import {
   Paper,
   Table,
@@ -33,8 +33,13 @@ const columns = [
   { id: 'action', label: 'Action', },
 ];
 
+//Type for props
+interface ExpenseProps {
+  handleToggle: (arg1:string, e:React.MouseEvent<HTMLButtonElement>)=>void;
+}
+
 // Define the CustomTable component
-const CustomTable = () => {
+const CustomTable: React.FC<ExpenseProps> = ({handleToggle}) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const dispatch: AppDispatch = useDispatch();
@@ -67,7 +72,13 @@ const CustomTable = () => {
   const userId = localStorage.getItem('userId');
   useEffect(() => {
     dispatch(fetchExpense(userId));
-  }, [])
+  }, []);
+
+  const handleFormData = (e:any, expense:any) => {
+    e.preventDefault();
+    console.log(e.target);
+    console.log(expense);
+  }
 
   return (
     <Paper style={{ width: '99%', overflowX: 'auto' }}>
@@ -123,7 +134,11 @@ const CustomTable = () => {
                     </Box>
                   </TableCell>
                   <TableCell align="left">
-                    <IconButton aria-label="edit" size={isMobile ? 'small' : 'medium'}>
+                    <IconButton onClick={(e)=>
+                      {
+                        handleToggle("edit", e)
+                        handleFormData(e, expense)
+                      }} aria-label="edit" size={isMobile ? 'small' : 'medium'}>
                       <EditIcon color="info" fontSize={isMobile ? 'small' : 'medium'} />
                     </IconButton>
                     <IconButton aria-label="delete" size={isMobile ? 'small' : 'medium'}>
