@@ -35,11 +35,12 @@ const columns = [
 
 //Type for props
 interface ExpenseProps {
-  handleToggle: (arg1:string, e:React.MouseEvent<HTMLButtonElement>)=>void;
+  handleToggle: (e:React.MouseEvent<HTMLButtonElement>, arg2:string)=>void;
+  handleEditFormData: (e:React.MouseEvent<HTMLButtonElement>, expense: Object)=>void;
 }
 
 // Define the CustomTable component
-const CustomTable: React.FC<ExpenseProps> = ({handleToggle}) => {
+const CustomTable: React.FC<ExpenseProps> = ({handleToggle, handleEditFormData}) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const dispatch: AppDispatch = useDispatch();
@@ -74,11 +75,7 @@ const CustomTable: React.FC<ExpenseProps> = ({handleToggle}) => {
     dispatch(fetchExpense(userId));
   }, []);
 
-  const handleFormData = (e:any, expense:any) => {
-    e.preventDefault();
-    console.log(e.target);
-    console.log(expense);
-  }
+
 
   return (
     <Paper style={{ width: '99%', overflowX: 'auto' }}>
@@ -136,8 +133,8 @@ const CustomTable: React.FC<ExpenseProps> = ({handleToggle}) => {
                   <TableCell align="left">
                     <IconButton onClick={(e)=>
                       {
-                        handleToggle("edit", e)
-                        handleFormData(e, expense)
+                        handleToggle(e, "edit")
+                        handleEditFormData(e, expense)
                       }} aria-label="edit" size={isMobile ? 'small' : 'medium'}>
                       <EditIcon color="info" fontSize={isMobile ? 'small' : 'medium'} />
                     </IconButton>

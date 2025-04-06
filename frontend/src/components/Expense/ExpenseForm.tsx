@@ -26,6 +26,8 @@ export const ExpenseForm = memo(({
     const { expenseTypes, fetchLoading } = useSelector((state: RootState) => state.expenseTypeReducer);
     const [formData, setFormData] = useState(formInitialState);
 
+    console.log("formInitialState", formInitialState);
+
     function handleAddExpense(e: any) {
         const { name, value } = e.target;
         //User change types then need to remove category that stored prev

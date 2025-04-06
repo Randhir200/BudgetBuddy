@@ -54,24 +54,25 @@ const Expenses: React.FC = () => {
   //   return isIt;
   // }
 
-  const handleToggle = (toggleType:string, event:any) => {
-    console.log("e---\n", event);
-    let isToggle = true;
-    if(toggleType==="add"){
-      if(event.id){
-        return;
-      }
-     isToggle =  isToggle ? false : true;
-
-    }else{
-      if(formState.id === event.id){
-        return;
-      }
+  const handleToggle = (e:any, toggleType:string) => {
+    let isToggle = toggle.isToggle;
+    console.log("toggle.toggleType", toggle.toggleType);
+    console.log("toggleType", toggleType);
+    
+    if(toggleType === toggle.toggleType){
       isToggle =  isToggle ? false : true;
+    }else{
+     
     }
-    console.log("isToggle---\n", isToggle);
+    // console.log("isToggle---\n", isToggle);
     setToggle({...toggle, toggleType, isToggle});
   };
+
+    const handleEditFormData = (e:any, expense:any) => {
+      e.preventDefault();
+      console.log(e.target);
+      console.log(expense); 
+    }
 
   useEffect(() => {
     //close form if data is upload otherwise wait.
@@ -103,20 +104,21 @@ const Expenses: React.FC = () => {
           variant="contained"
           color="primary"
           size={isSmallScreen ? "small" : "medium"} // Adjust button size
-          onClick={(event) => handleToggle("add", event)}
+          onClick={(event) => handleToggle(event, "add")}
         />
       </Box>
       {toggle.isToggle && (
         <ExpenseForm
           isSmallScreen={isSmallScreen}
           theme={theme}
+          formInitialState={formInitialState}
         />
       )}
 
       <Box sx={{ mt: 2 }}>
         {/* <ExpenseTable /> */}
         <Suspense fallback={<LinearProgress/>}>
-          <LazyExpenseTable handleToggle={handleToggle}/>
+          <LazyExpenseTable handleToggle={handleToggle} handleEditFormData={handleEditFormData}/>
         </Suspense>
       </Box>
     </Wrapper>
