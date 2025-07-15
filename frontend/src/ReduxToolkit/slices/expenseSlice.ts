@@ -3,7 +3,7 @@ import axios from "axios";
 import { budgetBuddyApiUrl } from "../../configs/apiURLs";
 import { setAlert } from "./alertSlice";
 
-interface ExpenseState {
+export interface ExpenseState {
     fetchLoading: boolean;
     addLoading: boolean;
     fetchStatus: string | null;
