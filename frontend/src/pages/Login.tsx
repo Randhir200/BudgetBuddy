@@ -13,7 +13,9 @@ interface Response {
     status: number;
     data: {
         message: string;
-        token: string;
+        data: {
+            token: string;
+        },
         status: string;
     };
 }
@@ -57,7 +59,7 @@ const Login = () => {
                     }
                 }
             );
-            const token = response.data.token;
+            const token = response.data.data.token;
             localStorage.setItem("auth-token", token);
             navigate('/');
             setAlertState({
