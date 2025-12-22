@@ -113,7 +113,7 @@ export const ExpenseTypeForm = memo(({
                 />
             </Box>
                 {/* Display added categories as chips */}
-                <Box sx={{ mt: 2 }}>
+                <Box sx={{ mt: 2, mb: 2 }}>
                             {categories.map((category, index) => (
                                 <Chip
                                     key={index}
