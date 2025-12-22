@@ -7,13 +7,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../ReduxToolkit/store";
 import { addExpenseType } from '../../ReduxToolkit/slices/expenseTypeSlice';
 
-const userId = localStorage.getItem('userId');
-
 const formInitialState = {
-    type: '',
-    categories: [],
-    userId: userId
-  }
+        type: '',
+        categories: [],
+        userId: ''
+    }
 
 export const ExpenseTypeForm = memo(({
     isSmallScreen,
@@ -48,8 +46,12 @@ export const ExpenseTypeForm = memo(({
     
 
     function handleSubmit(){
-        dispatch(addExpenseType(formData));
-        setFormData(formInitialState);
+        // Read userId at submit time to avoid module-load timing issues
+        const currentUserId = localStorage.getItem('userId') || formData.userId || '';
+        const payload = { ...formData, userId: currentUserId };
+        dispatch(addExpenseType(payload));
+        // Reset form; preserve a fresh userId so subsequent submits include it
+        setFormData({ ...formInitialState, userId: currentUserId });
         setCategories([]);
     }
 
