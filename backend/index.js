@@ -10,16 +10,10 @@ const AppError = require("./utils/appError");
 const { catchAsync } = require("./utils/catchAsync");
 const EventEmitter = require('events');
 const emitter = new EventEmitter();
-
-// uncaughtException for synchronus 
-process.on('uncaughtException', err=> {
-  console.log(err.name, err.message);
-  console.log('uncaughtException Rejection! 💥  Shutting down...')
-  process.exit(1)
-})
 const app = express();
-
 app.use(express.json());
+require("./controllers/gmailService/gmailController")(app); 
+
 
 //cors
 app.use(cors());
@@ -28,6 +22,13 @@ app.use(cors());
 app.use(helmet());
 
 app.use(masterRoute);
+
+// uncaughtException for synchronus 
+process.on('uncaughtException', err=> {
+  console.log(err.name, err.message);
+  console.log('uncaughtException Rejection! 💥  Shutting down...')
+  process.exit(1)
+})
 
 //DB connection check
 app.get("/health", catchAsync(async (req, res) => {

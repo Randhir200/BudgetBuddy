@@ -1,7 +1,7 @@
 const express = require('express');
 const { fetchExpense, createExpense, updateExpense,
      deleteExpense,
-     filteredExpenses } = require('../controllers/expenseController');
+     filteredExpenses, fetchExpensePerPage } = require('../controllers/expenseController');
 const { validateFetchExpense,
     validateCreateExpense,
     validateDeleteExpense, 
@@ -9,6 +9,7 @@ const { validateFetchExpense,
 const expenseRoute = express.Router();
 
 expenseRoute.get('/fetch', validateFetchExpense, fetchExpense);
+expenseRoute.get('/fetch-per-page', fetchExpensePerPage);
 expenseRoute.post('/create', validateCreateExpense, createExpense);
 expenseRoute.patch('/update/:expenseId', validateUpdateExpense, updateExpense);
 expenseRoute.delete('/delete/:expenseId', validateDeleteExpense, deleteExpense);

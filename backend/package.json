@@ -4,19 +4,23 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "NODE_ENV=development nodemon index.js", 
+    "start": "NODE_ENV=development nodemon index.js",
     "start:prod": "NODE_ENV=production nodemon index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.13.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
+    "googleapis": "^169.0.0",
     "helmet": "^7.1.0",
     "joi": "^17.13.3",
     "mongoose": "^8.6.0",
-    "nodemon": "^3.1.4"
+    "node-cron": "^4.2.1",
+    "nodemon": "^3.1.4",
+    "openai": "^6.15.0"
   }
 }
