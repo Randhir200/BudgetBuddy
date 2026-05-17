@@ -25,9 +25,10 @@ const merchantRuleSchema = new mongoose.Schema({
     confidence: { type: Number, default: 0.95 },
     source: {
         type: String,
-        enum: ['user', 'seeded'],
+        enum: ['user', 'ai', 'seeded'],
         default: 'user'
     },
+    confirmed: { type: Boolean, default: false },
     useCount: { type: Number, default: 0 }
 }, { timestamps: true });
 

@@ -13,7 +13,7 @@ async function upsertMerchantLearningRule(expense, updateBody) {
     const value = expense.vpa || expense.merchant;
     if (!matchType || !value) return;
 
-    await MerchantRule.findOneAndUpdate(
+    return MerchantRule.findOneAndUpdate(
         {
             userId: expense.userId,
             matchType,
@@ -28,7 +28,8 @@ async function upsertMerchantLearningRule(expense, updateBody) {
                 type: expense.type,
                 category: expense.category,
                 confidence: 0.98,
-                source: 'user'
+                source: 'user',
+                confirmed: true
             }
         },
         { upsert: true, new: true, runValidators: true }
@@ -85,10 +86,21 @@ exports.fetchExpensePerPage = catchAsync(async (req, res, next) => {
 
 exports.updateExpense = catchAsync(async (req, res, next) => {
     const { expenseId } = req.params;
+    const classificationChanged = req.body.type || req.body.category;
+    const updatePayload = {
+        ...req.body,
+        ...(classificationChanged
+            ? {
+                confidence: 0.98,
+                classificationSource: 'user-rule',
+                updatedAt: new Date()
+            }
+            : {})
+    };
 
     const updateExpense = await Expense.findByIdAndUpdate(
         expenseId,
-        req.body,
+        updatePayload,
         { new: true, runValidators: true }
     );
 
@@ -96,7 +108,14 @@ exports.updateExpense = catchAsync(async (req, res, next) => {
         return next(new AppError('Expense record not found', 404))
     }
 
-    await upsertMerchantLearningRule(updateExpense, req.body);
+    const learningRule = await upsertMerchantLearningRule(updateExpense, req.body);
+    if (learningRule?._id) {
+        updateExpense.classificationRuleId = String(learningRule._id);
+        await Expense.collection.updateOne(
+            { _id: updateExpense._id },
+            { $set: { classificationRuleId: updateExpense.classificationRuleId } }
+        );
+    }
 
     return responseJson(res, 200, 'Expense updated successfully!', updateExpense);
 

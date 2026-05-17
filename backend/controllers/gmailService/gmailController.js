@@ -2,20 +2,44 @@ const { google } = require('googleapis');
 const cron = require('node-cron');
 const { classifyExpense } = require('../../Agent/transactionType');
 const { getMessage, extractBody, getHeader, parseHdfcUpi } = require('../../utils/gmailHelpers');
+const { protect } = require('../../middlewares/authMiddleware');
+const { signAppToken, verifyAppToken } = require('../../utils/appToken');
+const { encryptToken, decryptToken } = require('../../utils/tokenCrypto');
 const Expense = require('../../models/expenseModel');
-// use app instance passed from index.js
+const GmailConnection = require('../../models/gmailConnectionModel');
+const User = require('../../models/userModel');
+
 module.exports = function (app) {
-    let savedTokens = null;
-    let lastSyncedAtSeconds = null;
     let isSyncRunning = false;
-    const defaultUserId = '6638bbb72ee0057ac3f3e21a'; // TEMP FIX, replace with actual logged-in userId
-    const firstSyncLookbackDays = 60;
+    const firstSyncLookbackDays = 2;
     const hdfcSendersQuery = '(from:hdfcbank.bank.in OR from:hdfcbank.com OR from:hdfcbank.net)';
     const hdfcTxnSearchQuery = '("UPI txn" OR "Account update")';
+    const loginScopes = ['openid', 'email', 'profile'];
+    const gmailScopes = ['openid', 'email', 'profile', 'https://www.googleapis.com/auth/gmail.readonly'];
     const allowedSubjects = [
         'UPI txn',
         'View: Account update for your HDFC Bank A/c'
     ];
+
+    function getFrontendUrl(path = '') {
+        return `${process.env.FRONTEND_URL || 'http://localhost:5173'}${path}`;
+    }
+
+    function createOAuthClient(redirectUri) {
+        return new google.auth.OAuth2(
+            process.env.GOOGLE_CLIENT_ID,
+            process.env.GOOGLE_CLIENT_SECRET,
+            redirectUri || process.env.GOOGLE_REDIRECT_URI
+        );
+    }
+
+    function getLoginRedirectUri() {
+        return process.env.GOOGLE_LOGIN_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI;
+    }
+
+    function getGmailRedirectUri() {
+        return process.env.GOOGLE_GMAIL_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI;
+    }
 
     function isAllowedHdfcSubject(subject) {
         if (!subject || /pre-approved|offer|loan/i.test(subject)) return false;
@@ -23,104 +47,250 @@ module.exports = function (app) {
         return allowedSubjects.some(allowedSubject => subject.includes(allowedSubject));
     }
 
-    const oauth2Client = new google.auth.OAuth2(
-        process.env.GOOGLE_CLIENT_ID,
-        process.env.GOOGLE_CLIENT_SECRET,
-        process.env.GOOGLE_REDIRECT_URI
-    );
+    async function getGoogleProfile(auth, idToken) {
+        if (idToken) {
+            const ticket = await auth.verifyIdToken({
+                idToken,
+                audience: process.env.GOOGLE_CLIENT_ID
+            });
+            const payload = ticket.getPayload();
+            return {
+                googleId: payload.sub,
+                email: payload.email,
+                name: payload.name,
+                picture: payload.picture
+            };
+        }
 
-    app.get('/auth/google', (req, res) => {
-        const url = oauth2Client.generateAuthUrl({
-            access_type: 'offline',
-            prompt: 'consent',
-            scope: ['https://www.googleapis.com/auth/gmail.readonly']
+        const oauth2 = google.oauth2({ version: 'v2', auth });
+        const profile = await oauth2.userinfo.get();
+        return {
+            googleId: profile.data.id,
+            email: profile.data.email,
+            name: profile.data.name,
+            picture: profile.data.picture
+        };
+    }
+
+    async function findOrCreateUser(profile) {
+        return User.findOneAndUpdate(
+            { googleId: profile.googleId },
+            {
+                $set: {
+                    googleId: profile.googleId,
+                    email: profile.email,
+                    name: profile.name,
+                    picture: profile.picture,
+                    lastLoginAt: new Date()
+                }
+            },
+            { upsert: true, new: true, runValidators: true }
+        );
+    }
+
+    function issueAppToken(user) {
+        return signAppToken({
+            userId: String(user._id),
+            email: user.email,
+            name: user.name
+        });
+    }
+
+    app.get('/auth/me', protect, async (req, res) => {
+        res.json({
+            status: 'success',
+            data: {
+                userId: req.user.id,
+                email: req.user.email,
+                name: req.user.name
+            }
+        });
+    });
+
+    app.get('/auth/google/login', (req, res) => {
+        const auth = createOAuthClient(getLoginRedirectUri());
+        const state = signAppToken({ purpose: 'google-login' }, 10 * 60);
+        const url = auth.generateAuthUrl({
+            access_type: 'online',
+            scope: loginScopes,
+            state
         });
 
         res.redirect(url);
     });
 
-
-    /**
-     * STEP 2: Google redirects back here
-     */
-    app.get('/auth/google/callback', async (req, res) => {
+    app.get('/auth/google/login/callback', async (req, res) => {
         try {
-            const { code } = req.query;
-
-            const { tokens } = await oauth2Client.getToken(code);
-
-            // SAVE tokens (TEMP)
-            savedTokens = tokens;
-            // lastSyncedAtSeconds = Math.floor(Date.now() / 1000);
-
-            res.send('Gmail connected successfully ✅');
+            await handleGoogleLoginCallback(req, res, getLoginRedirectUri());
         } catch (err) {
-            console.error(err);
-            res.status(500).send('OAuth failed ❌');
+            console.error('Google login failed:', err.message);
+            if (res.headersSent) return;
+            res.redirect(getFrontendUrl('/login?authError=google_login_failed'));
         }
     });
 
+    async function handleGoogleLoginCallback(req, res, redirectUri) {
+        const { code, state } = req.query;
+        const statePayload = verifyAppToken(state);
+        if (statePayload.purpose !== 'google-login') {
+            return res.redirect(getFrontendUrl('/login?authError=invalid_state'));
+        }
 
-    /**
-     * STEP 3: Fetch latest Gmail transactions
-     */
-    app.get('/gmail', async (req, res) => {
+        const auth = createOAuthClient(redirectUri);
+        const { tokens } = await auth.getToken(code);
+        auth.setCredentials(tokens);
+
+        const profile = await getGoogleProfile(auth, tokens.id_token);
+        const user = await findOrCreateUser(profile);
+        const appToken = issueAppToken(user);
+
+        return res.redirect(getFrontendUrl(`/auth/callback?token=${encodeURIComponent(appToken)}`));
+    }
+
+    app.get('/auth/google/connect', protect, (req, res) => {
+        const auth = createOAuthClient(getGmailRedirectUri());
+        const state = signAppToken({
+            purpose: 'gmail-connect',
+            userId: req.user.id
+        }, 10 * 60);
+        const url = auth.generateAuthUrl({
+            access_type: 'offline',
+            prompt: 'consent',
+            scope: gmailScopes,
+            state
+        });
+
+        res.redirect(url);
+    });
+
+    app.get('/auth/google/connect/callback', async (req, res) => {
         try {
-            if (!savedTokens) {
+            await handleGmailConnectCallback(req, res, getGmailRedirectUri());
+        } catch (err) {
+            console.error('Gmail connect failed:', err.message);
+            if (res.headersSent) return;
+            res.redirect(getFrontendUrl('/?gmail=connect_failed'));
+        }
+    });
+
+    async function handleGmailConnectCallback(req, res, redirectUri) {
+        const { code, state } = req.query;
+        const statePayload = verifyAppToken(state);
+        if (statePayload.purpose !== 'gmail-connect' || !statePayload.userId) {
+            return res.redirect(getFrontendUrl('/?gmail=invalid_state'));
+        }
+
+        const auth = createOAuthClient(redirectUri);
+        const { tokens } = await auth.getToken(code);
+        auth.setCredentials(tokens);
+
+        const profile = await getGoogleProfile(auth, tokens.id_token);
+        const existingConnection = await GmailConnection.findOne({ userId: statePayload.userId });
+        const refreshToken = tokens.refresh_token
+            ? encryptToken(tokens.refresh_token)
+            : existingConnection?.refreshToken;
+
+        await GmailConnection.findOneAndUpdate(
+            { userId: statePayload.userId },
+            {
+                $set: {
+                    userId: statePayload.userId,
+                    googleEmail: profile.email,
+                    accessToken: encryptToken(tokens.access_token),
+                    refreshToken,
+                    expiryDate: tokens.expiry_date,
+                    scope: tokens.scope,
+                    tokenType: tokens.token_type,
+                    isActive: true,
+                    lastError: ''
+                },
+                $setOnInsert: {
+                    lastSyncedAtSeconds: Math.floor(Date.now() / 1000) - firstSyncLookbackDays * 24 * 60 * 60
+                }
+            },
+            { upsert: true, new: true, runValidators: true }
+        );
+
+        return res.redirect(getFrontendUrl('/?gmail=connected'));
+    }
+
+    app.get('/auth/google/callback', async (req, res) => {
+        try {
+            const statePayload = verifyAppToken(req.query.state);
+            const legacyRedirectUri = process.env.GOOGLE_REDIRECT_URI || getLoginRedirectUri();
+
+            if (statePayload.purpose === 'google-login') {
+                return handleGoogleLoginCallback(req, res, legacyRedirectUri);
+            }
+
+            if (statePayload.purpose === 'gmail-connect') {
+                return handleGmailConnectCallback(req, res, legacyRedirectUri);
+            }
+
+            return res.redirect(getFrontendUrl('/login?authError=invalid_state'));
+        } catch (err) {
+            console.error('Google legacy callback failed:', err.message);
+            if (res.headersSent) return;
+            return res.redirect(getFrontendUrl('/login?authError=google_callback_failed'));
+        }
+    });
+
+    app.get('/gmail/status', protect, async (req, res) => {
+        const connection = await GmailConnection.findOne({ userId: req.user.id });
+        res.json({
+            status: 'success',
+            data: {
+                connected: Boolean(connection?.isActive && connection?.refreshToken),
+                googleEmail: connection?.googleEmail || null,
+                lastSyncedAtSeconds: connection?.lastSyncedAtSeconds || null,
+                lastError: connection?.lastError || null
+            }
+        });
+    });
+
+    app.get('/gmail', protect, async (req, res) => {
+        try {
+            const connection = await GmailConnection.findOne({ userId: req.user.id, isActive: true });
+            if (!connection?.refreshToken) {
                 return res.status(401).json({ error: 'Gmail not connected' });
             }
 
-            oauth2Client.setCredentials({
-                access_token: savedTokens.access_token,
-                refresh_token: savedTokens.refresh_token
+            const auth = createOAuthClient(getGmailRedirectUri());
+            auth.setCredentials({
+                access_token: decryptToken(connection.accessToken),
+                refresh_token: decryptToken(connection.refreshToken),
+                expiry_date: connection.expiryDate
             });
 
-            const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-
+            const gmail = google.gmail({ version: 'v1', auth });
             const query = `${hdfcSendersQuery} ${hdfcTxnSearchQuery}`;
-
-
             const listRes = await gmail.users.messages.list({
                 userId: 'me',
                 q: query,
                 maxResults: 5
             });
 
-
             const transactions = [];
 
             for (const m of listRes.data.messages || []) {
-                // 👇 HERE getMessage is used
                 const msg = await getMessage(gmail, m.id);
-                // console.log('msg:', msg);
-                // `gmail.users.messages.get` returns an object with `data.payload`
                 const subject = getHeader(msg.payload.headers, 'Subject');
                 if (!isAllowedHdfcSubject(subject)) continue;
 
                 const body = extractBody(msg.payload);
                 const txn = parseHdfcUpi(body);
 
-                if (txn && txn.amount) {
-                    transactions.push({
-                        messageId: m.id,
-                        ...txn
-                    });
-                } else {
-                    transactions.push({
-                        messageId: m.id,
-                        body
-                    });
-                }
+                transactions.push(txn && txn.amount
+                    ? { messageId: m.id, ...txn }
+                    : { messageId: m.id, body });
             }
 
             res.json(transactions);
-
         } catch (err) {
             console.error(err);
             res.status(500).json({ error: err.message });
         }
     });
-
 
     async function listGmailMessages(gmail, query, maxResults = 500) {
         const messages = [];
@@ -150,45 +320,31 @@ module.exports = function (app) {
         return new Date(`${fullYear}-${month}-${day}`);
     }
 
-    async function syncGmailTransactions(syncAfterSeconds) {
-        if (!savedTokens) {
-            console.log('Gmail not connected, skipping sync');
-            return;
+    async function syncGmailConnection(connection) {
+        if (!connection?.refreshToken) {
+            return { saved: 0, skipped: 0 };
         }
 
-        oauth2Client.setCredentials({
-            access_token: savedTokens.access_token,
-            refresh_token: savedTokens.refresh_token
+        const auth = createOAuthClient(getGmailRedirectUri());
+        auth.setCredentials({
+            access_token: decryptToken(connection.accessToken),
+            refresh_token: decryptToken(connection.refreshToken),
+            expiry_date: connection.expiryDate
         });
 
-        const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-        console.log('Starting Gmail transaction sync...');
-        let after = syncAfterSeconds
-            ? syncAfterSeconds - 10 // 10 sec buffer
-            : null;
-
-        console.log(
-            'Fetching emails after:',
-            after ? new Date(after * 1000).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : 'beginning',
-            '| Gmail after timestamp:',
-            after
-        );
-        // for now remove after to fetch all emails corrct this later
+        const gmail = google.gmail({ version: 'v1', auth });
+        const after = (connection.lastSyncedAtSeconds
+            || Math.floor(Date.now() / 1000) - firstSyncLookbackDays * 24 * 60 * 60) - 10;
         const query =
             `${hdfcSendersQuery} ` +
             `${hdfcTxnSearchQuery} ` +
-            (after ? `after:${after}` : '');
+            `after:${after}`;
 
         const messages = await listGmailMessages(gmail, query);
-        console.log('Gmail sync - Emails fetched:', messages.length);
-        if (!messages.length) {
-            lastSyncedAtSeconds = Math.floor(Date.now() / 1000);
-            return;
-        }
+        let saved = 0;
+        let skipped = 0;
 
         for (const m of messages) {
-            console.log('Fetching Gmail message:', m.id);
-
             let msg;
             try {
                 msg = await gmail.users.messages.get({
@@ -198,58 +354,46 @@ module.exports = function (app) {
                 });
             } catch (err) {
                 console.error('Failed to fetch Gmail message:', m.id, err.message);
+                skipped += 1;
                 continue;
             }
 
-            console.log('Fetched Gmail message:', m.id);
-            // `gmail.users.messages.get` returns an object with `data.payload`
             const payload = msg.data?.payload;
             if (!payload) {
-                console.log('Skipping email without payload:', m.id);
+                skipped += 1;
                 continue;
             }
 
             const subject = getHeader(payload.headers || [], 'Subject');
-            console.log('Gmail message subject:', subject);
             if (!isAllowedHdfcSubject(subject)) {
-                console.log('Skipping email because subject is not allowed:', m.id);
+                skipped += 1;
                 continue;
             }
 
             const body = extractBody(payload);
-            console.log('Gmail message body length:', body.length);
-            console.log('Body preview:', body.substring(0, 100));
-
-            if (!body) {
-                console.log('Skipping email because body is empty:', m.id);
-                continue;
-            }
-
-            if (!/HDFC/i.test(body) || !/UPI/i.test(body)) {
-                console.log('Skipping email because body does not contain both HDFC and UPI:', m.id);
+            if (!body || !/HDFC/i.test(body) || !/UPI/i.test(body)) {
+                skipped += 1;
                 continue;
             }
 
             const txn = parseHdfcUpi(body);
             if (!txn || !txn.amount) {
-                console.log('Skipping email because transaction could not be parsed:', m.id, txn);
+                skipped += 1;
                 continue;
             }
 
-            const classification = await classifyExpense(txn, defaultUserId);
-            console.log('💰 TRANSACTION:', txn);
-            console.log('🤖 CLASSIFIED AS:', classification);
-            console.log("txn", txn);
-            // 👉 FINAL object to save in DB
+            const classification = await classifyExpense(txn, connection.userId);
             const expense = {
-                type: classification.type, // Needs / Wants / Savings / Ignore
-                category: classification.category || "others",
+                type: classification.type,
+                category: classification.category || 'others',
                 price: txn.amount,
                 merchant: txn.merchant || 'unknown',
                 vpa: txn.vpa || 'unknown',
                 item: classification.category || 'others',
-                userId: defaultUserId,
+                userId: connection.userId,
                 confidence: classification.confidence,
+                classificationSource: classification.source,
+                classificationRuleId: classification.ruleId ? String(classification.ruleId) : undefined,
                 source: 'Gmail',
                 gmailMessageId: m.id,
                 transactionReferenceId: txn.referenceId,
@@ -258,60 +402,90 @@ module.exports = function (app) {
                 currency: txn.currency,
                 createdAt: parseTxnDate(txn.date)
             };
-            // console.log('FINAL EXPENSE OBJECT:', expense);
-            console.log('Saving expense to DB...', expense);
-            // ❌ Skip ignored txns
+
             if (expense.type === 'Ignore') {
-                console.log('Skipping ignored transaction:', m.id);
+                skipped += 1;
                 continue;
             }
 
             try {
-                const saveResult = await Expense.updateOne(
-                    { userId: expense.userId, gmailMessageId: expense.gmailMessageId },
-                    { $setOnInsert: expense },
-                    { upsert: true }
-                );
-
-                console.log('Expense save result:', {
-                    matchedCount: saveResult.matchedCount,
-                    modifiedCount: saveResult.modifiedCount,
-                    upsertedCount: saveResult.upsertedCount,
-                    upsertedId: saveResult.upsertedId
+                const alreadyExists = await Expense.exists({
+                    userId: expense.userId,
+                    gmailMessageId: expense.gmailMessageId
                 });
+                if (alreadyExists) {
+                    skipped += 1;
+                    continue;
+                }
+
+                await Expense.create(expense);
+                saved += 1;
             } catch (err) {
-                console.error('Error saving expense:', err.message);
+                if (err.code === 11000) {
+                    skipped += 1;
+                    continue;
+                }
+                console.error('Error saving Gmail expense:', err.message);
+                skipped += 1;
             }
         }
 
-        lastSyncedAtSeconds = Math.floor(Date.now() / 1000);
+        const credentials = auth.credentials || {};
+        await GmailConnection.updateOne(
+            { _id: connection._id },
+            {
+                $set: {
+                    accessToken: credentials.access_token ? encryptToken(credentials.access_token) : connection.accessToken,
+                    expiryDate: credentials.expiry_date || connection.expiryDate,
+                    lastSyncedAtSeconds: Math.floor(Date.now() / 1000),
+                    lastError: '',
+                    isActive: true
+                }
+            }
+        );
+
+        return { saved, skipped };
     }
-    //@explain this
-    cron.schedule('*/2 * * * *', async () => {
+
+    async function syncAllGmailConnections() {
+        const connections = await GmailConnection.find({ isActive: true, refreshToken: { $exists: true, $ne: '' } });
+        for (const connection of connections) {
+            try {
+                const result = await syncGmailConnection(connection);
+                console.log('Gmail sync done:', connection.userId, result);
+            } catch (err) {
+                console.error('Gmail sync failed:', connection.userId, err.message);
+                await GmailConnection.updateOne(
+                    { _id: connection._id },
+                    { $set: { lastError: err.message, isActive: /invalid_grant/i.test(err.message) ? false : connection.isActive } }
+                );
+            }
+        }
+    }
+
+    cron.schedule('0 22 * * *', async () => {
         if (isSyncRunning) {
             console.log('Gmail sync already running, skipping this tick');
             return;
         }
 
-        if (!lastSyncedAtSeconds) {
-            lastSyncedAtSeconds = Math.floor(Date.now() / 1000) - firstSyncLookbackDays * 48 * 60 * 60;
-        }
-
-        console.log('🔄 Gmail sync started (2 min)');
         try {
             isSyncRunning = true;
-            await syncGmailTransactions(lastSyncedAtSeconds);
-            console.log('✅ Gmail sync done');
+            await syncAllGmailConnections();
         } catch (e) {
-            console.error('❌ Sync failed', e.message);
+            console.error('Gmail sync failed:', e.message);
         } finally {
             isSyncRunning = false;
         }
     });
 
-    app.get('/gmail/sync-now', async (req, res) => {
-        await syncGmailTransactions(lastSyncedAtSeconds || Math.floor(Date.now() / 1000) - firstSyncLookbackDays * 24 * 60 * 60);
-        res.json({ status: 'Synced' });
-    });
+    app.get('/gmail/sync-now', protect, async (req, res) => {
+        const connection = await GmailConnection.findOne({ userId: req.user.id, isActive: true });
+        if (!connection?.refreshToken) {
+            return res.status(401).json({ error: 'Gmail not connected' });
+        }
 
+        const result = await syncGmailConnection(connection);
+        res.json({ status: 'Synced', ...result });
+    });
 };

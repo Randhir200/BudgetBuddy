@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import axios from "axios";
-import { authApiUrl } from "../../configs/apiURLs";
 import { LinearProgress } from "@mui/material";
+import { apiClient } from "../../configs/apiClient";
 
 interface PrivateRouteProps {
   children: React.ReactNode;
@@ -20,16 +19,12 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
           setIsAuthenticated(false); // No token, so not authenticated
           return;
         }
-        const response = await axios.get(`${authApiUrl}/protected`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
-          withCredentials: true
-        });
+        const response = await apiClient.get(`/auth/me`);
 
         if (response.status === 200) {
           //storing userId in local storage
           localStorage.setItem('userId', response.data.data.userId);
+          localStorage.setItem('userEmail', response.data.data.email || '');
           setIsAuthenticated(true); // Authenticated
           setIsLoading(false); 
         } else {

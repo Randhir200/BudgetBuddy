@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import axios from 'axios';
-import { budgetBuddyApiUrl } from '../../configs/apiURLs';
+import { apiClient } from '../../configs/apiClient';
 
 interface IncomeState {
     loading: boolean;
@@ -18,7 +17,7 @@ const initialState: IncomeState = {
 export const fetchIncome = createAsyncThunk(
     'income/fetchIncome', 
     async (userId: string) => {
-    const response = await axios.get(`${budgetBuddyApiUrl}/expense/getAllExpense?userId=${userId}`)
+    const response = await apiClient.get(`/income/fetch?userId=${userId}`)
     return response.data;
 });
 
@@ -41,4 +40,3 @@ const incomeSlice = createSlice({
 })
 
 export const { reducer: incomeReducer } = incomeSlice
-

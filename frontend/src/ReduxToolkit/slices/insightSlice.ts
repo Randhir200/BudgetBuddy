@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import axios from 'axios';
-import { budgetBuddyApiUrl } from '../../configs/apiURLs';
+import { apiClient } from '../../configs/apiClient';
 import { Balance } from '@mui/icons-material';
 
 interface Balance { 
@@ -47,7 +46,7 @@ const initialState: IncomeState = {
 export const fetchMonthlyOverview = createAsyncThunk(
     'insight/monthlyOverview',
     async ({userId, dateRange}:{ userId: string, dateRange : DateRange}) => {
-        const response = await axios.get(`${budgetBuddyApiUrl}/insight/monthlyOverview?userId=${userId}&firstDate=${dateRange.firstDate}&lastDate=${dateRange.lastDate}`);
+        const response = await apiClient.get(`/insight/monthlyOverview?userId=${userId}&firstDate=${dateRange.firstDate}&lastDate=${dateRange.lastDate}`);
 
         return response.data;
     });
@@ -55,7 +54,7 @@ export const fetchMonthlyOverview = createAsyncThunk(
 export const fetchBalance = createAsyncThunk(
     'insight/balance',
     async (userId: string) => {
-        const response = await axios.get(`${budgetBuddyApiUrl}/insight/balance?userId=${userId}`);
+        const response = await apiClient.get(`/insight/balance?userId=${userId}`);
         return response.data;
     }
 )

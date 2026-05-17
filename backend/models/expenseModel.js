@@ -19,6 +19,8 @@ const expenseSchema =  new mongoose.Schema({
     payBack:  { type: payBackSchema, default: () => ({}) }, // empty object to allow get default value from schema
     userId : {type: String, ref: 'User', required: true},
     confidence: {type: Number, required: false},
+    classificationSource: {type: String, required: false},
+    classificationRuleId: {type: String, required: false},
     source: {type: String, required: false},
     vpa: {type: String, required: false},
     gmailMessageId: {type: String, required: false},

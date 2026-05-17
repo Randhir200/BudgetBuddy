@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import axios from "axios";
-import { budgetBuddyApiUrl } from "../../configs/apiURLs";
+import { apiClient } from "../../configs/apiClient";
 import { setAlert } from "./alertSlice";
 
 
@@ -31,7 +30,7 @@ export const fetchExpenseType = createAsyncThunk(
     `expenseType/fetch`,
     async (userId: string | null, { rejectWithValue, dispatch }) => {
         try {
-            const res = await axios.get(`${budgetBuddyApiUrl}/expenseType/fetch?userId=${userId}`);
+            const res = await apiClient.get(`/expenseType/fetch?userId=${userId}`);
             dispatch(setAlert({ message: res.data.message, variant: 'success' }));
             return res.data;
         } catch (err: any) {
@@ -52,16 +51,7 @@ export const addExpenseType = createAsyncThunk(
     'expenseType/add',
     async (formData: Object, { rejectWithValue, dispatch }) => {
         try {
-            const res = await axios.post(
-                `${budgetBuddyApiUrl}/expenseType/create`,
-                formData,
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer token',
-                    },
-                }
-            );
+            const res = await apiClient.post(`/expenseType/create`, formData);
             dispatch(setAlert({ message: res.data.message, variant: 'success' }));
             return res.data;
         } catch (err: any) {

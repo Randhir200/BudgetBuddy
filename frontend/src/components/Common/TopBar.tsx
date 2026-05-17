@@ -6,8 +6,13 @@ import {
   IconButton,
   Typography,
   Switch,
+  Button,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { useNavigate } from "react-router-dom";
+import { startGmailConnect } from "../../configs/apiClient";
 
 const drawerWidth = 240;
 
@@ -54,6 +59,15 @@ const TopBar: React.FC<TopBarProps> = ({
   darkMode,
   onToggleDarkMode
 }) => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("auth-token");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userEmail");
+    navigate("/login");
+  };
+
   return (
     <AppBar position="fixed" open={open}>
     <Toolbar sx={{display: "flex", justifyContent: "space-between"}}>
@@ -74,7 +88,20 @@ const TopBar: React.FC<TopBarProps> = ({
       <Typography variant="h6" noWrap component="div">
         BudgetBuddy
       </Typography>
-      <Switch sx={{float:"right"}} checked={darkMode} onChange={onToggleDarkMode} />
+      <Toolbar sx={{ gap: 1, minHeight: "auto !important" }}>
+        <Button
+          color="inherit"
+          size="small"
+          startIcon={<MarkEmailReadIcon />}
+          onClick={startGmailConnect}
+        >
+          Gmail
+        </Button>
+        <IconButton color="inherit" onClick={handleLogout} aria-label="logout">
+          <LogoutIcon />
+        </IconButton>
+        <Switch sx={{float:"right"}} checked={darkMode} onChange={onToggleDarkMode} />
+      </Toolbar>
     </Toolbar>
   </AppBar>
   );

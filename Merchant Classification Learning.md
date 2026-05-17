@@ -19,8 +19,11 @@ The classifier now uses this order:
 2. User-saved merchant rule
 3. User-saved merchant pattern rule
 4. Seeded merchant rules in code
-5. AI classification
-6. Low-confidence fallback
+5. Cached AI VPA rule
+6. Cached AI merchant rule
+7. Cached AI merchant pattern rule
+8. Fresh AI classification
+9. Low-confidence fallback
 
 VPA exact match has highest priority because it is usually the most stable identifier in UPI emails.
 
@@ -40,6 +43,7 @@ It stores user-specific classification rules:
 - `category`
 - `confidence`
 - `source`
+- `confirmed`
 - `useCount`
 
 There is a unique index on:
@@ -50,6 +54,14 @@ There is a unique index on:
 
 This prevents duplicate rules for the same user and VPA/merchant.
 
+Rule source meaning:
+
+- `user`: created or promoted when the user corrects an expense
+- `ai`: created after a fresh AI classification to reduce repeated AI calls
+- `seeded`: reserved for built-in system rules
+
+User rules are confirmed and high-confidence. AI rules are unconfirmed and lower-confidence.
+
 ### `backend/Agent/transactionType.js`
 
 Reworked the classifier.
@@ -57,14 +69,19 @@ Reworked the classifier.
 Main flow:
 
 ```js
-const savedRule = await classifyBySavedRule(txn, userId);
-if (savedRule) return savedRule;
+const userRule = await findStoredRule(txn, userId, 'user');
+if (userRule) return userRule;
 
 const seededRule = classifyBySeededRules(txn);
 if (seededRule) return seededRule;
 
+const aiCachedRule = await findStoredRule(txn, userId, 'ai');
+if (aiCachedRule) return aiCachedRule;
+
 const aiResult = await aiClassifyExpense(txn);
-return normalizeClassification(aiResult, txn);
+const classification = normalizeClassification(aiResult, txn);
+await cacheAiRule(txn, classification, userId);
+return classification;
 ```
 
 Seeded rules include:
@@ -76,8 +93,28 @@ Seeded rules include:
 - rent, electricity, gas, broadband -> `Needs / bills`
 - SmartQ, cafeteria, canteen -> `Needs / office food`
 - Zomato, plain Swiggy, restaurant, cafe -> `Wants / food delivery`
-- Amazon, Flipkart, Myntra, Ajio, Nykaa -> `Wants / shopping`
+- Amazon, Flipkart, EKART, Myntra, Ajio, Nykaa -> `Wants / shopping`
 - Netflix, Prime, Spotify, BookMyShow -> `Wants / entertainment`
+
+AI is not allowed to skip a successful debit only because the transaction is ambiguous. If AI returns `Ignore` without a clear ignore signal, the classifier changes it to low-confidence `Needs / uncategorized` so the record is still saved and can be corrected by the user.
+
+After a fresh AI classification, the result is cached as an unconfirmed rule:
+
+```js
+{
+  matchType: "vpa",
+  value: "paytm.s1t4tpe@pty",
+  type: "Needs",
+  category: "uncategorized",
+  confidence: 0.45,
+  source: "ai",
+  confirmed: false
+}
+```
+
+This reduces token cost because the next same VPA/merchant does not need another AI call. Cached AI rules never override user-confirmed rules.
+
+If the AI request fails and the code falls back to `Needs / uncategorized`, that fallback is not cached. This avoids creating permanent rules from network/API failures.
 
 ### `backend/controllers/gmailService/gmailController.js`
 
@@ -108,11 +145,22 @@ Example:
   type: "Needs",
   category: "grocery",
   confidence: 0.98,
-  source: "user"
+  source: "user",
+  confirmed: true
 }
 ```
 
 Next time the same VPA appears, the saved rule is used before seeded rules or AI.
+
+The updated expense also gets:
+
+```js
+{
+  confidence: 0.98,
+  classificationSource: "user-rule",
+  classificationRuleId: "mongo_rule_id_here"
+}
+```
 
 ## Example
 
@@ -152,3 +200,5 @@ VPA exact match > merchant exact match > merchant pattern > seeded rules > AI
 ## Current Limitation
 
 If a merchant uses many dynamic QR VPAs, exact VPA rules may not generalize. In that case, a merchant or pattern rule should be added manually later.
+
+AI cached rules are useful for cost reduction, but they are not treated as confirmed truth. Low-confidence AI rows should still be reviewable in the UI.

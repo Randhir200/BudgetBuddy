@@ -12,14 +12,17 @@ const EventEmitter = require('events');
 const emitter = new EventEmitter();
 const app = express();
 app.use(express.json());
-require("./controllers/gmailService/gmailController")(app); 
-
 
 //cors
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || true,
+  credentials: true
+}));
 
 // Use Helmet to set various HTTP headers for security
 app.use(helmet());
+
+require("./controllers/gmailService/gmailController")(app);
 
 app.use(masterRoute);
 
@@ -74,4 +77,3 @@ process.on('unhandledRejection', err=> {
     process.exit(1)
   })
 })
-

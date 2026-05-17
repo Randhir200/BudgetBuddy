@@ -2,6 +2,8 @@ const openai = require('../configs/aiClient');
 const MerchantRule = require('../models/merchantRuleModel');
 
 const allowedTypes = new Set(['Needs', 'Wants', 'Savings', 'Ignore']);
+const aiRuleMaxConfidence = 0.65;
+const aiRuleDefaultConfidence = 0.45;
 
 const seededMerchantRules = [
     {
@@ -55,7 +57,7 @@ const seededMerchantRules = [
     },
     {
         label: 'shopping',
-        match: /\b(amazon|flipkart|myntra|ajio|nykaa|mall|shopping)\b/i,
+        match: /\b(amazon|flipkart|ekart|myntra|ajio|nykaa|mall|shopping)\b/i,
         type: 'Wants',
         category: 'shopping',
         confidence: 0.78
@@ -82,17 +84,34 @@ function buildSearchText(txn) {
 }
 
 function normalizeClassification(result, txn, fallbackType = 'Needs') {
-    const type = allowedTypes.has(result?.type) ? result.type : fallbackType;
+    let type = allowedTypes.has(result?.type) ? result.type : fallbackType;
+    let category = result?.category || 'uncategorized';
+    let confidence = Number(result?.confidence ?? 0.4);
+    let source = result?.source || 'unknown';
+
+    if (type === 'Ignore' && !hasClearIgnoreSignal(txn)) {
+        type = fallbackType;
+        category = 'uncategorized';
+        confidence = Math.min(confidence, 0.35);
+        source = `${source}-ignore-guard`;
+    }
 
     return {
         type,
         merchant: result?.merchant || txn?.merchant || 'unknown',
-        category: result?.category || 'uncategorized',
-        confidence: Number(result?.confidence ?? 0.4),
-        source: result?.source || 'unknown',
+        category,
+        confidence,
+        source,
         ruleId: result?.ruleId,
         ruleLabel: result?.ruleLabel
     };
+}
+
+function hasClearIgnoreSignal(txn) {
+    if (!txn || !txn.amount || txn.amount <= 2) return true;
+
+    return /\b(verification|verify|failed|declined|reversal|reversed|refund|refunded|mandate|autopay\s+setup|collect\s+request|otp)\b/i
+        .test(buildSearchText(txn));
 }
 
 function classifyBySeededRules(txn) {
@@ -113,7 +132,7 @@ function classifyBySeededRules(txn) {
     return null;
 }
 
-async function classifyBySavedRule(txn, userId) {
+async function findStoredRule(txn, userId, source) {
     if (!userId) return null;
 
     const merchant = MerchantRule.normalizeValue(txn?.merchant);
@@ -121,10 +140,10 @@ async function classifyBySavedRule(txn, userId) {
 
     const exactQueries = [];
     if (vpa) {
-        exactQueries.push({ userId, matchType: 'vpa', normalizedValue: vpa });
+        exactQueries.push({ userId, source, matchType: 'vpa', normalizedValue: vpa });
     }
     if (merchant) {
-        exactQueries.push({ userId, matchType: 'merchant', normalizedValue: merchant });
+        exactQueries.push({ userId, source, matchType: 'merchant', normalizedValue: merchant });
     }
 
     for (const query of exactQueries) {
@@ -135,7 +154,7 @@ async function classifyBySavedRule(txn, userId) {
                 type: savedRule.type,
                 category: savedRule.category,
                 confidence: savedRule.confidence,
-                source: 'user-rule',
+                source: `${source}-rule`,
                 ruleId: savedRule._id,
                 merchant: txn.merchant
             }, txn);
@@ -143,7 +162,7 @@ async function classifyBySavedRule(txn, userId) {
     }
 
     if (merchant) {
-        const patternRules = await MerchantRule.find({ userId, matchType: 'pattern' });
+        const patternRules = await MerchantRule.find({ userId, source, matchType: 'pattern' });
         for (const savedRule of patternRules) {
             if (merchant.includes(savedRule.normalizedValue)) {
                 await MerchantRule.updateOne({ _id: savedRule._id }, { $inc: { useCount: 1 } });
@@ -151,7 +170,7 @@ async function classifyBySavedRule(txn, userId) {
                     type: savedRule.type,
                     category: savedRule.category,
                     confidence: savedRule.confidence,
-                    source: 'user-rule',
+                    source: `${source}-rule`,
                     ruleId: savedRule._id,
                     merchant: txn.merchant
                 }, txn);
@@ -160,6 +179,45 @@ async function classifyBySavedRule(txn, userId) {
     }
 
     return null;
+}
+
+async function cacheAiRule(txn, classification, userId) {
+    if (!userId || !txn || !classification) return null;
+    if (!allowedTypes.has(classification.type) || classification.type === 'Ignore') return null;
+    if (!String(classification.source || '').startsWith('ai')) return null;
+
+    const matchType = txn.vpa ? 'vpa' : txn.merchant ? 'merchant' : null;
+    const value = txn.vpa || txn.merchant;
+    if (!matchType || !value) return null;
+
+    const normalizedValue = MerchantRule.normalizeValue(value);
+    const existingRule = await MerchantRule.findOne({ userId, matchType, normalizedValue });
+
+    if (existingRule && ['user', 'seeded'].includes(existingRule.source)) return existingRule;
+
+    const confidence = Math.min(
+        Number(classification.confidence || aiRuleDefaultConfidence),
+        aiRuleMaxConfidence
+    );
+
+    return MerchantRule.findOneAndUpdate(
+        { userId, matchType, normalizedValue },
+        {
+            $set: {
+                userId,
+                matchType,
+                value,
+                normalizedValue,
+                type: classification.type,
+                category: classification.category || 'uncategorized',
+                confidence,
+                source: 'ai',
+                confirmed: false
+            },
+            $inc: { useCount: 1 }
+        },
+        { upsert: true, new: true, runValidators: true }
+    );
 }
 
 async function aiClassifyExpense(txn) {
@@ -174,6 +232,8 @@ Important:
 - HDFC UPI emails usually do not include product names.
 - Use only merchant/payee name, VPA, and description.
 - If merchant is ambiguous, make the best conservative guess and keep confidence low.
+- Do not return Ignore for a successful debit only because it is ambiguous.
+- Use Ignore only for verification, failed, reversed, refunded, mandate setup, OTP, or non-expense messages.
 - Grocery delivery merchants like Blinkit, Zepto, Swiggy Instamart are Needs/grocery.
 - Plain Swiggy/Zomato restaurant food is Wants/food delivery.
 
@@ -229,17 +289,28 @@ async function classifyExpense(txn, userId) {
         }, txn, 'Ignore');
     }
 
-    const savedRule = await classifyBySavedRule(txn, userId);
-    if (savedRule) return savedRule;
+    const userRule = await findStoredRule(txn, userId, 'user');
+    if (userRule) return userRule;
 
     const seededRule = classifyBySeededRules(txn);
     if (seededRule) return seededRule;
 
+    const aiCachedRule = await findStoredRule(txn, userId, 'ai');
+    if (aiCachedRule) return aiCachedRule;
+
     const aiResult = await aiClassifyExpense(txn);
-    return normalizeClassification(aiResult, txn);
+    const classification = normalizeClassification(aiResult, txn);
+
+    const cachedRule = await cacheAiRule(txn, classification, userId);
+    if (cachedRule?._id) {
+        classification.ruleId = cachedRule._id;
+    }
+
+    return classification;
 }
 
 module.exports = {
     classifyExpense,
-    seededMerchantRules
+    seededMerchantRules,
+    cacheAiRule
 };

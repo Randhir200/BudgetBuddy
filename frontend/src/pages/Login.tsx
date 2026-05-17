@@ -1,169 +1,40 @@
-import axios, { AxiosError } from "axios";
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
-import { AlertProps } from "@mui/material/Alert";
-import { AlertComp } from "../components/Common/AlertComp";
-import { SnackbarOrigin } from "@mui/material/Snackbar";
-import {authApiUrl} from "../configs/apiURLs";
-import {LinearProgress} from "@mui/material";
+import React from "react";
+import { Button, Paper, Stack, Typography } from "@mui/material";
+import GoogleIcon from "@mui/icons-material/Google";
+import { startGoogleLogin } from "../configs/apiClient";
 
-interface Response {
-    status: number;
-    data: {
-        message: string;
-        data: {
-            token: string;
-        },
-        status: string;
-    };
-}
+const Login: React.FC = () => {
+  return (
+    <Stack
+      minHeight="100vh"
+      alignItems="center"
+      justifyContent="center"
+      sx={{ backgroundColor: "#f7f8fb", px: 2 }}
+    >
+      <Paper elevation={2} sx={{ width: "100%", maxWidth: 380, p: 4, borderRadius: 2 }}>
+        <Stack spacing={3}>
+          <Stack spacing={1}>
+            <Typography variant="h5" fontWeight={700}>
+              BudgetBuddy
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Sign in with Google to continue.
+            </Typography>
+          </Stack>
 
-interface State extends SnackbarOrigin {
-    open: boolean;
-}
-
-interface alertState extends AlertProps {
-    message: string
-}
-
-const Login = () => {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [toastState, setToastState] = React.useState<State>({
-        open: false,
-        vertical: 'top',
-        horizontal: 'center',
-    });
-    const [alertState, setAlertState] = React.useState<alertState>({ severity: "success", message: '' });
-
-    const { open, vertical, horizontal } = toastState;
-    const navigate = useNavigate();
-
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        try {
-            setLoading(true);
-            const response: Response = await axios.post(
-                `${authApiUrl}/login`,
-                {
-                    email,
-                    password,
-                },
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer token'
-                    }
-                }
-            );
-            const token = response.data.data.token;
-            localStorage.setItem("auth-token", token);
-            navigate('/');
-            setAlertState({
-                ...alertState,
-                severity: "success",
-                message: response.data.message
-            });
-
-        } catch (error: any) {
-            if (AxiosError) {
-                setAlertState({ ...alertState, severity: 'error', message: error.message })
-            }
-            setAlertState({ ...alertState, severity: 'error', message: error.message })
-
-        } finally {
-            setToastState({ ...toastState, open: true });
-            setTimeout(() => {
-                setToastState({ ...toastState, open: false });
-            }, 2000); // Close after 2 seconds
-            setLoading(false);
-        }
-    };
-
-    return (
-        <Container>
-            <AlertComp vertical={vertical} horizontal={horizontal} open={open}
-                alertState={alertState}
-            />  
-            <Form onSubmit={handleSubmit}  style={{marginTop:"2rem"}}>
-                <Title>Login</Title>
-                <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email"
-                />
-                <Input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Password"
-                    />
-
-                {loading && <LinearProgress style={{borderRadius:"0.5rem 0.5rem 0 0"}}/>}
-                <Button type="submit">
-                    Login</Button>
-                <p className="switch">
-                    New to BudgetBuddy? <Link to={"/signup"}>Signup</Link>{" "}
-                </p>
-            </Form>
-        </Container>
-    );
+          <Button
+            fullWidth
+            size="large"
+            variant="contained"
+            startIcon={<GoogleIcon />}
+            onClick={startGoogleLogin}
+          >
+            Continue with Google
+          </Button>
+        </Stack>
+      </Paper>
+    </Stack>
+  );
 };
 
 export default Login;
-
-// Styled components
-const Container = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #fff;
-  height: "auto";
-`;
-
-const Form = styled.form`
-  background-color: white;
-  padding: 40px;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  max-width: 400px;
-  width: 100%;
-  .switch {
-    margin-top: 10px;
-  }
-`;
-
-const Title = styled.h2`
-  margin-bottom: 20px;
-  font-size: 24px;
-  text-align: center;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 16px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: transparent;
-  font-size: 16px;
-`;
-
-const Button = styled.button`
-  width: 100%;
-  padding: 12px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #0056b3;
-  }
-`;
