@@ -10,9 +10,25 @@ const incomeSchema = new Schema({
     dateRecieved: { type: Date, default: Date.now },
     updatedAt: {type: Date, default: Date.now
     },
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    source: { type: String, required: false },
+    merchant: { type: String, required: false },
+    vpa: { type: String, required: false },
+    gmailMessageId: { type: String, required: false },
+    transactionReferenceId: { type: String, required: false },
+    bank: { type: String, required: false },
+    accountLast4: { type: String, required: false },
+    currency: { type: String, required: false }
 
 });
+
+incomeSchema.index(
+    { userId: 1, gmailMessageId: 1 },
+    {
+        unique: true,
+        partialFilterExpression: { gmailMessageId: { $exists: true, $type: 'string' } }
+    }
+);
 
 //update current balance plugin
 incomeSchema.plugin(updateCurrentBalance);

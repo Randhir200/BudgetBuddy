@@ -75,11 +75,11 @@ function parseHdfcUpi(text) {
 
         const type = /\bdebit(?:ed)?\b/i.test(t) ? 'Debit' : /\bcredit(?:ed)?\b/i.test(t) ? 'Credit' : null; // determine transaction type
 
-        const accountMatch = t.match(/account(?:\s+ending)?\s+(\d{2,4})/i); // last 2-4 digits of account
+        const accountMatch = t.match(/account(?:\s+ending)?\s+(?:\*+)?(\d{2,4})/i); // last 2-4 digits of account
         const accountLast4 = accountMatch ? accountMatch[1] : null; // last 2-4 digits
 
-        const upiDetailsMatch = t.match(/\b(?:to|towards)\s+VPA\s+([A-Za-z0-9._-]+@[A-Za-z0-9._-]+)(?:\s+\(([^)]*?)\)|\s+(.+?))?\s+on\s+(\d{2}-\d{2}-\d{2,4})\b/i);
-        const vpaMatch = upiDetailsMatch || t.match(/\b(?:to|towards)\s+VPA\s+([A-Za-z0-9._-]+@[A-Za-z0-9._-]+)/i); // VPA pattern
+        const upiDetailsMatch = t.match(/\b(?:to|towards|by|from)\s+VPA\s+([A-Za-z0-9._-]+@[A-Za-z0-9._-]+)(?:\s+\(([^)]*?)\)|\s+(.+?))?\s+on\s+(\d{2}-\d{2}-\d{2,4})\b/i);
+        const vpaMatch = upiDetailsMatch || t.match(/\b(?:to|towards|by|from)\s+VPA\s+([A-Za-z0-9._-]+@[A-Za-z0-9._-]+)/i); // VPA pattern
         const vpa = vpaMatch ? vpaMatch[1] : null; // extract VPA
 
         // merchant: text between the VPA (or 'to') and the 'on <date>' token
@@ -104,6 +104,8 @@ function parseHdfcUpi(text) {
 
             const bracketMatch = name.match(/^\(([^)]*?)\)$/);
             return (bracketMatch ? bracketMatch[1] : name)
+                .replace(/\b(?:at|@|-|,)?\s*\d{1,2}[:.]\d{2}(?::\d{2})?\s*(?:A\.?M\.?|P\.?M\.?)?\b/ig, '')
+                .replace(/\bIST\b/ig, '')
                 .replace(/^[:,-\s]+|[,:\s]+$/g, '')
                 .trim() || null;
         };

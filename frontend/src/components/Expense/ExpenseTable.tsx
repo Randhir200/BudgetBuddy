@@ -30,6 +30,7 @@ import AddIcon from '@mui/icons-material/Add';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
 import ThumbDownOffAltIcon from '@mui/icons-material/ThumbDownOffAlt';
 import ThumbUpOffAltIcon from '@mui/icons-material/ThumbUpOffAlt';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -63,6 +64,16 @@ const emptyEditForm = {
     amount: 0,
   },
 };
+
+const sortOptions = [
+  { value: 'newest', label: 'Newest first' },
+  { value: 'oldest', label: 'Oldest first' },
+  { value: 'amountHigh', label: 'Highest amount' },
+  { value: 'amountLow', label: 'Lowest amount' },
+  { value: 'merchantAsc', label: 'Merchant A-Z' },
+  { value: 'categoryAsc', label: 'Category A-Z' },
+  { value: 'reviewFirst', label: 'Needs review first' },
+];
 
 function toDateInputValue(dateString?: string) {
   if (!dateString) return '';
@@ -122,6 +133,13 @@ function getConfidenceIcon(label: string, fontSize: 'small' | 'medium' = 'medium
   return <CheckCircleIcon color="success" fontSize={fontSize} />;
 }
 
+function getReviewRank(expense: any) {
+  const label = getConfidenceMeta(expense).label;
+  if (label === 'Need Review') return 0;
+  if (label === 'Review') return 1;
+  return 2;
+}
+
 function toCategoryPayload(category: any) {
   return {
     name: category.name,
@@ -138,17 +156,66 @@ const CustomTable = () => {
   const [editForm, setEditForm] = useState(emptyEditForm);
   const [newTypeName, setNewTypeName] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [searchText, setSearchText] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
   const dispatch: AppDispatch = useDispatch();
   const { fetchLoading, expenses, updateLoading, deleteLoading } = useSelector((state: RootState) => state.expenseReducer);
   const { expenseTypes } = useSelector((state: RootState) => state.expenseTypeReducer);
   const isMobile = useMediaQuery('(max-width:600px)');
   const userId = localStorage.getItem('userId');
-  const visibleExpenses = expenses.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   const availableCategories = useMemo(() => {
     const selectedConfig = expenseTypes.find((item: any) => item.type === editForm.type);
     return selectedConfig ? selectedConfig.categories : [];
   }, [editForm.type, expenseTypes]);
+
+  const filteredExpenses = useMemo(() => {
+    const query = searchText.trim().toLowerCase();
+    const searchedExpenses = query
+      ? expenses.filter((expense: any) => {
+        const reviewLabel = getConfidenceMeta(expense).label;
+        const searchable = [
+          expense.merchant,
+          expense.vpa,
+          expense.type,
+          expense.category,
+          expense.item,
+          expense.price,
+          reviewLabel,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+
+        return searchable.includes(query);
+      })
+      : [...expenses];
+
+    return searchedExpenses.sort((a: any, b: any) => {
+      if (sortBy === 'oldest') {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }
+      if (sortBy === 'amountHigh') {
+        return Number(b.price || 0) - Number(a.price || 0);
+      }
+      if (sortBy === 'amountLow') {
+        return Number(a.price || 0) - Number(b.price || 0);
+      }
+      if (sortBy === 'merchantAsc') {
+        return String(a.merchant || '').localeCompare(String(b.merchant || ''));
+      }
+      if (sortBy === 'categoryAsc') {
+        return String(a.category || '').localeCompare(String(b.category || ''));
+      }
+      if (sortBy === 'reviewFirst') {
+        return getReviewRank(a) - getReviewRank(b) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [expenses, searchText, sortBy]);
+
+  const visibleExpenses = filteredExpenses.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString(undefined, {
@@ -163,6 +230,16 @@ const CustomTable = () => {
 
   const handleChangeRowsPerPage = (event: any) => {
     setRowsPerPage(+event.target.value);
+    setPage(0);
+  };
+
+  const handleSearchChange = (event: any) => {
+    setSearchText(event.target.value);
+    setPage(0);
+  };
+
+  const handleSortChange = (event: any) => {
+    setSortBy(event.target.value);
     setPage(0);
   };
 
@@ -289,6 +366,39 @@ const CustomTable = () => {
     <>
       <Paper sx={{ width: '99%', overflowX: isMobile ? 'hidden' : 'auto' }}>
         {fetchLoading && <LinearProgress />}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'minmax(220px, 1fr) 220px' },
+            gap: 1,
+            p: 1,
+            alignItems: 'center',
+          }}
+        >
+          <TextField
+            value={searchText}
+            onChange={handleSearchChange}
+            placeholder="Search merchant, VPA, category, amount..."
+            size="small"
+            fullWidth
+            InputProps={{
+              startAdornment: <SearchIcon color="action" fontSize="small" sx={{ mr: 1 }} />,
+            }}
+          />
+          <FormControl size="small" fullWidth>
+            <InputLabel id="expense-sort-label">Sort</InputLabel>
+            <Select
+              labelId="expense-sort-label"
+              value={sortBy}
+              label="Sort"
+              onChange={handleSortChange}
+            >
+              {sortOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
         {isMobile ? (
           <Stack spacing={1.25} sx={{ p: 1 }}>
             {visibleExpenses.map((expense: any, index: number) => {
@@ -443,7 +553,7 @@ const CustomTable = () => {
         <TablePagination
           rowsPerPageOptions={[10, 25, 100]}
           component="div"
-          count={expenses.length}
+          count={filteredExpenses.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={(_event, newPage) => setPage(newPage)}

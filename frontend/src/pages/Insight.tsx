@@ -52,6 +52,7 @@ function getMonthRange(value: Date) {
 
 const Insight: React.FC = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [selectedTrendDate, setSelectedTrendDate] = useState<string | null>(null);
   const dispatch: AppDispatch = useDispatch();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -83,6 +84,7 @@ const Insight: React.FC = () => {
   const topMerchants = dashboard?.topMerchants || [];
   const monthlyOverview = dashboard?.monthlyOverview || [];
   const dailyTrend = dashboard?.dailyTrend || [];
+  const dailyDetails = dashboard?.dailyDetails || [];
   const reviewStatus = dashboard?.reviewStatus || [];
   const insights = dashboard?.insights || [];
   const budgetHealth = dashboard?.budgetHealth;
@@ -176,7 +178,7 @@ const Insight: React.FC = () => {
     grid: { left: isMobile ? 44 : 56, right: 12, top: 24, bottom: 44, containLabel: true },
     xAxis: {
       type: 'category',
-      data: dailyTrend.map((item: any) => new Date(item.date).getDate()),
+      data: dailyTrend.map((item: any) => Number(String(item.date).slice(8, 10))),
       axisLabel: { color: axisColor },
       axisLine: { lineStyle: { color: axisColor } },
     },
@@ -194,6 +196,8 @@ const Insight: React.FC = () => {
       },
     ],
   };
+  const selectedDay = dailyDetails.find((item: any) => item.date === selectedTrendDate) || dailyDetails[dailyDetails.length - 1];
+  const selectedDayTotal = selectedDay?.transactions?.reduce((sum: number, item: any) => sum + Number(item.amount || 0), 0) || 0;
 
   return (
     <Box sx={{ p: { xs: 1, sm: 2 }, maxWidth: 1440, mx: 'auto', width: '100%', minWidth: 0, overflowX: 'hidden' }}>
@@ -248,7 +252,55 @@ const Insight: React.FC = () => {
           <Grid item xs={12} md={8} sx={{ minWidth: 0 }}>
             <Paper sx={{ ...panelSx, height: '100%' }}>
               <Typography sx={{ fontWeight: 700, mb: 1 }}>Daily Spend Trend</Typography>
-              <ReactEChartsCore echarts={echarts} option={trendOptions} style={chartStyle(isMobile ? 240 : 340)} />
+              <ReactEChartsCore
+                echarts={echarts}
+                option={trendOptions}
+                style={chartStyle(isMobile ? 240 : 340)}
+                onEvents={{
+                  click: (params: any) => {
+                    const matched = dailyTrend.find((item: any) => String(Number(String(item.date).slice(8, 10))) === String(params.name));
+                    if (matched) setSelectedTrendDate(matched.date);
+                  },
+                }}
+              />
+              <Box sx={{ mt: 1.5 }}>
+                <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                  {selectedDay ? new Date(selectedDay.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Daily details'}
+                  {selectedDay ? ` · ${formatCurrency(selectedDayTotal)}` : ''}
+                </Typography>
+                <Stack spacing={0.75} sx={{ mt: 1, maxHeight: 240, overflowY: 'auto', pr: 0.5 }}>
+                  {selectedDay?.transactions?.length ? selectedDay.transactions.map((transaction: any) => (
+                    <Box
+                      key={transaction.id}
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: { xs: '1fr auto', sm: 'minmax(0, 1.4fr) minmax(0, 1fr) auto' },
+                        gap: 1,
+                        alignItems: 'center',
+                        borderTop: `1px solid ${theme.palette.divider}`,
+                        pt: 0.75,
+                      }}
+                    >
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 700, overflowWrap: 'anywhere' }}>
+                          {transaction.merchant || transaction.item}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {new Date(transaction.date).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true })}
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, overflowWrap: 'anywhere' }}>
+                        {transaction.category} · {transaction.type}
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 800 }}>
+                        {formatCurrency(transaction.amount)}
+                      </Typography>
+                    </Box>
+                  )) : (
+                    <Typography variant="body2" color="text.secondary">Click a day in the chart to see transactions.</Typography>
+                  )}
+                </Stack>
+              </Box>
             </Paper>
           </Grid>
           <Grid item xs={12} md={4} sx={{ minWidth: 0 }}>

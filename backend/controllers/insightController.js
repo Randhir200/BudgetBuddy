@@ -47,6 +47,21 @@ function formatAmount(amount) {
     return `₹${Math.round(amount || 0).toLocaleString("en-IN")}`;
 }
 
+function getLocalDateKey(date) {
+    const parts = new Intl.DateTimeFormat("en-IN", {
+        timeZone: "Asia/Kolkata",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+    }).formatToParts(new Date(date));
+
+    const year = parts.find((part) => part.type === "year")?.value;
+    const month = parts.find((part) => part.type === "month")?.value;
+    const day = parts.find((part) => part.type === "day")?.value;
+
+    return `${year}-${month}-${day}`;
+}
+
 function buildMonthlyOverview(expenses) {
     const typeMap = new Map();
 
@@ -227,13 +242,14 @@ exports.dashboard = catchAsync(async (req, res) => {
         ["Need Review", { label: "Need Review", count: 0, amount: 0 }]
     ]);
     const dailyMap = new Map();
+    const dailyDetailsMap = new Map();
 
     currentExpenses.forEach((expense) => {
         const amount = Number(expense.price || 0);
         const category = expense.category || "Others";
         const merchant = expense.merchant || expense.vpa || "Unknown";
         const reviewLabel = getReviewLabel(expense);
-        const dateKey = new Date(expense.createdAt).toISOString().slice(0, 10);
+        const dateKey = getLocalDateKey(expense.createdAt);
 
         categoryMap.set(category, {
             category,
@@ -251,6 +267,20 @@ exports.dashboard = catchAsync(async (req, res) => {
             amount: reviewMap.get(reviewLabel).amount + amount
         });
         dailyMap.set(dateKey, (dailyMap.get(dateKey) || 0) + amount);
+        if (!dailyDetailsMap.has(dateKey)) {
+            dailyDetailsMap.set(dateKey, []);
+        }
+        dailyDetailsMap.get(dateKey).push({
+            id: String(expense._id),
+            date: expense.createdAt,
+            merchant,
+            type: expense.type || "Others",
+            category,
+            item: expense.item || category,
+            amount,
+            reviewStatus: reviewLabel,
+            source: expense.source || "Manual"
+        });
     });
 
     const monthlyOverview = buildMonthlyOverview(currentExpenses);
@@ -259,6 +289,12 @@ exports.dashboard = catchAsync(async (req, res) => {
     const reviewStatus = Array.from(reviewMap.values());
     const dailyTrend = Array.from(dailyMap.entries())
         .map(([date, amount]) => ({ date, amount }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+    const dailyDetails = Array.from(dailyDetailsMap.entries())
+        .map(([date, transactions]) => ({
+            date,
+            transactions: transactions.sort((a, b) => new Date(b.date) - new Date(a.date))
+        }))
         .sort((a, b) => a.date.localeCompare(b.date));
 
     const data = {
@@ -286,6 +322,7 @@ exports.dashboard = catchAsync(async (req, res) => {
         topMerchants,
         reviewStatus,
         dailyTrend,
+        dailyDetails,
         gmailStatus: {
             connected: Boolean(gmailConnection?.isActive && gmailConnection?.refreshToken),
             lastSyncedAtSeconds: gmailConnection?.lastSyncedAtSeconds || null,
