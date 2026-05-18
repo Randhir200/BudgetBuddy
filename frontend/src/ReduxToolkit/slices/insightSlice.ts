@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { apiClient } from '../../configs/apiClient';
-import { Balance } from '@mui/icons-material';
 
 interface Balance { 
     currentBalance : number;
@@ -22,10 +21,13 @@ interface Overview {
 interface IncomeState {
     monthlyOverviewLoading: boolean;
     balanceLoading: boolean;
+    dashboardLoading: boolean;
     monthlyOverviews: Overview[];
     balance: Balance,
+    dashboard: any;
     monthlyOverviewError: string | null;
     balanceError: string | null;
+    dashboardError: string | null;
 }
 
 interface DateRange {
@@ -36,10 +38,13 @@ interface DateRange {
 const initialState: IncomeState = {
     monthlyOverviewLoading: true,
     balanceLoading: true,
+    dashboardLoading: true,
     monthlyOverviews: [],
     balance: {currentBalance: 0},
+    dashboard: null,
     monthlyOverviewError: '',
-    balanceError: ''
+    balanceError: '',
+    dashboardError: ''
 }
 
 
@@ -58,6 +63,13 @@ export const fetchBalance = createAsyncThunk(
         return response.data;
     }
 )
+
+export const fetchInsightDashboard = createAsyncThunk(
+    'insight/dashboard',
+    async ({userId, dateRange}:{ userId: string, dateRange : DateRange}) => {
+        const response = await apiClient.get(`/insight/dashboard?userId=${userId}&firstDate=${dateRange.firstDate}&lastDate=${dateRange.lastDate}`);
+        return response.data;
+    });
 
 
 
@@ -91,6 +103,21 @@ const insightSlice = createSlice({
             .addCase(fetchBalance.rejected, (state, action: PayloadAction<any>) => {
                 state.balanceLoading = false;
                 state.balanceError = action.payload?.message || 'Something went wrong!';
+            })
+            .addCase(fetchInsightDashboard.pending, (state) => {
+                state.dashboardLoading = true;
+                state.dashboardError = null;
+            })
+            .addCase(fetchInsightDashboard.fulfilled, (state, action: PayloadAction<any>) => {
+                state.dashboardLoading = false;
+                state.dashboard = action.payload.data;
+                state.monthlyOverviews = action.payload.data?.monthlyOverview || [];
+                state.balance = { currentBalance: action.payload.data?.summary?.currentBalance || 0 };
+                state.dashboardError = null;
+            })
+            .addCase(fetchInsightDashboard.rejected, (state, action: PayloadAction<any>) => {
+                state.dashboardLoading = false;
+                state.dashboardError = action.payload?.message || 'Failed to fetch dashboard data';
             })
     }
 });

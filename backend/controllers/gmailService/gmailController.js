@@ -11,7 +11,7 @@ const User = require('../../models/userModel');
 
 module.exports = function (app) {
     let isSyncRunning = false;
-    const firstSyncLookbackDays = 2;
+    const firstSyncLookbackDays = 3;
     const hdfcSendersQuery = '(from:hdfcbank.bank.in OR from:hdfcbank.com OR from:hdfcbank.net)';
     const hdfcTxnSearchQuery = '("UPI txn" OR "Account update")';
     const loginScopes = ['openid', 'email', 'profile'];
@@ -311,13 +311,39 @@ module.exports = function (app) {
         return messages;
     }
 
-    function parseTxnDate(date) {
-        if (!date) return new Date();
+    function parseTxnDateTime(date, time, fallbackDate = new Date()) {
+        if (!date) return fallbackDate;
 
         const [day, month, year] = date.split('-');
         const fullYear = year.length === 2 ? `20${year}` : year;
+        const fallbackParts = new Intl.DateTimeFormat('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        }).formatToParts(fallbackDate);
+        let hours = fallbackParts.find(part => part.type === 'hour')?.value || '00';
+        let minutes = fallbackParts.find(part => part.type === 'minute')?.value || '00';
+        let seconds = fallbackParts.find(part => part.type === 'second')?.value || '00';
+        if (hours === '24') hours = '00';
 
-        return new Date(`${fullYear}-${month}-${day}`);
+        if (time) {
+            const timeMatch = time.match(/^(\d{1,2})[:.](\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+            if (timeMatch) {
+                let parsedHours = Number(timeMatch[1]);
+                const meridiem = timeMatch[4]?.toUpperCase();
+
+                if (meridiem === 'PM' && parsedHours < 12) parsedHours += 12;
+                if (meridiem === 'AM' && parsedHours === 12) parsedHours = 0;
+
+                hours = String(parsedHours).padStart(2, '0');
+                minutes = timeMatch[2];
+                seconds = timeMatch[3] || '00';
+            }
+        }
+
+        return new Date(`${fullYear}-${month}-${day}T${hours}:${minutes}:${seconds}+05:30`);
     }
 
     async function syncGmailConnection(connection) {
@@ -400,7 +426,11 @@ module.exports = function (app) {
                 bank: txn.bank,
                 accountLast4: txn.accountLast4,
                 currency: txn.currency,
-                createdAt: parseTxnDate(txn.date)
+                createdAt: parseTxnDateTime(
+                    txn.date,
+                    txn.time,
+                    msg.data?.internalDate ? new Date(Number(msg.data.internalDate)) : new Date()
+                )
             };
 
             if (expense.type === 'Ignore') {
@@ -462,8 +492,11 @@ module.exports = function (app) {
             }
         }
     }
+  // run in cron every 2 minutes
 
-    cron.schedule('0 22 * * *', async () => {
+
+
+  cron.schedule('*/2 * * * *', async () => {
         if (isSyncRunning) {
             console.log('Gmail sync already running, skipping this tick');
             return;
