@@ -1,6 +1,5 @@
-// vite.config.js
 export default {
-  base: './', // relative base path for assets
+  base: '/',
   build: {
     outDir: 'dist',
   },
