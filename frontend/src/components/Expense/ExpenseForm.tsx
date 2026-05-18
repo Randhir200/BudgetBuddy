@@ -14,16 +14,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addExpense } from "../../ReduxToolkit/slices/expenseSlice";
 import { fetchExpenseType } from '../../ReduxToolkit/slices/expenseTypeSlice';
 
-//getting userId from local storage
-const userId = localStorage.getItem('userId');
-
 const formInitialState = {
     type: '',
     category: '',
     item: '',
     price: 0,
     createdAt: '',
-    userId
+    userId: ''
   }
 
 export const ExpenseForm = memo(({
@@ -44,8 +41,10 @@ export const ExpenseForm = memo(({
         setFormData((formData: any) => ({ ...formData, [name]: value }));
     }
 
-    function handleSubmit() {
-        dispatch(addExpense(formData))
+    async function handleSubmit() {
+        const currentUserId = localStorage.getItem('userId') || '';
+        await dispatch(addExpense({ ...formData, userId: currentUserId, item: formData.item || formData.category }));
+        setFormData({ ...formInitialState, userId: currentUserId });
     }
 
     useEffect(() => {
@@ -58,6 +57,7 @@ export const ExpenseForm = memo(({
     return (
         <Box
             component="form"
+            onSubmit={(event) => event.preventDefault()}
             sx={{
                 display: "flex",
                 flexDirection: isSmallScreen ? "column" : "row",

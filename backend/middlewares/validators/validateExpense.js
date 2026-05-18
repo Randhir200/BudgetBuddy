@@ -68,6 +68,9 @@ const updateExpenseSchema = Joi.object({
     price: Joi.number().optional().messages({
         'number.base': 'amount must be a number!'
     }),
+    createdAt: Joi.date().optional().messages({
+        'date.base': 'createdAt must be a valid date!'
+    }),
     updatedAt: Joi.date().optional().messages({
         'date.base': 'updatedAt must be a valid date!'
     }),

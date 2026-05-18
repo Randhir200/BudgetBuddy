@@ -6,6 +6,7 @@ import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
 import Expense from "./pages/Expense";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import AuthCallback from "./pages/AuthCallback";
 import PageNotFound from "./pages/PageNotFound";
 import PrivateRoute from "./components/Common/PrivateRoute";
 import Income from "./pages/Income";
@@ -39,8 +40,9 @@ const App: React.FC = () => {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />4
-          <Route path="*" element={<PageNotFound />} />4
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="*" element={<PageNotFound />} />
           <Route
             path="/"
             element={

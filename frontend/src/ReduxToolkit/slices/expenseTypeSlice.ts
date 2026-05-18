@@ -1,14 +1,17 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import axios from "axios";
-import { budgetBuddyApiUrl } from "../../configs/apiURLs";
+import { apiClient } from "../../configs/apiClient";
 import { setAlert } from "./alertSlice";
 
 
 interface ExpenseTypeState {
     fetchLoading: boolean;
     addLoading: boolean;
+    updateLoading: boolean;
+    deleteLoading: boolean;
     fetchStatus: string | null;
     addStatus: string | null;
+    updateStatus: string | null;
+    deleteStatus: string | null;
     expenseTypes: any[];
     addMessage: string;
     fetchError: string | null;
@@ -18,8 +21,12 @@ interface ExpenseTypeState {
 const initialState: ExpenseTypeState = {
     fetchLoading: false,
     addLoading: false,
+    updateLoading: false,
+    deleteLoading: false,
     fetchStatus: null,
     addStatus: null,
+    updateStatus: null,
+    deleteStatus: null,
     expenseTypes: [],
     addMessage: '',
     fetchError: null,
@@ -31,7 +38,7 @@ export const fetchExpenseType = createAsyncThunk(
     `expenseType/fetch`,
     async (userId: string | null, { rejectWithValue, dispatch }) => {
         try {
-            const res = await axios.get(`${budgetBuddyApiUrl}/expenseType/fetch?userId=${userId}`);
+            const res = await apiClient.get(`/expenseType/fetch?userId=${userId}`);
             dispatch(setAlert({ message: res.data.message, variant: 'success' }));
             return res.data;
         } catch (err: any) {
@@ -52,18 +59,51 @@ export const addExpenseType = createAsyncThunk(
     'expenseType/add',
     async (formData: Object, { rejectWithValue, dispatch }) => {
         try {
-            const res = await axios.post(
-                `${budgetBuddyApiUrl}/expenseType/create`,
-                formData,
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer token',
-                    },
-                }
-            );
+            const res = await apiClient.post(`/expenseType/create`, formData);
             dispatch(setAlert({ message: res.data.message, variant: 'success' }));
             return res.data;
+        } catch (err: any) {
+            const errorMessage = err.response
+                ? Array.isArray(err.response.data.message)
+                    ? err.response.data.message.join(',')
+                    : err.response.data.message || err.message
+                : err.message;
+
+            dispatch(setAlert({ message: errorMessage, variant: 'error' }));
+            return rejectWithValue({ message: errorMessage, code: err.code });
+        }
+    }
+);
+
+// Thunk for updating an expense type
+export const updateExpenseType = createAsyncThunk(
+    'expenseType/update',
+    async ({ id, formData }: { id: string; formData: Object }, { rejectWithValue, dispatch }) => {
+        try {
+            const res = await apiClient.patch(`/expenseType/update/${id}`, formData);
+            dispatch(setAlert({ message: res.data.message, variant: 'success' }));
+            return res.data;
+        } catch (err: any) {
+            const errorMessage = err.response
+                ? Array.isArray(err.response.data.message)
+                    ? err.response.data.message.join(',')
+                    : err.response.data.message || err.message
+                : err.message;
+
+            dispatch(setAlert({ message: errorMessage, variant: 'error' }));
+            return rejectWithValue({ message: errorMessage, code: err.code });
+        }
+    }
+);
+
+// Thunk for deleting an expense type
+export const deleteExpenseType = createAsyncThunk(
+    'expenseType/delete',
+    async (id: string, { rejectWithValue, dispatch }) => {
+        try {
+            const res = await apiClient.delete(`/expenseType/delete/${id}`);
+            dispatch(setAlert({ message: res.data.message, variant: 'success' }));
+            return { id, ...res.data };
         } catch (err: any) {
             const errorMessage = err.response
                 ? Array.isArray(err.response.data.message)
@@ -110,12 +150,46 @@ const expenseTypeSlice = createSlice({
                 state.addLoading = false;
                 state.addStatus = action.payload.status;
                 state.addMessage = action.payload.message || 'Expense type added successfully';
+                state.expenseTypes.push(action.payload.data);
                 state.addError = null;
             })
             .addCase(addExpenseType.rejected, (state, action: PayloadAction<any>) => {
                 state.addLoading = false;
                 state.addStatus = 'failed';
                 state.addError = action.payload.message || 'Something went wrong!';
+            })
+
+            // Handling updateExpenseType thunk
+            .addCase(updateExpenseType.pending, (state) => {
+                state.updateLoading = true;
+                state.updateStatus = null;
+            })
+            .addCase(updateExpenseType.fulfilled, (state, action: PayloadAction<any>) => {
+                state.updateLoading = false;
+                state.updateStatus = action.payload.status;
+                const updatedExpenseType = action.payload.data;
+                state.expenseTypes = state.expenseTypes.map((expenseType) =>
+                    expenseType._id === updatedExpenseType._id ? updatedExpenseType : expenseType
+                );
+            })
+            .addCase(updateExpenseType.rejected, (state) => {
+                state.updateLoading = false;
+                state.updateStatus = 'failed';
+            })
+
+            // Handling deleteExpenseType thunk
+            .addCase(deleteExpenseType.pending, (state) => {
+                state.deleteLoading = true;
+                state.deleteStatus = null;
+            })
+            .addCase(deleteExpenseType.fulfilled, (state, action: PayloadAction<any>) => {
+                state.deleteLoading = false;
+                state.deleteStatus = action.payload.status;
+                state.expenseTypes = state.expenseTypes.filter((expenseType) => expenseType._id !== action.payload.id);
+            })
+            .addCase(deleteExpenseType.rejected, (state) => {
+                state.deleteLoading = false;
+                state.deleteStatus = 'failed';
             });
     }
 });

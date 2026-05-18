@@ -2,10 +2,10 @@ import {
     Box, TextField, Chip
 } from '@mui/material';
 import ButtonComp from '../Common/ButtonComp';
-import { useState, memo} from 'react';
+import { useState, memo, useEffect} from 'react';
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../ReduxToolkit/store";
-import { addExpenseType } from '../../ReduxToolkit/slices/expenseTypeSlice';
+import { addExpenseType, updateExpenseType } from '../../ReduxToolkit/slices/expenseTypeSlice';
 
 const formInitialState = {
         type: '',
@@ -16,12 +16,26 @@ const formInitialState = {
 export const ExpenseTypeForm = memo(({
     isSmallScreen,
     theme,
+    editData = null,
+    onEditComplete = () => {}
 }: any) => {
     const [categories, setCategories] = useState<string[]>([]); // State for categories
     const [categoryInput, setCategoryInput] = useState<string>(''); // State for input field
     const [formData, setFormData] = useState(formInitialState); 
-    const {addLoading} = useSelector((state:RootState)=>state.expenseTypeReducer);
+    const {addLoading, updateLoading} = useSelector((state:RootState)=>state.expenseTypeReducer);
     const dispatch:AppDispatch = useDispatch();
+
+    // Initialize form with edit data if provided
+    useEffect(() => {
+        if (editData) {
+            setFormData({
+                type: editData.type,
+                categories: editData.categories,
+                userId: editData.userId
+            });
+            setCategories(editData.categories.map((cat: any) => cat.name));
+        }
+    }, [editData]);
 
     // Handle keypress (Enter) to add categories
     const handleCategoryKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -36,6 +50,10 @@ export const ExpenseTypeForm = memo(({
     // Handle removing a category
     const handleRemoveCategory = (categoryToRemove: string) => {
         setCategories((prev) => prev.filter((category) => category !== categoryToRemove));
+        setFormData((prev: any) => ({
+            ...prev,
+            categories: prev.categories.filter((cat: any) => cat.name !== categoryToRemove)
+        }));
     };
 
 
@@ -48,10 +66,31 @@ export const ExpenseTypeForm = memo(({
     function handleSubmit(){
         // Read userId at submit time to avoid module-load timing issues
         const currentUserId = localStorage.getItem('userId') || formData.userId || '';
-        const payload = { ...formData, userId: currentUserId };
-        dispatch(addExpenseType(payload));
-        // Reset form; preserve a fresh userId so subsequent submits include it
-        setFormData({ ...formInitialState, userId: currentUserId });
+        
+        // Clean categories to remove _id field
+        const cleanedCategories = formData.categories.map((cat: any) => ({
+            name: cat.name,
+            description: cat.description || '',
+            isActive: cat.isActive !== undefined ? cat.isActive : true
+        }));
+        
+        const payload = { ...formData, userId: currentUserId, categories: cleanedCategories };
+        
+        if (editData) {
+            // Update mode
+            dispatch(updateExpenseType({ id: editData._id, formData: payload })).then(() => {
+                onEditComplete();
+                resetForm(currentUserId);
+            });
+        } else {
+            // Add mode
+            dispatch(addExpenseType(payload));
+            resetForm(currentUserId);
+        }
+    }
+
+    function resetForm(userId: string) {
+        setFormData({ ...formInitialState, userId });
         setCategories([]);
     }
 
@@ -104,12 +143,12 @@ export const ExpenseTypeForm = memo(({
                         />
                 {/* Submit Button */}
                 <ButtonComp
-                    title="Submit"
+                    title={editData ? "Update" : "Submit"}
                     variant="contained"
                     color="primary"
                     size={isSmallScreen ? "small" : "medium"}
                     event={handleSubmit}
-                    loading = {addLoading}
+                    loading = {editData ? updateLoading : addLoading}
                 />
             </Box>
                 {/* Display added categories as chips */}

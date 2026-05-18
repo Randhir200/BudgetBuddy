@@ -1,13 +1,16 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import axios from "axios";
-import { budgetBuddyApiUrl } from "../../configs/apiURLs";
+import { apiClient } from "../../configs/apiClient";
 import { setAlert } from "./alertSlice";
 
 interface ExpenseState {
     fetchLoading: boolean;
     addLoading: boolean;
+    updateLoading: boolean;
+    deleteLoading: boolean;
     fetchStatus: string | null;
     addStatus: string | null;
+    updateStatus: string | null;
+    deleteStatus: string | null;
     expenses: any[];
     addMessage: string;
     fetchError: string | null;
@@ -18,8 +21,12 @@ interface ExpenseState {
 const initialState: ExpenseState = {
     fetchLoading: false,
     addLoading: false,
+    updateLoading: false,
+    deleteLoading: false,
     fetchStatus: null,
     addStatus: null,
+    updateStatus: null,
+    deleteStatus: null,
     expenses: [],
     addMessage: '',
     fetchError: null,
@@ -30,7 +37,7 @@ export const fetchExpense = createAsyncThunk(
     'expense/read',
     async (userId: string | null, { rejectWithValue, dispatch }) => {
         try {
-            const res = await axios.get(`${budgetBuddyApiUrl}/expense/fetch?userId=${userId}`);
+            const res = await apiClient.get(`/expense/fetch?userId=${userId}`);
             dispatch(setAlert({ message: res.data.message, variant: "success" }));
             return res.data;
         } catch (err: any) {
@@ -49,15 +56,7 @@ export const addExpense = createAsyncThunk(
     'expense/add',
     async (formData: Object, { rejectWithValue, dispatch }) => {
         try {
-            const res = await axios.post(`${budgetBuddyApiUrl}/expense/create`,
-                formData,
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer token'
-                    }
-                }
-            )
+            const res = await apiClient.post(`/expense/create`, formData)
             dispatch(setAlert({ message: res.data.message, variant: "success" }));
             return res.data;
         } catch (err: any) {
@@ -74,24 +73,32 @@ export const addExpense = createAsyncThunk(
 
 export const expenseUpdate = createAsyncThunk(
     'expense/update',
-    async (body, id) => {
-        await axios.patch(`${budgetBuddyApiUrl}/expense/update?_id=${id}`,
-            body,
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer token'
-                }
-            }
-        )
+    async ({ body, id }: { body: any; id: string }, { rejectWithValue, dispatch }) => {
+        try {
+            const res = await apiClient.patch(`/expense/update/${id}`, body);
+            dispatch(setAlert({ message: res.data.message, variant: "success" }));
+            return res.data;
+        } catch (err: any) {
+            const errorMessage = err.response?.data?.message || err.message;
+            dispatch(setAlert({ message: errorMessage, variant: "error" }));
+            return rejectWithValue({ message: errorMessage, code: err.code });
+        }
     }
 )
 
 
 export const expenseDelete = createAsyncThunk(
     'expense/delete',
-    async (id) => {
-        await axios.delete(`${budgetBuddyApiUrl}/expense/delete?_id=${id}`)
+    async (id: string, { rejectWithValue, dispatch }) => {
+        try {
+            const res = await apiClient.delete(`/expense/delete/${id}`);
+            dispatch(setAlert({ message: res.data.message, variant: "success" }));
+            return { id, ...res.data };
+        } catch (err: any) {
+            const errorMessage = err.response?.data?.message || err.message;
+            dispatch(setAlert({ message: errorMessage, variant: "error" }));
+            return rejectWithValue({ message: errorMessage, code: err.code });
+        }
     }
 )
 
@@ -137,6 +144,35 @@ const expenseSlice = createSlice({
                 state.addLoading = false;
                 state.addStatus = 'failed';
                 state.addError = action.payload.message || 'Failed to add expense';
+            })
+            .addCase(expenseUpdate.pending, (state) => {
+                state.updateLoading = true;
+                state.updateStatus = null;
+            })
+            .addCase(expenseUpdate.fulfilled, (state, action: PayloadAction<any>) => {
+                state.updateLoading = false;
+                state.updateStatus = action.payload.status;
+                const updatedExpense = action.payload.data;
+                state.expenses = state.expenses.map((expense) =>
+                    expense._id === updatedExpense._id ? updatedExpense : expense
+                );
+            })
+            .addCase(expenseUpdate.rejected, (state) => {
+                state.updateLoading = false;
+                state.updateStatus = 'failed';
+            })
+            .addCase(expenseDelete.pending, (state) => {
+                state.deleteLoading = true;
+                state.deleteStatus = null;
+            })
+            .addCase(expenseDelete.fulfilled, (state, action: PayloadAction<any>) => {
+                state.deleteLoading = false;
+                state.deleteStatus = action.payload.status;
+                state.expenses = state.expenses.filter((expense) => expense._id !== action.payload.id);
+            })
+            .addCase(expenseDelete.rejected, (state) => {
+                state.deleteLoading = false;
+                state.deleteStatus = 'failed';
             });
     }
 });
