@@ -2,7 +2,6 @@ import { memo, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -28,10 +27,13 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ThumbDownOffAltIcon from '@mui/icons-material/ThumbDownOffAlt';
 import ThumbUpOffAltIcon from '@mui/icons-material/ThumbUpOffAlt';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { RootState, AppDispatch } from "../../ReduxToolkit/store";
 import { useSelector, useDispatch } from 'react-redux';
 import { expenseDelete, expenseUpdate, fetchExpense } from '../../ReduxToolkit/slices/expenseSlice';
@@ -71,24 +73,53 @@ function getConfidenceMeta(expense: any) {
   const confidence = Number(expense.confidence ?? 1);
   if (confidence < 0.6) {
     return {
-      label: 'Needs review',
+      label: 'Need Review',
       color: 'warning' as const,
-      rowSx: { backgroundColor: '#fff7ed', '&:hover': { backgroundColor: '#ffedd5' } },
+      rowSx: {
+        backgroundColor: (theme: any) => theme.palette.mode === 'dark' ? '#3a2414' : '#fff7ed',
+        color: 'text.primary',
+        '&:hover': {
+          backgroundColor: (theme: any) => theme.palette.mode === 'dark' ? '#4a2f18' : '#ffedd5',
+        },
+        '& .MuiTableCell-root': {
+          color: 'text.primary',
+        },
+      },
     };
   }
   if (confidence < 0.85) {
     return {
       label: 'Review',
       color: 'info' as const,
-      rowSx: { backgroundColor: '#fffbeb', '&:hover': { backgroundColor: '#fef3c7' } },
+      rowSx: {
+        backgroundColor: (theme: any) => theme.palette.mode === 'dark' ? '#332b12' : '#fffbeb',
+        color: 'text.primary',
+        '&:hover': {
+          backgroundColor: (theme: any) => theme.palette.mode === 'dark' ? '#423817' : '#fef3c7',
+        },
+        '& .MuiTableCell-root': {
+          color: 'text.primary',
+        },
+      },
     };
   }
 
   return {
-    label: expense.classificationSource === 'user-rule' ? 'Confirmed' : 'Auto',
-    color: expense.classificationSource === 'user-rule' ? 'success' as const : 'default' as const,
+    label: 'Confirmed',
+    color: 'success' as const,
     rowSx: {},
   };
+}
+
+function getConfidenceIcon(label: string, fontSize: 'small' | 'medium' = 'medium') {
+  if (label === 'Need Review') {
+    return <WarningAmberIcon color="error" fontSize={fontSize} />;
+  }
+  if (label === 'Review') {
+    return <VisibilityIcon sx={{ color: '#f59e0b' }} fontSize={fontSize} />;
+  }
+
+  return <CheckCircleIcon color="success" fontSize={fontSize} />;
 }
 
 function toCategoryPayload(category: any) {
@@ -112,6 +143,7 @@ const CustomTable = () => {
   const { expenseTypes } = useSelector((state: RootState) => state.expenseTypeReducer);
   const isMobile = useMediaQuery('(max-width:600px)');
   const userId = localStorage.getItem('userId');
+  const visibleExpenses = expenses.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   const availableCategories = useMemo(() => {
     const selectedConfig = expenseTypes.find((item: any) => item.type === editForm.type);
@@ -252,32 +284,118 @@ const CustomTable = () => {
 
   return (
     <>
-      <Paper style={{ width: '99%', overflowX: 'auto' }}>
-        <TableContainer style={{ maxHeight: 520 }}>
-          {fetchLoading && <LinearProgress />}
-          <Table
-            stickyHeader
-            aria-label="expense table"
-            sx={{
-              '& .MuiTableCell-root': {
-                fontSize: isMobile ? '8px' : '12px',
-                padding: isMobile ? '3px' : '9px',
-              },
-            }}
-          >
-            <TableHead>
-              <TableRow>
-                {columns.map((column) => (
-                  <TableCell key={column.id} align="left">
-                    {column.label}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {expenses
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((expense: any, index: number) => {
+      <Paper sx={{ width: '99%', overflowX: isMobile ? 'hidden' : 'auto' }}>
+        {fetchLoading && <LinearProgress />}
+        {isMobile ? (
+          <Stack spacing={1.25} sx={{ p: 1 }}>
+            {visibleExpenses.map((expense: any, index: number) => {
+              const confidenceMeta = getConfidenceMeta(expense);
+              return (
+                <Paper
+                  key={expense._id}
+                  variant="outlined"
+                  sx={{
+                    p: 1.25,
+                    borderRadius: 1,
+                    ...confidenceMeta.rowSx,
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontSize: '0.72rem', color: 'text.secondary' }}>
+                        #{page * rowsPerPage + index + 1} · {formatDate(expense.createdAt)}
+                      </Typography>
+                      <Typography sx={{ fontWeight: 700, fontSize: '1rem', overflowWrap: 'anywhere' }}>
+                        ₹{expense.price}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                      <Tooltip title={confidenceMeta.label}>
+                        <Box component="span" aria-label={confidenceMeta.label} sx={{ display: 'inline-flex' }}>
+                          {getConfidenceIcon(confidenceMeta.label, 'small')}
+                        </Box>
+                      </Tooltip>
+                      <IconButton aria-label="edit" size="small" onClick={() => openEditDialog(expense)}>
+                        <EditIcon color="info" fontSize="small" />
+                      </IconButton>
+                      <IconButton aria-label="delete" size="small" onClick={() => setDeleteExpense(expense)}>
+                        <DeleteIcon color="warning" fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: 0.75,
+                      mt: 1,
+                    }}
+                  >
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontSize: '0.68rem', color: 'text.secondary' }}>Merchant</Typography>
+                      <Typography sx={{ fontSize: '0.82rem', overflowWrap: 'anywhere' }}>
+                        {expense.merchant || '-'}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontSize: '0.68rem', color: 'text.secondary' }}>Type</Typography>
+                      <Typography sx={{ fontSize: '0.82rem', overflowWrap: 'anywhere' }}>
+                        {expense.type || '-'}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontSize: '0.68rem', color: 'text.secondary' }}>Category</Typography>
+                      <Typography sx={{ fontSize: '0.82rem', overflowWrap: 'anywhere' }}>
+                        {expense.category || '-'}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontSize: '0.68rem', color: 'text.secondary' }}>Payback</Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                        {expense.payBack?.isPayback ? (
+                          <ThumbUpOffAltIcon color="success" fontSize="small" />
+                        ) : (
+                          <ThumbDownOffAltIcon color="info" fontSize="small" />
+                        )}
+                        <Typography sx={{ fontSize: '0.82rem' }}>₹{expense.payBack?.amount || 0}</Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ mt: 0.75 }}>
+                    <Typography sx={{ fontSize: '0.68rem', color: 'text.secondary' }}>Item</Typography>
+                    <Typography sx={{ fontSize: '0.82rem', overflowWrap: 'anywhere' }}>
+                      {expense.item || '-'}
+                    </Typography>
+                  </Box>
+                </Paper>
+              );
+            })}
+          </Stack>
+        ) : (
+          <TableContainer style={{ maxHeight: 520 }}>
+            <Table
+              stickyHeader
+              aria-label="expense table"
+              sx={{
+                '& .MuiTableCell-root': {
+                  fontSize: '12px',
+                  padding: '9px',
+                },
+              }}
+            >
+              <TableHead>
+                <TableRow>
+                  {columns.map((column) => (
+                    <TableCell key={column.id} align="left">
+                      {column.label}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {visibleExpenses.map((expense: any, index: number) => {
                   const confidenceMeta = getConfidenceMeta(expense);
                   return (
                     <TableRow hover tabIndex={-1} key={expense._id} sx={confidenceMeta.rowSx}>
@@ -288,39 +406,37 @@ const CustomTable = () => {
                       <TableCell>{expense.category}</TableCell>
                       <TableCell>{expense.item}</TableCell>
                       <TableCell>
-                        <Tooltip title={`Confidence: ${Math.round(Number(expense.confidence ?? 1) * 100)}%`}>
-                          <Chip
-                            label={confidenceMeta.label}
-                            size="small"
-                            color={confidenceMeta.color}
-                            variant={confidenceMeta.color === 'default' ? 'outlined' : 'filled'}
-                          />
+                        <Tooltip title={confidenceMeta.label}>
+                          <Box component="span" aria-label={confidenceMeta.label} sx={{ display: 'inline-flex' }}>
+                            {getConfidenceIcon(confidenceMeta.label)}
+                          </Box>
                         </Tooltip>
                       </TableCell>
                       <TableCell align="left">₹{expense.price}</TableCell>
                       <TableCell align="left">
                         <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "center" }}>
                           <IconButton sx={{ cursor: "default" }}>
-                            {expense.payBack?.isPayback ? <ThumbUpOffAltIcon color="success" fontSize={isMobile ? 'small' : 'medium'} />
-                              : <ThumbDownOffAltIcon color="info" fontSize={isMobile ? 'small' : 'medium'} />}
+                            {expense.payBack?.isPayback ? <ThumbUpOffAltIcon color="success" fontSize="medium" />
+                              : <ThumbDownOffAltIcon color="info" fontSize="medium" />}
                           </IconButton>
                           ₹{expense.payBack?.amount || 0}
                         </Box>
                       </TableCell>
                       <TableCell align="left">
-                        <IconButton aria-label="edit" size={isMobile ? 'small' : 'medium'} onClick={() => openEditDialog(expense)}>
-                          <EditIcon color="info" fontSize={isMobile ? 'small' : 'medium'} />
+                        <IconButton aria-label="edit" size="medium" onClick={() => openEditDialog(expense)}>
+                          <EditIcon color="info" fontSize="medium" />
                         </IconButton>
-                        <IconButton aria-label="delete" size={isMobile ? 'small' : 'medium'} onClick={() => setDeleteExpense(expense)}>
-                          <DeleteIcon color="warning" fontSize={isMobile ? 'small' : 'medium'} />
+                        <IconButton aria-label="delete" size="medium" onClick={() => setDeleteExpense(expense)}>
+                          <DeleteIcon color="warning" fontSize="medium" />
                         </IconButton>
                       </TableCell>
                     </TableRow>
                   );
                 })}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
         <TablePagination
           rowsPerPageOptions={[10, 25, 100]}
           component="div"
