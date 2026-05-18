@@ -8,7 +8,12 @@ import {
   TableHead,
   TablePagination,
   TableRow,
-  useMediaQuery
+  useMediaQuery,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button
 } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
@@ -16,7 +21,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { LinearProgress } from '@mui/material';
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../ReduxToolkit/store";
-import { fetchExpenseType } from '../../ReduxToolkit/slices/expenseTypeSlice';
+import { fetchExpenseType, deleteExpenseType } from '../../ReduxToolkit/slices/expenseTypeSlice';
 
 
 // Define the columns
@@ -29,11 +34,13 @@ const columns = [
 ];
 
 // Define the typeItemTable component
-const ExpenseTypeTable = () => {
+const ExpenseTypeTable = ({ onEdit = null }: any) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const dispatch:AppDispatch = useDispatch();
-  const {expenseTypes, fetchLoading} = useSelector((state:RootState)=>state.expenseTypeReducer)
+  const {expenseTypes, fetchLoading, deleteLoading} = useSelector((state:RootState)=>state.expenseTypeReducer)
   // Check if screen width is less than 600px
   const isMobile = useMediaQuery('(max-width:600px)');
 
@@ -57,6 +64,30 @@ const ExpenseTypeTable = () => {
       day: 'numeric',
     };
     return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  const handleEdit = (typeItem: any) => {
+    if (onEdit) {
+      onEdit(typeItem);
+    }
+  };
+
+  const handleDeleteClick = (typeItem: any) => {
+    setDeleteTarget(typeItem);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteTarget) {
+      dispatch(deleteExpenseType(deleteTarget._id));
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setDeleteTarget(null);
   };
 
  const userId = localStorage.getItem('userId');
@@ -103,10 +134,10 @@ const ExpenseTypeTable = () => {
                   </TableCell>
                   <TableCell>{formatDate(typeItem.createdAt)}</TableCell>
                   <TableCell align="left">
-                    <IconButton aria-label="edit" size={isMobile ? 'small' : 'medium'}>
+                    <IconButton aria-label="edit" size={isMobile ? 'small' : 'medium'} onClick={() => handleEdit(typeItem)}>
                       <EditIcon fontSize={isMobile ? 'small' : 'medium'} />
                     </IconButton>
-                    <IconButton aria-label="delete" size={isMobile ? 'small' : 'medium'}>
+                    <IconButton aria-label="delete" size={isMobile ? 'small' : 'medium'} onClick={() => handleDeleteClick(typeItem)}>
                       <DeleteIcon fontSize={isMobile ? 'small' : 'medium'} />
                     </IconButton>
                   </TableCell>
@@ -132,6 +163,22 @@ const ExpenseTypeTable = () => {
           },
         }}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={handleCancelDelete} fullWidth maxWidth="xs">
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete the expense type "{deleteTarget?.type}"? This action cannot be undone.
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained" disabled={deleteLoading}>
+            {deleteLoading ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 };

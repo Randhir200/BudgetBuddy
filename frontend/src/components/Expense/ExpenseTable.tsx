@@ -27,6 +27,7 @@ import {
   Typography,
   useMediaQuery,
 } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ThumbDownOffAltIcon from '@mui/icons-material/ThumbDownOffAlt';
@@ -34,11 +35,12 @@ import ThumbUpOffAltIcon from '@mui/icons-material/ThumbUpOffAlt';
 import { RootState, AppDispatch } from "../../ReduxToolkit/store";
 import { useSelector, useDispatch } from 'react-redux';
 import { expenseDelete, expenseUpdate, fetchExpense } from '../../ReduxToolkit/slices/expenseSlice';
-import { fetchExpenseType } from '../../ReduxToolkit/slices/expenseTypeSlice';
+import { addExpenseType, fetchExpenseType, updateExpenseType } from '../../ReduxToolkit/slices/expenseTypeSlice';
 
 const columns = [
   { id: 'slNo', label: 'Sl.No.' },
   { id: 'date', label: 'Date' },
+  {id: 'merchant', label: 'Merchant'},
   { id: 'type', label: 'Type' },
   { id: 'category', label: 'Category' },
   { id: 'item', label: 'Item' },
@@ -89,12 +91,22 @@ function getConfidenceMeta(expense: any) {
   };
 }
 
+function toCategoryPayload(category: any) {
+  return {
+    name: category.name,
+    description: category.description || '',
+    isActive: category.isActive ?? true,
+  };
+}
+
 const CustomTable = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [editExpense, setEditExpense] = useState<any | null>(null);
   const [deleteExpense, setDeleteExpense] = useState<any | null>(null);
   const [editForm, setEditForm] = useState(emptyEditForm);
+  const [newTypeName, setNewTypeName] = useState('');
+  const [newCategoryName, setNewCategoryName] = useState('');
   const dispatch: AppDispatch = useDispatch();
   const { fetchLoading, expenses, updateLoading, deleteLoading } = useSelector((state: RootState) => state.expenseReducer);
   const { expenseTypes } = useSelector((state: RootState) => state.expenseTypeReducer);
@@ -121,6 +133,8 @@ const CustomTable = () => {
 
   const openEditDialog = (expense: any) => {
     setEditExpense(expense);
+    setNewTypeName('');
+    setNewCategoryName('');
     setEditForm({
       type: expense.type || '',
       category: expense.category || '',
@@ -170,6 +184,61 @@ const CustomTable = () => {
     setEditExpense(null);
   };
 
+  const handleAddType = async () => {
+    const typeName = newTypeName.trim();
+    if (!typeName) return;
+
+    const fallbackCategory = newCategoryName.trim() || 'General';
+    const result = await dispatch(addExpenseType({
+      userId,
+      type: typeName,
+      categories: [{ name: fallbackCategory, description: '', isActive: true }],
+    }));
+
+    if (addExpenseType.fulfilled.match(result)) {
+      setEditForm((prev) => ({ ...prev, type: typeName, category: fallbackCategory }));
+      setNewTypeName('');
+      setNewCategoryName('');
+    }
+  };
+
+  const handleAddCategory = async () => {
+    const categoryName = newCategoryName.trim();
+    if (!categoryName || !editForm.type) return;
+
+    const selectedType = expenseTypes.find((item: any) => item.type === editForm.type);
+    if (!selectedType) return;
+
+    const categoryExists = selectedType.categories.some(
+      (category: any) => category.name.toLowerCase() === categoryName.toLowerCase()
+    );
+    if (categoryExists) {
+      const existingCategory = selectedType.categories.find(
+        (category: any) => category.name.toLowerCase() === categoryName.toLowerCase()
+      );
+      setEditForm((prev) => ({ ...prev, category: existingCategory.name }));
+      setNewCategoryName('');
+      return;
+    }
+
+    const result = await dispatch(updateExpenseType({
+      id: selectedType._id,
+      formData: {
+        userId,
+        type: selectedType.type,
+        categories: [
+          ...selectedType.categories.map(toCategoryPayload),
+          { name: categoryName, description: '', isActive: true },
+        ],
+      },
+    }));
+
+    if (updateExpenseType.fulfilled.match(result)) {
+      setEditForm((prev) => ({ ...prev, category: categoryName }));
+      setNewCategoryName('');
+    }
+  };
+
   const handleConfirmDelete = async () => {
     if (!deleteExpense?._id) return;
     await dispatch(expenseDelete(deleteExpense._id));
@@ -214,6 +283,7 @@ const CustomTable = () => {
                     <TableRow hover tabIndex={-1} key={expense._id} sx={confidenceMeta.rowSx}>
                       <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                       <TableCell>{formatDate(expense.createdAt)}</TableCell>
+                      <TableCell>{expense.merchant}</TableCell>
                       <TableCell>{expense.type}</TableCell>
                       <TableCell>{expense.category}</TableCell>
                       <TableCell>{expense.item}</TableCell>
@@ -274,6 +344,23 @@ const CustomTable = () => {
         <DialogTitle>Edit Expense</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr auto' }, gap: 1 }}>
+              <TextField
+                label="New type"
+                value={newTypeName}
+                onChange={(event) => setNewTypeName(event.target.value)}
+                size="small"
+                fullWidth
+              />
+              <Button
+                variant="outlined"
+                startIcon={<AddIcon />}
+                onClick={handleAddType}
+                disabled={!newTypeName.trim()}
+              >
+                Add Type
+              </Button>
+            </Box>
             <FormControl fullWidth>
               <InputLabel id="edit-type-label">Type</InputLabel>
               <Select labelId="edit-type-label" name="type" label="Type" value={editForm.type} onChange={handleEditChange}>
@@ -282,6 +369,23 @@ const CustomTable = () => {
                 ))}
               </Select>
             </FormControl>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr auto' }, gap: 1 }}>
+              <TextField
+                label="New category"
+                value={newCategoryName}
+                onChange={(event) => setNewCategoryName(event.target.value)}
+                size="small"
+                fullWidth
+              />
+              <Button
+                variant="outlined"
+                startIcon={<AddIcon />}
+                onClick={handleAddCategory}
+                disabled={!newCategoryName.trim() || !editForm.type}
+              >
+                Add Category
+              </Button>
+            </Box>
             <FormControl fullWidth>
               <InputLabel id="edit-category-label">Category</InputLabel>
               <Select labelId="edit-category-label" name="category" label="Category" value={editForm.category} onChange={handleEditChange}>

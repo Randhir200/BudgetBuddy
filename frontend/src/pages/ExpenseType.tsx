@@ -17,15 +17,29 @@ const Wrapper = styled.section`
 
 const ExpenseType: React.FC = () => {
   const [toggleTypeAdd, setToggleTypeAdd] = useState(false);
+  const [editingExpenseType, setEditingExpenseType] = useState<any>(null);
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const { message, variant } = useSelector((state: RootState) => state.alertReducer);
-  const { addStatus } = useSelector((state: RootState) => state.expenseTypeReducer);
+  const { addStatus, updateStatus } = useSelector((state: RootState) => state.expenseTypeReducer);
   const { enqueueSnackbar } = useSnackbar();
   const dispatch: AppDispatch = useDispatch();
 
   function handleToggleTypeAdd() {
-    setToggleTypeAdd(!toggleTypeAdd)
+    setToggleTypeAdd(!toggleTypeAdd);
+    if (toggleTypeAdd) {
+      setEditingExpenseType(null);
+    }
+  }
+
+  function handleEditExpenseType(expenseType: any) {
+    setEditingExpenseType(expenseType);
+    setToggleTypeAdd(true);
+  }
+
+  function handleEditComplete() {
+    setEditingExpenseType(null);
+    setToggleTypeAdd(false);
   }
 
   useEffect(() => {
@@ -37,11 +51,12 @@ const ExpenseType: React.FC = () => {
 
   useEffect(() => {
     //close form if data is upload otherwise wait.
-    if (addStatus === 'success') {
+    if (addStatus === 'success' || updateStatus === 'success') {
       setToggleTypeAdd(false);
+      setEditingExpenseType(null);
       dispatch(fetchExpenseType(localStorage.getItem('userId')))
     }
-  }, [addStatus])
+  }, [addStatus, updateStatus])
 
   return (
     <>
@@ -51,10 +66,10 @@ const ExpenseType: React.FC = () => {
             gutterBottom
             sx={{ textAlign: "left", fontSize: isSmallScreen ? "1.2rem" : "1.5rem" }} // Smaller font for small screens
           >
-            Config
+            {editingExpenseType ? "Edit Expense Type" : "Config"}
           </Typography>
           <ButtonComp
-            title="Add Type"
+            title={editingExpenseType ? "Close" : "Add Type"}
             variant="contained"
             color="primary"
             size={isSmallScreen ? "small" : "medium"} // Adjust button size
@@ -67,11 +82,13 @@ const ExpenseType: React.FC = () => {
             <ExpenseTypeForm
               isSmallScreen={isSmallScreen}
               theme={theme}
+              editData={editingExpenseType}
+              onEditComplete={handleEditComplete}
             />
           }
 
         </div>
-        <ExpenseTypeTable />
+        <ExpenseTypeTable onEdit={handleEditExpenseType} />
       </Wrapper>
     </>
   );
