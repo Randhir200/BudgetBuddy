@@ -2,7 +2,6 @@ import { memo, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -28,10 +27,14 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
 import ThumbDownOffAltIcon from '@mui/icons-material/ThumbDownOffAlt';
 import ThumbUpOffAltIcon from '@mui/icons-material/ThumbUpOffAlt';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { RootState, AppDispatch } from "../../ReduxToolkit/store";
 import { useSelector, useDispatch } from 'react-redux';
 import { expenseDelete, expenseUpdate, fetchExpense } from '../../ReduxToolkit/slices/expenseSlice';
@@ -62,6 +65,16 @@ const emptyEditForm = {
   },
 };
 
+const sortOptions = [
+  { value: 'newest', label: 'Newest first' },
+  { value: 'oldest', label: 'Oldest first' },
+  { value: 'amountHigh', label: 'Highest amount' },
+  { value: 'amountLow', label: 'Lowest amount' },
+  { value: 'merchantAsc', label: 'Merchant A-Z' },
+  { value: 'categoryAsc', label: 'Category A-Z' },
+  { value: 'reviewFirst', label: 'Needs review first' },
+];
+
 function toDateInputValue(dateString?: string) {
   if (!dateString) return '';
   return new Date(dateString).toISOString().slice(0, 10);
@@ -71,24 +84,60 @@ function getConfidenceMeta(expense: any) {
   const confidence = Number(expense.confidence ?? 1);
   if (confidence < 0.6) {
     return {
-      label: 'Needs review',
+      label: 'Need Review',
       color: 'warning' as const,
-      rowSx: { backgroundColor: '#fff7ed', '&:hover': { backgroundColor: '#ffedd5' } },
+      rowSx: {
+        backgroundColor: (theme: any) => theme.palette.mode === 'dark' ? '#3a2414' : '#fff7ed',
+        color: 'text.primary',
+        '&:hover': {
+          backgroundColor: (theme: any) => theme.palette.mode === 'dark' ? '#4a2f18' : '#ffedd5',
+        },
+        '& .MuiTableCell-root': {
+          color: 'text.primary',
+        },
+      },
     };
   }
   if (confidence < 0.85) {
     return {
       label: 'Review',
       color: 'info' as const,
-      rowSx: { backgroundColor: '#fffbeb', '&:hover': { backgroundColor: '#fef3c7' } },
+      rowSx: {
+        backgroundColor: (theme: any) => theme.palette.mode === 'dark' ? '#332b12' : '#fffbeb',
+        color: 'text.primary',
+        '&:hover': {
+          backgroundColor: (theme: any) => theme.palette.mode === 'dark' ? '#423817' : '#fef3c7',
+        },
+        '& .MuiTableCell-root': {
+          color: 'text.primary',
+        },
+      },
     };
   }
 
   return {
-    label: expense.classificationSource === 'user-rule' ? 'Confirmed' : 'Auto',
-    color: expense.classificationSource === 'user-rule' ? 'success' as const : 'default' as const,
+    label: 'Confirmed',
+    color: 'success' as const,
     rowSx: {},
   };
+}
+
+function getConfidenceIcon(label: string, fontSize: 'small' | 'medium' = 'medium') {
+  if (label === 'Need Review') {
+    return <WarningAmberIcon color="error" fontSize={fontSize} />;
+  }
+  if (label === 'Review') {
+    return <VisibilityIcon sx={{ color: '#f59e0b' }} fontSize={fontSize} />;
+  }
+
+  return <CheckCircleIcon color="success" fontSize={fontSize} />;
+}
+
+function getReviewRank(expense: any) {
+  const label = getConfidenceMeta(expense).label;
+  if (label === 'Need Review') return 0;
+  if (label === 'Review') return 1;
+  return 2;
 }
 
 function toCategoryPayload(category: any) {
@@ -107,6 +156,8 @@ const CustomTable = () => {
   const [editForm, setEditForm] = useState(emptyEditForm);
   const [newTypeName, setNewTypeName] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [searchText, setSearchText] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
   const dispatch: AppDispatch = useDispatch();
   const { fetchLoading, expenses, updateLoading, deleteLoading } = useSelector((state: RootState) => state.expenseReducer);
   const { expenseTypes } = useSelector((state: RootState) => state.expenseTypeReducer);
@@ -118,16 +169,77 @@ const CustomTable = () => {
     return selectedConfig ? selectedConfig.categories : [];
   }, [editForm.type, expenseTypes]);
 
+  const filteredExpenses = useMemo(() => {
+    const query = searchText.trim().toLowerCase();
+    const searchedExpenses = query
+      ? expenses.filter((expense: any) => {
+        const reviewLabel = getConfidenceMeta(expense).label;
+        const searchable = [
+          expense.merchant,
+          expense.vpa,
+          expense.type,
+          expense.category,
+          expense.item,
+          expense.price,
+          reviewLabel,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+
+        return searchable.includes(query);
+      })
+      : [...expenses];
+
+    return searchedExpenses.sort((a: any, b: any) => {
+      if (sortBy === 'oldest') {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }
+      if (sortBy === 'amountHigh') {
+        return Number(b.price || 0) - Number(a.price || 0);
+      }
+      if (sortBy === 'amountLow') {
+        return Number(a.price || 0) - Number(b.price || 0);
+      }
+      if (sortBy === 'merchantAsc') {
+        return String(a.merchant || '').localeCompare(String(b.merchant || ''));
+      }
+      if (sortBy === 'categoryAsc') {
+        return String(a.category || '').localeCompare(String(b.category || ''));
+      }
+      if (sortBy === 'reviewFirst') {
+        return getReviewRank(a) - getReviewRank(b) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [expenses, searchText, sortBy]);
+
+  const visibleExpenses = filteredExpenses.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(undefined, {
+    return new Date(dateString).toLocaleString(undefined, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
     });
   };
 
   const handleChangeRowsPerPage = (event: any) => {
     setRowsPerPage(+event.target.value);
+    setPage(0);
+  };
+
+  const handleSearchChange = (event: any) => {
+    setSearchText(event.target.value);
+    setPage(0);
+  };
+
+  const handleSortChange = (event: any) => {
+    setSortBy(event.target.value);
     setPage(0);
   };
 
@@ -252,32 +364,151 @@ const CustomTable = () => {
 
   return (
     <>
-      <Paper style={{ width: '99%', overflowX: 'auto' }}>
-        <TableContainer style={{ maxHeight: 520 }}>
-          {fetchLoading && <LinearProgress />}
-          <Table
-            stickyHeader
-            aria-label="expense table"
-            sx={{
-              '& .MuiTableCell-root': {
-                fontSize: isMobile ? '8px' : '12px',
-                padding: isMobile ? '3px' : '9px',
-              },
+      <Paper sx={{ width: '99%', overflowX: isMobile ? 'hidden' : 'auto' }}>
+        {fetchLoading && <LinearProgress />}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'minmax(220px, 1fr) 220px' },
+            gap: 1,
+            p: 1,
+            alignItems: 'center',
+          }}
+        >
+          <TextField
+            value={searchText}
+            onChange={handleSearchChange}
+            placeholder="Search merchant, VPA, category, amount..."
+            size="small"
+            fullWidth
+            InputProps={{
+              startAdornment: <SearchIcon color="action" fontSize="small" sx={{ mr: 1 }} />,
             }}
-          >
-            <TableHead>
-              <TableRow>
-                {columns.map((column) => (
-                  <TableCell key={column.id} align="left">
-                    {column.label}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {expenses
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((expense: any, index: number) => {
+          />
+          <FormControl size="small" fullWidth>
+            <InputLabel id="expense-sort-label">Sort</InputLabel>
+            <Select
+              labelId="expense-sort-label"
+              value={sortBy}
+              label="Sort"
+              onChange={handleSortChange}
+            >
+              {sortOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+        {isMobile ? (
+          <Stack spacing={1.25} sx={{ p: 1 }}>
+            {visibleExpenses.map((expense: any, index: number) => {
+              const confidenceMeta = getConfidenceMeta(expense);
+              return (
+                <Paper
+                  key={expense._id}
+                  variant="outlined"
+                  sx={{
+                    p: 1.25,
+                    borderRadius: 1,
+                    ...confidenceMeta.rowSx,
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontSize: '0.72rem', color: 'text.secondary' }}>
+                        #{page * rowsPerPage + index + 1} · {formatDate(expense.createdAt)}
+                      </Typography>
+                      <Typography sx={{ fontWeight: 700, fontSize: '1rem', overflowWrap: 'anywhere' }}>
+                        ₹{expense.price}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                      <Tooltip title={confidenceMeta.label}>
+                        <Box component="span" aria-label={confidenceMeta.label} sx={{ display: 'inline-flex' }}>
+                          {getConfidenceIcon(confidenceMeta.label, 'small')}
+                        </Box>
+                      </Tooltip>
+                      <IconButton aria-label="edit" size="small" onClick={() => openEditDialog(expense)}>
+                        <EditIcon color="info" fontSize="small" />
+                      </IconButton>
+                      <IconButton aria-label="delete" size="small" onClick={() => setDeleteExpense(expense)}>
+                        <DeleteIcon color="warning" fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: 0.75,
+                      mt: 1,
+                    }}
+                  >
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontSize: '0.68rem', color: 'text.secondary' }}>Merchant</Typography>
+                      <Typography sx={{ fontSize: '0.82rem', overflowWrap: 'anywhere' }}>
+                        {expense.merchant || '-'}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontSize: '0.68rem', color: 'text.secondary' }}>Type</Typography>
+                      <Typography sx={{ fontSize: '0.82rem', overflowWrap: 'anywhere' }}>
+                        {expense.type || '-'}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontSize: '0.68rem', color: 'text.secondary' }}>Category</Typography>
+                      <Typography sx={{ fontSize: '0.82rem', overflowWrap: 'anywhere' }}>
+                        {expense.category || '-'}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontSize: '0.68rem', color: 'text.secondary' }}>Payback</Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                        {expense.payBack?.isPayback ? (
+                          <ThumbUpOffAltIcon color="success" fontSize="small" />
+                        ) : (
+                          <ThumbDownOffAltIcon color="info" fontSize="small" />
+                        )}
+                        <Typography sx={{ fontSize: '0.82rem' }}>₹{expense.payBack?.amount || 0}</Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ mt: 0.75 }}>
+                    <Typography sx={{ fontSize: '0.68rem', color: 'text.secondary' }}>Item</Typography>
+                    <Typography sx={{ fontSize: '0.82rem', overflowWrap: 'anywhere' }}>
+                      {expense.item || '-'}
+                    </Typography>
+                  </Box>
+                </Paper>
+              );
+            })}
+          </Stack>
+        ) : (
+          <TableContainer style={{ maxHeight: 520 }}>
+            <Table
+              stickyHeader
+              aria-label="expense table"
+              sx={{
+                '& .MuiTableCell-root': {
+                  fontSize: '12px',
+                  padding: '9px',
+                },
+              }}
+            >
+              <TableHead>
+                <TableRow>
+                  {columns.map((column) => (
+                    <TableCell key={column.id} align="left">
+                      {column.label}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {visibleExpenses.map((expense: any, index: number) => {
                   const confidenceMeta = getConfidenceMeta(expense);
                   return (
                     <TableRow hover tabIndex={-1} key={expense._id} sx={confidenceMeta.rowSx}>
@@ -288,43 +519,41 @@ const CustomTable = () => {
                       <TableCell>{expense.category}</TableCell>
                       <TableCell>{expense.item}</TableCell>
                       <TableCell>
-                        <Tooltip title={`Confidence: ${Math.round(Number(expense.confidence ?? 1) * 100)}%`}>
-                          <Chip
-                            label={confidenceMeta.label}
-                            size="small"
-                            color={confidenceMeta.color}
-                            variant={confidenceMeta.color === 'default' ? 'outlined' : 'filled'}
-                          />
+                        <Tooltip title={confidenceMeta.label}>
+                          <Box component="span" aria-label={confidenceMeta.label} sx={{ display: 'inline-flex' }}>
+                            {getConfidenceIcon(confidenceMeta.label)}
+                          </Box>
                         </Tooltip>
                       </TableCell>
                       <TableCell align="left">₹{expense.price}</TableCell>
                       <TableCell align="left">
                         <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "center" }}>
                           <IconButton sx={{ cursor: "default" }}>
-                            {expense.payBack?.isPayback ? <ThumbUpOffAltIcon color="success" fontSize={isMobile ? 'small' : 'medium'} />
-                              : <ThumbDownOffAltIcon color="info" fontSize={isMobile ? 'small' : 'medium'} />}
+                            {expense.payBack?.isPayback ? <ThumbUpOffAltIcon color="success" fontSize="medium" />
+                              : <ThumbDownOffAltIcon color="info" fontSize="medium" />}
                           </IconButton>
                           ₹{expense.payBack?.amount || 0}
                         </Box>
                       </TableCell>
                       <TableCell align="left">
-                        <IconButton aria-label="edit" size={isMobile ? 'small' : 'medium'} onClick={() => openEditDialog(expense)}>
-                          <EditIcon color="info" fontSize={isMobile ? 'small' : 'medium'} />
+                        <IconButton aria-label="edit" size="medium" onClick={() => openEditDialog(expense)}>
+                          <EditIcon color="info" fontSize="medium" />
                         </IconButton>
-                        <IconButton aria-label="delete" size={isMobile ? 'small' : 'medium'} onClick={() => setDeleteExpense(expense)}>
-                          <DeleteIcon color="warning" fontSize={isMobile ? 'small' : 'medium'} />
+                        <IconButton aria-label="delete" size="medium" onClick={() => setDeleteExpense(expense)}>
+                          <DeleteIcon color="warning" fontSize="medium" />
                         </IconButton>
                       </TableCell>
                     </TableRow>
                   );
                 })}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
         <TablePagination
           rowsPerPageOptions={[10, 25, 100]}
           component="div"
-          count={expenses.length}
+          count={filteredExpenses.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={(_event, newPage) => setPage(newPage)}

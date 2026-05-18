@@ -7,11 +7,12 @@ const { signAppToken, verifyAppToken } = require('../../utils/appToken');
 const { encryptToken, decryptToken } = require('../../utils/tokenCrypto');
 const Expense = require('../../models/expenseModel');
 const GmailConnection = require('../../models/gmailConnectionModel');
+const Income = require('../../models/incomeModel');
 const User = require('../../models/userModel');
 
 module.exports = function (app) {
     let isSyncRunning = false;
-    const firstSyncLookbackDays = 2;
+    const firstSyncLookbackDays = 90;
     const hdfcSendersQuery = '(from:hdfcbank.bank.in OR from:hdfcbank.com OR from:hdfcbank.net)';
     const hdfcTxnSearchQuery = '("UPI txn" OR "Account update")';
     const loginScopes = ['openid', 'email', 'profile'];
@@ -311,13 +312,46 @@ module.exports = function (app) {
         return messages;
     }
 
-    function parseTxnDate(date) {
-        if (!date) return new Date();
+    function getGmailMessageDate(msg, payload) {
+        if (msg.data?.internalDate) {
+            const internalDate = new Date(Number(msg.data.internalDate));
+            if (!Number.isNaN(internalDate.getTime())) return internalDate;
+        }
+
+        const dateHeader = getHeader(payload?.headers || [], 'Date');
+        if (dateHeader) {
+            const headerDate = new Date(dateHeader);
+            if (!Number.isNaN(headerDate.getTime())) return headerDate;
+        }
+
+        return null;
+    }
+
+    function parseTxnDateTime(date, time, fallbackDate = null) {
+        if (!date) return fallbackDate || new Date();
 
         const [day, month, year] = date.split('-');
         const fullYear = year.length === 2 ? `20${year}` : year;
+        if (!time && fallbackDate) return fallbackDate;
+        if (!time) return new Date(`${fullYear}-${month}-${day}T00:00:00+05:30`);
 
-        return new Date(`${fullYear}-${month}-${day}`);
+        let hours = '00';
+        let minutes = '00';
+        let seconds = '00';
+        const timeMatch = time.match(/^(\d{1,2})[:.](\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+        if (!timeMatch) return fallbackDate || new Date(`${fullYear}-${month}-${day}T00:00:00+05:30`);
+
+        let parsedHours = Number(timeMatch[1]);
+        const meridiem = timeMatch[4]?.toUpperCase();
+
+        if (meridiem === 'PM' && parsedHours < 12) parsedHours += 12;
+        if (meridiem === 'AM' && parsedHours === 12) parsedHours = 0;
+
+        hours = String(parsedHours).padStart(2, '0');
+        minutes = timeMatch[2];
+        seconds = timeMatch[3] || '00';
+
+        return new Date(`${fullYear}-${month}-${day}T${hours}:${minutes}:${seconds}+05:30`);
     }
 
     async function syncGmailConnection(connection) {
@@ -382,6 +416,50 @@ module.exports = function (app) {
                 continue;
             }
 
+            const gmailMessageDate = getGmailMessageDate(msg, payload);
+            const transactionDate = parseTxnDateTime(txn.date, txn.time, gmailMessageDate);
+
+            if (txn.type === 'Credit') {
+                const income = {
+                    type: 'Income',
+                    category: 'Uncategorised',
+                    amount: txn.amount,
+                    description: txn.merchant || txn.vpa || 'UPI credit',
+                    dateRecieved: transactionDate,
+                    userId: connection.userId,
+                    source: 'Gmail',
+                    merchant: txn.merchant || 'unknown',
+                    vpa: txn.vpa || 'unknown',
+                    gmailMessageId: m.id,
+                    transactionReferenceId: txn.referenceId,
+                    bank: txn.bank,
+                    accountLast4: txn.accountLast4,
+                    currency: txn.currency
+                };
+
+                try {
+                    const alreadyExists = await Income.exists({
+                        userId: income.userId,
+                        gmailMessageId: income.gmailMessageId
+                    });
+                    if (alreadyExists) {
+                        skipped += 1;
+                        continue;
+                    }
+
+                    await Income.create(income);
+                    saved += 1;
+                } catch (err) {
+                    if (err.code === 11000) {
+                        skipped += 1;
+                        continue;
+                    }
+                    console.error('Error saving Gmail income:', err.message);
+                    skipped += 1;
+                }
+                continue;
+            }
+
             const classification = await classifyExpense(txn, connection.userId);
             const expense = {
                 type: classification.type,
@@ -400,7 +478,7 @@ module.exports = function (app) {
                 bank: txn.bank,
                 accountLast4: txn.accountLast4,
                 currency: txn.currency,
-                createdAt: parseTxnDate(txn.date)
+                createdAt: transactionDate
             };
 
             if (expense.type === 'Ignore') {
@@ -462,8 +540,10 @@ module.exports = function (app) {
             }
         }
     }
+  // run in cron every 2 minutes
 
-    cron.schedule('0 22 * * *', async () => {
+
+  cron.schedule('0 22 * * *', async () => {
         if (isSyncRunning) {
             console.log('Gmail sync already running, skipping this tick');
             return;

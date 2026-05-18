@@ -75,22 +75,37 @@ function parseHdfcUpi(text) {
 
         const type = /\bdebit(?:ed)?\b/i.test(t) ? 'Debit' : /\bcredit(?:ed)?\b/i.test(t) ? 'Credit' : null; // determine transaction type
 
-        const accountMatch = t.match(/account(?:\s+ending)?\s+(\d{2,4})/i); // last 2-4 digits of account
+        const accountMatch = t.match(/account(?:\s+ending)?\s+(?:\*+)?(\d{2,4})/i); // last 2-4 digits of account
         const accountLast4 = accountMatch ? accountMatch[1] : null; // last 2-4 digits
 
-        const upiDetailsMatch = t.match(/\b(?:to|towards)\s+VPA\s+([A-Za-z0-9._-]+@[A-Za-z0-9._-]+)(?:\s+\(([^)]*?)\)|\s+(.+?))?\s+on\s+(\d{2}-\d{2}-\d{2,4})\b/i);
-        const vpaMatch = upiDetailsMatch || t.match(/\b(?:to|towards)\s+VPA\s+([A-Za-z0-9._-]+@[A-Za-z0-9._-]+)/i); // VPA pattern
+        const upiDetailsMatch = t.match(/\b(?:to|towards|by|from)\s+VPA\s+([A-Za-z0-9._-]+@[A-Za-z0-9._-]+)(?:\s+\(([^)]*?)\)|\s+(.+?))?\s+on\s+(\d{2}-\d{2}-\d{2,4})\b/i);
+        const vpaMatch = upiDetailsMatch || t.match(/\b(?:to|towards|by|from)\s+VPA\s+([A-Za-z0-9._-]+@[A-Za-z0-9._-]+)/i); // VPA pattern
         const vpa = vpaMatch ? vpaMatch[1] : null; // extract VPA
 
         // merchant: text between the VPA (or 'to') and the 'on <date>' token
         let merchant = null;
         const onDateMatch = t.match(/on\s+(\d{2}-\d{2}-\d{2,4})/i);
         const onDate = upiDetailsMatch ? upiDetailsMatch[4] : onDateMatch ? onDateMatch[1] : null;
+        const escapedDate = onDate ? onDate.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : null;
+        const timePattern = '(\\d{1,2}[:.]\\d{2}(?::\\d{2})?\\s*(?:A\\.?M\\.?|P\\.?M\\.?)?)';
+        const timeMatch = escapedDate
+            ? t.match(new RegExp(`${escapedDate}\\s*(?:at|@|,|-)?\\s*${timePattern}`, 'i'))
+                || t.match(new RegExp(`${timePattern}\\s*(?:IST|on)?\\s*${escapedDate}`, 'i'))
+            : t.match(new RegExp(`\\b(?:at|@)\\s*${timePattern}\\b`, 'i'));
+        const txnTime = timeMatch
+            ? timeMatch[1]
+                .replace(/\s+/g, ' ')
+                .replace(/([AP])\.?M\.?/i, '$1M')
+                .replace(/^(\d{1,2})\.(\d{2})/, '$1:$2')
+                .trim()
+            : null;
         const cleanMerchantName = (name) => {
             if (!name) return null;
 
             const bracketMatch = name.match(/^\(([^)]*?)\)$/);
             return (bracketMatch ? bracketMatch[1] : name)
+                .replace(/\b(?:at|@|-|,)?\s*\d{1,2}[:.]\d{2}(?::\d{2})?\s*(?:A\.?M\.?|P\.?M\.?)?\b/ig, '')
+                .replace(/\bIST\b/ig, '')
                 .replace(/^[:,-\s]+|[,:\s]+$/g, '')
                 .trim() || null;
         };
@@ -124,6 +139,7 @@ function parseHdfcUpi(text) {
             merchant,
             referenceId,
             date: onDate,
+            time: txnTime,
             text: cleanText,
         };
     }
