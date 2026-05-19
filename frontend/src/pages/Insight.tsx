@@ -28,6 +28,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchInsightDashboard } from '../ReduxToolkit/slices/insightSlice';
 import { AppDispatch, RootState } from '../ReduxToolkit/store';
+import MerchantAnalysis from '../components/Insight/MerchantAnalysis';
 
 echarts.use([TitleComponent, TooltipComponent, GridComponent, LegendComponent, PieChart, BarChart, LineChart, CanvasRenderer]);
 
@@ -82,6 +83,7 @@ const Insight: React.FC = () => {
   const summary = dashboard?.summary || {};
   const topCategories = dashboard?.topCategories || [];
   const topMerchants = dashboard?.topMerchants || [];
+  const allTimeMerchants = dashboard?.allTimeMerchants || [];
   const monthlyOverview = dashboard?.monthlyOverview || [];
   const dailyTrend = dashboard?.dailyTrend || [];
   const dailyDetails = dashboard?.dailyDetails || [];
@@ -380,6 +382,8 @@ const Insight: React.FC = () => {
             </Paper>
           </Grid>
         </Grid>
+
+        <MerchantAnalysis topMerchants={topMerchants} allTimeMerchants={allTimeMerchants} />
       </Stack>
     </Box>
   );

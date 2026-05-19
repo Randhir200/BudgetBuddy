@@ -47,6 +47,25 @@ function formatAmount(amount) {
     return `₹${Math.round(amount || 0).toLocaleString("en-IN")}`;
 }
 
+function getMerchantName(expense) {
+    return expense.merchant || expense.vpa || "Unknown";
+}
+
+function getMerchantQuery(userId, merchant) {
+    const query = { userId };
+
+    if (merchant === "Unknown") {
+        query.$and = [
+            { $or: [{ merchant: { $exists: false } }, { merchant: "" }, { merchant: null }] },
+            { $or: [{ vpa: { $exists: false } }, { vpa: "" }, { vpa: null }] }
+        ];
+        return query;
+    }
+
+    query.$or = [{ merchant }, { vpa: merchant }];
+    return query;
+}
+
 function getLocalDateKey(date) {
     const parts = new Intl.DateTimeFormat("en-IN", {
         timeZone: "Asia/Kolkata",
@@ -247,7 +266,7 @@ exports.dashboard = catchAsync(async (req, res) => {
     currentExpenses.forEach((expense) => {
         const amount = Number(expense.price || 0);
         const category = expense.category || "Others";
-        const merchant = expense.merchant || expense.vpa || "Unknown";
+        const merchant = getMerchantName(expense);
         const reviewLabel = getReviewLabel(expense);
         const dateKey = getLocalDateKey(expense.createdAt);
 
@@ -283,9 +302,23 @@ exports.dashboard = catchAsync(async (req, res) => {
         });
     });
 
+    const allExpenses = await Expense.find({ userId }).lean();
+    const allTimeMerchantMap = new Map();
+    allExpenses.forEach((expense) => {
+        const amount = Number(expense.price || 0);
+        const merchant = getMerchantName(expense);
+
+        allTimeMerchantMap.set(merchant, {
+            merchant,
+            count: (allTimeMerchantMap.get(merchant)?.count || 0) + 1,
+            amount: (allTimeMerchantMap.get(merchant)?.amount || 0) + amount
+        });
+    });
+
     const monthlyOverview = buildMonthlyOverview(currentExpenses);
     const topCategories = Array.from(categoryMap.values()).sort((a, b) => b.amount - a.amount).slice(0, 6);
     const topMerchants = Array.from(merchantMap.values()).sort((a, b) => b.amount - a.amount).slice(0, 6);
+    const allTimeMerchants = Array.from(allTimeMerchantMap.values()).sort((a, b) => b.amount - a.amount);
     const reviewStatus = Array.from(reviewMap.values());
     const dailyTrend = Array.from(dailyMap.entries())
         .map(([date, amount]) => ({ date, amount }))
@@ -320,6 +353,7 @@ exports.dashboard = catchAsync(async (req, res) => {
         monthlyOverview,
         topCategories,
         topMerchants,
+        allTimeMerchants,
         reviewStatus,
         dailyTrend,
         dailyDetails,
@@ -341,4 +375,82 @@ exports.dashboard = catchAsync(async (req, res) => {
     });
 
     responseJson(res, 200, "Insight dashboard generated successfully", data);
+});
+
+exports.merchantAnalysis = catchAsync(async (req, res) => {
+    const { userId, merchant, firstDate, lastDate, allTime } = req.query;
+
+    const { start, end } = getDateRange(firstDate, lastDate);
+    const merchantQuery = getMerchantQuery(userId, merchant);
+    const isAllTime = allTime === 'true';
+
+    const [allTimeExpenses, monthlyExpenses] = await Promise.all([
+        Expense.find(merchantQuery).lean(),
+        Expense.find({
+            ...merchantQuery,
+            createdAt: { $gte: start, $lte: end }
+        }).lean()
+    ]);
+
+    const analysisExpenses = isAllTime ? allTimeExpenses : monthlyExpenses;
+
+    const monthlyTotal = monthlyExpenses.reduce((sum, e) => sum + Number(e.price || 0), 0);
+    const allTimeTotal = allTimeExpenses.reduce((sum, e) => sum + Number(e.price || 0), 0);
+
+    const categoryMap = new Map();
+    analysisExpenses.forEach((expense) => {
+        const category = expense.category || "Others";
+        const amount = Number(expense.price || 0);
+
+        categoryMap.set(category, {
+            category,
+            count: (categoryMap.get(category)?.count || 0) + 1,
+            amount: (categoryMap.get(category)?.amount || 0) + amount
+        });
+    });
+
+    const categories = Array.from(categoryMap.values())
+        .sort((a, b) => b.amount - a.amount);
+
+    const monthMap = new Map();
+    allTimeExpenses.forEach((expense) => {
+        const date = new Date(expense.createdAt);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+        if (!monthMap.has(monthKey)) {
+            monthMap.set(monthKey, { month: monthKey, amount: 0, count: 0 });
+        }
+        const monthData = monthMap.get(monthKey);
+        monthData.amount += Number(expense.price || 0);
+        monthData.count += 1;
+    });
+
+    const monthlyTrend = Array.from(monthMap.values())
+        .sort((a, b) => a.month.localeCompare(b.month));
+
+    const transactions = analysisExpenses.map((expense) => ({
+        id: String(expense._id),
+        date: expense.createdAt,
+        merchant: getMerchantName(expense),
+        category: expense.category || "Others",
+        item: expense.item || expense.category,
+        amount: Number(expense.price || 0),
+        type: expense.type || "Others",
+        vpa: expense.vpa,
+        reviewStatus: getReviewLabel(expense)
+    })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    const data = {
+        merchant,
+        monthlyTotal,
+        allTimeTotal,
+        monthlyCount: monthlyExpenses.length,
+        allTimeCount: allTimeExpenses.length,
+        categories,
+        transactions,
+        monthlyTrend,
+        range: { firstDate: start, lastDate: end }
+    };
+
+    responseJson(res, 200, "Merchant analysis generated successfully", data);
 });

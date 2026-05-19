@@ -58,7 +58,7 @@ const emptyEditForm = {
   category: '',
   item: '',
   price: 0,
-  createdAt: '',
+  // createdAt: '',
   payBack: {
     isPayback: false,
     amount: 0,
@@ -252,7 +252,7 @@ const CustomTable = () => {
       category: expense.category || '',
       item: expense.item || '',
       price: expense.price || 0,
-      createdAt: toDateInputValue(expense.createdAt),
+      // createdAt: toDateInputValue(expense.createdAt),
       payBack: {
         isPayback: Boolean(expense.payBack?.isPayback),
         amount: expense.payBack?.amount || 0,
@@ -625,7 +625,7 @@ const CustomTable = () => {
             </FormControl>
             <TextField label="Item" name="item" value={editForm.item} onChange={handleEditChange} fullWidth />
             <TextField label="Price" name="price" type="number" value={editForm.price} onChange={handleEditChange} fullWidth />
-            <TextField
+            {/* <TextField
               label="Date"
               name="createdAt"
               type="date"
@@ -633,7 +633,7 @@ const CustomTable = () => {
               onChange={handleEditChange}
               InputLabelProps={{ shrink: true }}
               fullWidth
-            />
+            /> */}
             <FormControl fullWidth>
               <InputLabel id="payback-status-label">Payback</InputLabel>
               <Select

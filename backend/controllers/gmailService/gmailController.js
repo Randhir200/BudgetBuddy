@@ -540,8 +540,6 @@ module.exports = function (app) {
             }
         }
     }
-  // run in cron every 2 minutes
-
 
   cron.schedule('0 22 * * *', async () => {
         if (isSyncRunning) {

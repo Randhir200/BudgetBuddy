@@ -22,12 +22,15 @@ interface IncomeState {
     monthlyOverviewLoading: boolean;
     balanceLoading: boolean;
     dashboardLoading: boolean;
+    merchantAnalysisLoading: boolean;
     monthlyOverviews: Overview[];
     balance: Balance,
     dashboard: any;
+    merchantAnalysis: any;
     monthlyOverviewError: string | null;
     balanceError: string | null;
     dashboardError: string | null;
+    merchantAnalysisError: string | null;
 }
 
 interface DateRange {
@@ -39,12 +42,15 @@ const initialState: IncomeState = {
     monthlyOverviewLoading: true,
     balanceLoading: true,
     dashboardLoading: true,
+    merchantAnalysisLoading: false,
     monthlyOverviews: [],
     balance: {currentBalance: 0},
     dashboard: null,
+    merchantAnalysis: null,
     monthlyOverviewError: '',
     balanceError: '',
-    dashboardError: ''
+    dashboardError: '',
+    merchantAnalysisError: ''
 }
 
 
@@ -71,6 +77,12 @@ export const fetchInsightDashboard = createAsyncThunk(
         return response.data;
     });
 
+export const fetchMerchantAnalysis = createAsyncThunk(
+    'insight/merchantAnalysis',
+    async ({userId, merchant, dateRange, allTime}: {userId: string, merchant: string, dateRange: DateRange, allTime?: boolean}) => {
+        const response = await apiClient.get(`/insight/merchant-analysis?userId=${userId}&merchant=${encodeURIComponent(merchant)}&firstDate=${dateRange.firstDate}&lastDate=${dateRange.lastDate}&allTime=${allTime || false}`);
+        return response.data;
+    });
 
 
 const insightSlice = createSlice({
@@ -118,6 +130,19 @@ const insightSlice = createSlice({
             .addCase(fetchInsightDashboard.rejected, (state, action: PayloadAction<any>) => {
                 state.dashboardLoading = false;
                 state.dashboardError = action.payload?.message || 'Failed to fetch dashboard data';
+            })
+            .addCase(fetchMerchantAnalysis.pending, (state) => {
+                state.merchantAnalysisLoading = true;
+                state.merchantAnalysisError = null;
+            })
+            .addCase(fetchMerchantAnalysis.fulfilled, (state, action: PayloadAction<any>) => {
+                state.merchantAnalysisLoading = false;
+                state.merchantAnalysis = action.payload.data;
+                state.merchantAnalysisError = null;
+            })
+            .addCase(fetchMerchantAnalysis.rejected, (state, action: PayloadAction<any>) => {
+                state.merchantAnalysisLoading = false;
+                state.merchantAnalysisError = action.payload?.message || 'Failed to fetch merchant analysis';
             })
     }
 });
