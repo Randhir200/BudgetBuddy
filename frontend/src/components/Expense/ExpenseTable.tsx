@@ -75,10 +75,10 @@ const sortOptions = [
   { value: 'reviewFirst', label: 'Needs review first' },
 ];
 
-function toDateInputValue(dateString?: string) {
-  if (!dateString) return '';
-  return new Date(dateString).toISOString().slice(0, 10);
-}
+// function toDateInputValue(dateString?: string) {
+//   if (!dateString) return '';
+//   return new Date(dateString).toISOString().slice(0, 10);
+// }
 
 function getConfidenceMeta(expense: any) {
   const confidence = Number(expense.confidence ?? 1);
