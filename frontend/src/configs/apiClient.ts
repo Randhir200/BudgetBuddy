@@ -25,3 +25,11 @@ export const startGmailConnect = () => {
 
   window.location.href = `${budgetBuddyApiUrl}/auth/google/connect?token=${encodeURIComponent(token)}`;
 };
+
+export const getGmailStatus = () => {
+  return apiClient.get("/gmail/status");
+};
+
+export const syncGmailNow = () => {
+  return apiClient.get("/gmail/sync-now");
+};

@@ -540,8 +540,6 @@ module.exports = function (app) {
             }
         }
     }
-  // run in cron every 2 minutes
-
 
   cron.schedule('0 22 * * *', async () => {
         if (isSyncRunning) {
@@ -560,12 +558,35 @@ module.exports = function (app) {
     });
 
     app.get('/gmail/sync-now', protect, async (req, res) => {
+        if (isSyncRunning) {
+            return res.status(409).json({ error: 'Gmail sync already running' });
+        }
+
         const connection = await GmailConnection.findOne({ userId: req.user.id, isActive: true });
         if (!connection?.refreshToken) {
             return res.status(401).json({ error: 'Gmail not connected' });
         }
 
-        const result = await syncGmailConnection(connection);
-        res.json({ status: 'Synced', ...result });
+        try {
+            isSyncRunning = true;
+            const result = await syncGmailConnection(connection);
+            const lastSyncedAtSeconds = Math.floor(Date.now() / 1000);
+
+            res.json({
+                status: 'success',
+                message: 'Gmail synced',
+                lastSyncedAtSeconds,
+                ...result
+            });
+        } catch (err) {
+            console.error('Manual Gmail sync failed:', req.user.id, err.message);
+            await GmailConnection.updateOne(
+                { _id: connection._id },
+                { $set: { lastError: err.message, isActive: /invalid_grant/i.test(err.message) ? false : connection.isActive } }
+            );
+            res.status(500).json({ error: err.message || 'Gmail sync failed' });
+        } finally {
+            isSyncRunning = false;
+        }
     });
 };
