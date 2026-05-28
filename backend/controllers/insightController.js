@@ -51,8 +51,12 @@ function getMerchantName(expense) {
     return expense.merchant || expense.vpa || "Unknown";
 }
 
+function isIncomeLikeTransaction(transaction) {
+    return /income|credit|credited|received/i.test(String(transaction?.type || ""));
+}
+
 function getMerchantQuery(userId, merchant) {
-    const query = { userId };
+    const query = { userId, type: { $not: /income|credit|credited|received/i } };
 
     if (merchant === "Unknown") {
         query.$and = [
@@ -176,7 +180,8 @@ exports.monthlyTransactions = catchAsync(async (req, res, next) => {
                         $gte: new Date(firstDate),  
                         $lte: new Date( lastDate)
                     },
-                    userId
+                    userId,
+                    type: { $not: /income|credit|credited|received/i }
                 }
             },
             {
@@ -246,8 +251,10 @@ exports.dashboard = catchAsync(async (req, res) => {
         GmailConnection.findOne({ userId }).lean()
     ]);
 
-    const totalExpense = currentExpenses.reduce((sum, expense) => sum + Number(expense.price || 0), 0);
-    const previousExpense = previousExpenses.reduce((sum, expense) => sum + Number(expense.price || 0), 0);
+    const expenseTransactions = currentExpenses.filter((expense) => !isIncomeLikeTransaction(expense));
+    const previousExpenseTransactions = previousExpenses.filter((expense) => !isIncomeLikeTransaction(expense));
+    const totalExpense = expenseTransactions.reduce((sum, expense) => sum + Number(expense.price || 0), 0);
+    const previousExpense = previousExpenseTransactions.reduce((sum, expense) => sum + Number(expense.price || 0), 0);
     const totalIncome = currentIncomes.reduce((sum, income) => sum + Number(income.amount || 0), 0);
     const previousIncome = previousIncomes.reduce((sum, income) => sum + Number(income.amount || 0), 0);
     const netSavings = totalIncome - totalExpense;
@@ -263,7 +270,7 @@ exports.dashboard = catchAsync(async (req, res) => {
     const dailyMap = new Map();
     const dailyDetailsMap = new Map();
 
-    currentExpenses.forEach((expense) => {
+    expenseTransactions.forEach((expense) => {
         const amount = Number(expense.price || 0);
         const category = expense.category || "Others";
         const merchant = getMerchantName(expense);
@@ -285,7 +292,10 @@ exports.dashboard = catchAsync(async (req, res) => {
             count: reviewMap.get(reviewLabel).count + 1,
             amount: reviewMap.get(reviewLabel).amount + amount
         });
-        dailyMap.set(dateKey, (dailyMap.get(dateKey) || 0) + amount);
+        if (!dailyMap.has(dateKey)) {
+            dailyMap.set(dateKey, { date: dateKey, incomeAmount: 0, expenseAmount: 0 });
+        }
+        dailyMap.get(dateKey).expenseAmount += amount;
         if (!dailyDetailsMap.has(dateKey)) {
             dailyDetailsMap.set(dateKey, []);
         }
@@ -297,14 +307,39 @@ exports.dashboard = catchAsync(async (req, res) => {
             category,
             item: expense.item || category,
             amount,
+            transactionType: "expense",
             reviewStatus: reviewLabel,
             source: expense.source || "Manual"
         });
     });
 
+    currentIncomes.forEach((income) => {
+        const amount = Number(income.amount || 0);
+        const dateKey = getLocalDateKey(income.dateRecieved);
+        const merchant = income.merchant || income.description || income.vpa || "Income";
+        if (!dailyMap.has(dateKey)) {
+            dailyMap.set(dateKey, { date: dateKey, incomeAmount: 0, expenseAmount: 0 });
+        }
+        dailyMap.get(dateKey).incomeAmount += amount;
+        if (!dailyDetailsMap.has(dateKey)) {
+            dailyDetailsMap.set(dateKey, []);
+        }
+        dailyDetailsMap.get(dateKey).push({
+            id: String(income._id),
+            date: income.dateRecieved,
+            merchant,
+            type: income.type || "Income",
+            category: income.category || "Income",
+            item: income.description || income.category || "Income",
+            amount,
+            transactionType: "income",
+            source: income.source || "Manual"
+        });
+    });
+
     const allExpenses = await Expense.find({ userId }).lean();
     const allTimeMerchantMap = new Map();
-    allExpenses.forEach((expense) => {
+    allExpenses.filter((expense) => !isIncomeLikeTransaction(expense)).forEach((expense) => {
         const amount = Number(expense.price || 0);
         const merchant = getMerchantName(expense);
 
@@ -315,13 +350,13 @@ exports.dashboard = catchAsync(async (req, res) => {
         });
     });
 
-    const monthlyOverview = buildMonthlyOverview(currentExpenses);
+    const monthlyOverview = buildMonthlyOverview(expenseTransactions);
     const topCategories = Array.from(categoryMap.values()).sort((a, b) => b.amount - a.amount).slice(0, 6);
     const topMerchants = Array.from(merchantMap.values()).sort((a, b) => b.amount - a.amount).slice(0, 6);
     const allTimeMerchants = Array.from(allTimeMerchantMap.values()).sort((a, b) => b.amount - a.amount);
     const reviewStatus = Array.from(reviewMap.values());
-    const dailyTrend = Array.from(dailyMap.entries())
-        .map(([date, amount]) => ({ date, amount }))
+    const dailyTrend = Array.from(dailyMap.values())
+        .map((item) => ({ ...item, amount: item.incomeAmount + item.expenseAmount }))
         .sort((a, b) => a.date.localeCompare(b.date));
     const dailyDetails = Array.from(dailyDetailsMap.entries())
         .map(([date, transactions]) => ({
@@ -365,8 +400,8 @@ exports.dashboard = catchAsync(async (req, res) => {
     };
 
     data.insights = buildInsights({
-        currentExpenses,
-        previousExpenses,
+        currentExpenses: expenseTransactions,
+        previousExpenses: previousExpenseTransactions,
         totalExpense,
         previousExpense,
         topMerchants,

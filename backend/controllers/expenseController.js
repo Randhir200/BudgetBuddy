@@ -4,6 +4,10 @@ const AppError = require("../utils/appError");
 const { catchAsync } = require("../utils/catchAsync");
 const { responseJson } = require("../utils/responseJson");
 
+const expenseOnlyQuery = {
+    type: { $not: /income|credit|credited|received/i }
+};
+
 async function upsertMerchantLearningRule(expense, updateBody) {
     const classificationChanged = updateBody.type || updateBody.category;
     if (!classificationChanged || !expense.userId || !expense.type || !expense.category) return;
@@ -46,7 +50,7 @@ exports.fetchExpense = catchAsync(async (req, res, next) => {
     const { userId } = req.query;
 
     // Query the database with a valid userId
-    const expenses = await Expense.find({userId}).sort({createdAt: -1});
+    const expenses = await Expense.find({ userId, ...expenseOnlyQuery }).sort({createdAt: -1});
     
     // If no expense data is found, handle accordingly
     if (!expenses || expenses.length === 0) {
@@ -63,14 +67,14 @@ exports.fetchExpense = catchAsync(async (req, res, next) => {
 exports.fetchExpensePerPage = catchAsync(async (req, res, next) => {
     const { userId, page = 1, limit = 10 } = req.query;
     const skip = (page - 1) * limit;
-    const totalCount = await Expense.countDocuments({ userId });
+    const totalCount = await Expense.countDocuments({ userId, ...expenseOnlyQuery });
     const totalExpense = await Expense.aggregate([
-        { $match: { userId } },
+        { $match: { userId, ...expenseOnlyQuery } },
         { $group: { _id: null, total: { $sum: "$price" } } }
     ]);
     const totalExpenseAmount = totalExpense.length > 0 ? totalExpense[0].total : 0; 
     // Query the database with a valid userId and pagination
-    const expenses = await Expense.find({userId}).sort({createdAt: -1}).skip(skip).limit(Number(limit));
+    const expenses = await Expense.find({ userId, ...expenseOnlyQuery }).sort({createdAt: -1}).skip(skip).limit(Number(limit));
     
     // If no expense data is found, handle accordingly
     if (!expenses || expenses.length === 0) {
@@ -135,8 +139,9 @@ exports.deleteExpense = catchAsync(async (req, res, next) => {
 
 exports.filteredExpenses = catchAsync(async (req, res) => {
     const { userId, type, category } = req.query;
-    const matchQuery = {userId};
-    if (type) matchQuery.type = type;
+    const matchQuery = type
+        ? { userId, type, $and: [expenseOnlyQuery] }
+        : { userId, ...expenseOnlyQuery };
     if (category) matchQuery.category = category;   
 
     const filteredExpensesData = await Expense.aggregate([

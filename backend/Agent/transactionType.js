@@ -103,7 +103,8 @@ function normalizeClassification(result, txn, fallbackType = 'Needs') {
         confidence,
         source,
         ruleId: result?.ruleId,
-        ruleLabel: result?.ruleLabel
+        ruleLabel: result?.ruleLabel,
+        ruleScope: result?.ruleScope
     };
 }
 
@@ -132,18 +133,24 @@ function classifyBySeededRules(txn) {
     return null;
 }
 
+function getRuleLookupUserId(userId, source) {
+    return source === 'global' ? MerchantRule.GLOBAL_USER_ID : userId;
+}
+
 async function findStoredRule(txn, userId, source) {
     if (!userId) return null;
 
+    const lookupUserId = getRuleLookupUserId(userId, source);
     const merchant = MerchantRule.normalizeValue(txn?.merchant);
     const vpa = MerchantRule.normalizeValue(txn?.vpa);
+    const searchText = MerchantRule.normalizeValue(buildSearchText(txn));
 
     const exactQueries = [];
     if (vpa) {
-        exactQueries.push({ userId, source, matchType: 'vpa', normalizedValue: vpa });
+        exactQueries.push({ userId: lookupUserId, source, matchType: 'vpa', normalizedValue: vpa });
     }
     if (merchant) {
-        exactQueries.push({ userId, source, matchType: 'merchant', normalizedValue: merchant });
+        exactQueries.push({ userId: lookupUserId, source, matchType: 'merchant', normalizedValue: merchant });
     }
 
     for (const query of exactQueries) {
@@ -156,15 +163,17 @@ async function findStoredRule(txn, userId, source) {
                 confidence: savedRule.confidence,
                 source: `${source}-rule`,
                 ruleId: savedRule._id,
+                ruleScope: source === 'global' ? 'global' : 'user',
                 merchant: txn.merchant
             }, txn);
         }
     }
 
-    if (merchant) {
-        const patternRules = await MerchantRule.find({ userId, source, matchType: 'pattern' });
+    if (searchText) {
+        const patternRules = await MerchantRule.find({ userId: lookupUserId, source, matchType: 'pattern' });
+        patternRules.sort((a, b) => String(b.normalizedValue).length - String(a.normalizedValue).length);
         for (const savedRule of patternRules) {
-            if (merchant.includes(savedRule.normalizedValue)) {
+            if (searchText.includes(savedRule.normalizedValue)) {
                 await MerchantRule.updateOne({ _id: savedRule._id }, { $inc: { useCount: 1 } });
                 return normalizeClassification({
                     type: savedRule.type,
@@ -172,6 +181,7 @@ async function findStoredRule(txn, userId, source) {
                     confidence: savedRule.confidence,
                     source: `${source}-rule`,
                     ruleId: savedRule._id,
+                    ruleScope: source === 'global' ? 'global' : 'user',
                     merchant: txn.merchant
                 }, txn);
             }
@@ -291,6 +301,9 @@ async function classifyExpense(txn, userId) {
 
     const userRule = await findStoredRule(txn, userId, 'user');
     if (userRule) return userRule;
+
+    const globalRule = await findStoredRule(txn, userId, 'global');
+    if (globalRule) return globalRule;
 
     const seededRule = classifyBySeededRules(txn);
     if (seededRule) return seededRule;
