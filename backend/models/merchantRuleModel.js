@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+const GLOBAL_MERCHANT_RULE_USER_ID = '__global__';
+
 function normalizeRuleValue(value) {
     return String(value || '')
         .trim()
@@ -25,7 +27,7 @@ const merchantRuleSchema = new mongoose.Schema({
     confidence: { type: Number, default: 0.95 },
     source: {
         type: String,
-        enum: ['user', 'ai', 'seeded'],
+        enum: ['user', 'ai', 'seeded', 'global'],
         default: 'user'
     },
     confirmed: { type: Boolean, default: false },
@@ -36,6 +38,8 @@ merchantRuleSchema.index(
     { userId: 1, matchType: 1, normalizedValue: 1 },
     { unique: true }
 );
+merchantRuleSchema.index({ userId: 1, source: 1, matchType: 1, normalizedValue: 1 });
+merchantRuleSchema.index({ userId: 1, source: 1, matchType: 1 });
 
 merchantRuleSchema.pre('validate', function setNormalizedValue(next) {
     this.normalizedValue = normalizeRuleValue(this.value);
@@ -43,6 +47,14 @@ merchantRuleSchema.pre('validate', function setNormalizedValue(next) {
 });
 
 merchantRuleSchema.statics.normalizeValue = normalizeRuleValue;
+merchantRuleSchema.statics.GLOBAL_USER_ID = GLOBAL_MERCHANT_RULE_USER_ID;
+merchantRuleSchema.statics.globalQuery = function globalQuery(extra = {}) {
+    return {
+        userId: GLOBAL_MERCHANT_RULE_USER_ID,
+        source: 'global',
+        ...extra
+    };
+};
 
 const MerchantRule = mongoose.model('MerchantRule', merchantRuleSchema, 'MerchantRule');
 

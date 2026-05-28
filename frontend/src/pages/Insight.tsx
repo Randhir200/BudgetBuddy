@@ -54,6 +54,7 @@ function getMonthRange(value: Date) {
 const Insight: React.FC = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [selectedTrendDate, setSelectedTrendDate] = useState<string | null>(null);
+  const [selectedTrendType, setSelectedTrendType] = useState<'income' | 'expense' | null>(null);
   const dispatch: AppDispatch = useDispatch();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -175,8 +176,13 @@ const Insight: React.FC = () => {
 
   const trendOptions = {
     backgroundColor: 'transparent',
-    color: ['#0891b2'],
+    color: ['#16a34a', '#f59e0b'],
     tooltip: { trigger: 'axis' },
+    legend: {
+      top: 0,
+      right: 0,
+      textStyle: { color: axisColor },
+    },
     grid: { left: isMobile ? 44 : 56, right: 12, top: 24, bottom: 44, containLabel: true },
     xAxis: {
       type: 'category',
@@ -191,15 +197,30 @@ const Insight: React.FC = () => {
     },
     series: [
       {
+        name: 'Income',
         type: 'line',
         smooth: true,
-        areaStyle: { opacity: theme.palette.mode === 'dark' ? 0.18 : 0.12 },
-        data: dailyTrend.map((item: any) => item.amount),
+        symbolSize: 8,
+        lineStyle: { width: 2 },
+        areaStyle: { opacity: theme.palette.mode === 'dark' ? 0.12 : 0.08 },
+        data: dailyTrend.map((item: any) => Number(item.incomeAmount || 0) || null),
+      },
+      {
+        name: 'Expense',
+        type: 'line',
+        smooth: true,
+        symbolSize: 8,
+        lineStyle: { width: 2 },
+        areaStyle: { opacity: theme.palette.mode === 'dark' ? 0.12 : 0.08 },
+        data: dailyTrend.map((item: any) => Number(item.expenseAmount || item.amount || 0) || null),
       },
     ],
   };
   const selectedDay = dailyDetails.find((item: any) => item.date === selectedTrendDate) || dailyDetails[dailyDetails.length - 1];
-  const selectedDayTotal = selectedDay?.transactions?.reduce((sum: number, item: any) => sum + Number(item.amount || 0), 0) || 0;
+  const selectedTransactions = selectedTrendType
+    ? selectedDay?.transactions?.filter((item: any) => item.transactionType === selectedTrendType)
+    : selectedDay?.transactions;
+  const selectedDayTotal = selectedTransactions?.reduce((sum: number, item: any) => sum + Number(item.amount || 0), 0) || 0;
 
   return (
     <Box sx={{ p: { xs: 1, sm: 2 }, maxWidth: 1440, mx: 'auto', width: '100%', minWidth: 0, overflowX: 'hidden' }}>
@@ -253,7 +274,7 @@ const Insight: React.FC = () => {
         <Grid container spacing={1.5} sx={{ minWidth: 0 }}>
           <Grid item xs={12} md={8} sx={{ minWidth: 0 }}>
             <Paper sx={{ ...panelSx, height: '100%' }}>
-              <Typography sx={{ fontWeight: 700, mb: 1 }}>Daily Spend Trend</Typography>
+              <Typography sx={{ fontWeight: 700, mb: 1 }}>Daily Transaction Trend</Typography>
               <ReactEChartsCore
                 echarts={echarts}
                 option={trendOptions}
@@ -261,17 +282,21 @@ const Insight: React.FC = () => {
                 onEvents={{
                   click: (params: any) => {
                     const matched = dailyTrend.find((item: any) => String(Number(String(item.date).slice(8, 10))) === String(params.name));
-                    if (matched) setSelectedTrendDate(matched.date);
+                    if (matched) {
+                      setSelectedTrendDate(matched.date);
+                      setSelectedTrendType(params.seriesName === 'Income' ? 'income' : 'expense');
+                    }
                   },
                 }}
               />
               <Box sx={{ mt: 1.5 }}>
                 <Typography variant="body2" sx={{ fontWeight: 700 }}>
                   {selectedDay ? new Date(selectedDay.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Daily details'}
+                  {selectedTrendType ? ` · ${selectedTrendType === 'income' ? 'Income' : 'Expense'}` : ''}
                   {selectedDay ? ` · ${formatCurrency(selectedDayTotal)}` : ''}
                 </Typography>
                 <Stack spacing={0.75} sx={{ mt: 1, maxHeight: 240, overflowY: 'auto', pr: 0.5 }}>
-                  {selectedDay?.transactions?.length ? selectedDay.transactions.map((transaction: any) => (
+                  {selectedTransactions?.length ? selectedTransactions.map((transaction: any) => (
                     <Box
                       key={transaction.id}
                       sx={{
@@ -294,7 +319,7 @@ const Insight: React.FC = () => {
                       <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, overflowWrap: 'anywhere' }}>
                         {transaction.category} · {transaction.type}
                       </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 800 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 800, color: transaction.transactionType === 'income' ? '#16a34a' : '#f59e0b' }}>
                         {formatCurrency(transaction.amount)}
                       </Typography>
                     </Box>
